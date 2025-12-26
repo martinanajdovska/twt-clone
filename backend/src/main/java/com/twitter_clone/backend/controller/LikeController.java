@@ -16,7 +16,7 @@ public class LikeController {
         this.likeService = likeService;
     }
 
-    //    TODO: change username param after frontend
+    //    TODO: refactor params after frontend auth
     @PostMapping("/{tweetId}/likes")
     public ResponseEntity<Like> likeTweet(@PathVariable Long tweetId, @RequestParam String username) {
         return this.likeService.save(username,tweetId)

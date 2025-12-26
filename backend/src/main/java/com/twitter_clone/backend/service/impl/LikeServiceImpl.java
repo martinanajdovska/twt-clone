@@ -3,6 +3,7 @@ package com.twitter_clone.backend.service.impl;
 import com.twitter_clone.backend.model.Like;
 import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.User;
+import com.twitter_clone.backend.model.exceptions.ActionNotAllowedException;
 import com.twitter_clone.backend.model.exceptions.LikeNotFoundException;
 import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
 import com.twitter_clone.backend.model.exceptions.UsernameNotFoundException;
@@ -45,7 +46,10 @@ public class LikeServiceImpl implements LikeService {
     @Override
     @Transactional
     public void delete(String username, Long tweetId) {
-        this.likeRepository.findByTweetIdAndUserUsername(tweetId,username).orElseThrow(LikeNotFoundException::new);
-        this.likeRepository.deleteByTweetIdAndUserUsername(tweetId,username);
+        Like like = this.likeRepository.findByTweetIdAndUserUsername(tweetId,username).orElseThrow(LikeNotFoundException::new);
+        if (!like.getUser().getUsername().equals(username)) {
+            throw new ActionNotAllowedException("Can't remove a like not made by this user");
+        }
+        this.likeRepository.delete(like);
     }
 }

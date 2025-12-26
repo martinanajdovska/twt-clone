@@ -24,6 +24,8 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String email;
 
+//    TODO: profile picture?
+
     private boolean isAccountNonExpired = true;
     private boolean isAccountNonLocked = true;
     private boolean isCredentialsNonExpired = true;
