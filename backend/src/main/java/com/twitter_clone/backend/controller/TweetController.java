@@ -1,13 +1,19 @@
 package com.twitter_clone.backend.controller;
 
-import com.twitter_clone.backend.model.DTO.TweetRequest;
+import com.twitter_clone.backend.model.DTO.TweetRequestDTO;
+import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
 import com.twitter_clone.backend.model.Tweet;
+import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
 import com.twitter_clone.backend.service.TweetService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tweets")
@@ -18,15 +24,22 @@ public class TweetController {
         this.tweetService = tweetService;
     }
 
-    //    TODO: change params after frontend
-    @GetMapping
-    public List<Tweet> findAll(@RequestParam(required = true) String username) {
-        return this.tweetService.findAllByUserUsername(username);
+    //    TODO: remove user param everywhere after frontend auth
+
+    @GetMapping("")
+    public List<TweetResponseDTO> generateFeed(@RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "5") int size,
+                                               @RequestParam String username){
+        Sort sort = Sort.by("createdAt").descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return this.tweetService.generateFeed(username, pageable)
+                .stream().map(this.tweetService::convertToDTO)
+                .collect(Collectors.toList());
     }
 
-
     @PostMapping()
-    public ResponseEntity<Tweet> save(@RequestBody TweetRequest request) {
+    public ResponseEntity<Tweet> save(@RequestBody TweetRequestDTO request) {
         return this.tweetService
                 .save(
                         request.getUsername(),
@@ -38,6 +51,14 @@ public class TweetController {
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
-    //TODO: delete tweet
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteById(@PathVariable Long id, @RequestParam String username) {
+        try {
+            this.tweetService.deleteById(id, username);
+            return ResponseEntity.noContent().build();
+        } catch (TweetNotFoundException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
 }
