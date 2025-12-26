@@ -12,5 +12,5 @@ import java.util.Optional;
 @Repository
 public interface TweetRepository extends JpaRepository<Tweet,Long> {
     List<Tweet> findAllByUserUsername(String username);
-    Page<Tweet> findTweetsByUserIdIn(List<Long> userIds, Pageable pageable);
+    Page<Tweet> findTweetsByUserUsernameIn(List<String> usernames, Pageable pageable);
 }

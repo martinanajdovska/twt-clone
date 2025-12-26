@@ -13,7 +13,7 @@ public interface TweetService {
     Optional<Tweet> save(String username, Long parentId, String content, String imageUrl);
     List<Tweet> findAllByUserUsername(String username);
     Optional<Tweet> findById(Long id);
-    Page<Tweet> generateFeed(String username, Pageable pageable);
+    List<TweetResponseDTO> generateFeed(String username, Pageable pageable);
     TweetResponseDTO convertToDTO(Tweet tweet);
     void deleteById(Long id, String username);
 }

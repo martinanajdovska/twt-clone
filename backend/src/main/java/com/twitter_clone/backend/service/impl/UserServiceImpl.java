@@ -1,5 +1,6 @@
 package com.twitter_clone.backend.service.impl;
 
+import com.twitter_clone.backend.model.DTO.UserResponseDTO;
 import com.twitter_clone.backend.model.User;
 import com.twitter_clone.backend.model.enums.Role;
 import com.twitter_clone.backend.model.exceptions.PasswordsDoNotMatchException;
@@ -7,6 +8,7 @@ import com.twitter_clone.backend.model.exceptions.UsernameAlreadyExistsException
 import com.twitter_clone.backend.model.exceptions.UsernameNotFoundException;
 import com.twitter_clone.backend.repository.UserRepository;
 import com.twitter_clone.backend.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,11 +19,13 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ModelMapper modelMapper;
 
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.modelMapper = modelMapper;
     }
 
     @Override
@@ -55,5 +59,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return this.userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+    }
+
+    @Override
+    public UserResponseDTO convertToDTO(User user) {
+        return this.modelMapper.map(user, UserResponseDTO.class);
     }
 }

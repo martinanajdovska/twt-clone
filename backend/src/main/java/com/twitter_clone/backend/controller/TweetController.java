@@ -24,18 +24,16 @@ public class TweetController {
         this.tweetService = tweetService;
     }
 
-    //    TODO: remove user param everywhere after frontend auth
+    //    TODO: refactor params after frontend auth
 
-    @GetMapping("")
+    @GetMapping()
     public List<TweetResponseDTO> generateFeed(@RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "5") int size,
                                                @RequestParam String username){
         Sort sort = Sort.by("createdAt").descending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return this.tweetService.generateFeed(username, pageable)
-                .stream().map(this.tweetService::convertToDTO)
-                .collect(Collectors.toList());
+        return this.tweetService.generateFeed(username, pageable);
     }
 
     @PostMapping()
@@ -52,7 +50,7 @@ public class TweetController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteById(@PathVariable Long id, @RequestParam String username) {
+    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestParam String username) {
         try {
             this.tweetService.deleteById(id, username);
             return ResponseEntity.noContent().build();

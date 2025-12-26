@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TweetServiceImpl implements TweetService {
@@ -62,12 +63,14 @@ public class TweetServiceImpl implements TweetService {
 
 //    TODO: dont return all replies so it doesnt crash if there are many replies
     @Override
-    public Page<Tweet> generateFeed(String username, Pageable pageable) {
+    public List<TweetResponseDTO> generateFeed(String username, Pageable pageable) {
         User user = this.userRepository.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
 
-        List<Long> followedIds = this.followService.followedIds(username);
+        List<String> followedUsernames = this.followService.followedUsernames(username);
 
-        return tweetRepository.findTweetsByUserIdIn(followedIds, pageable);
+        return tweetRepository.findTweetsByUserUsernameIn(followedUsernames, pageable)
+                .stream().map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
