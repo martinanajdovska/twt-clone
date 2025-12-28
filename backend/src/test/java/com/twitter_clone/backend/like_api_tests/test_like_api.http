@@ -5,10 +5,10 @@ Content-Type: application/x-www-form-urlencoded
 username=martina&password=test123
 
 ### 2. Like a Tweet
-POST http://localhost:8080/api/tweets/1/likes?username=martina
+POST http://localhost:8080/api/tweets/2/likes?username=martina
 
 ### 3. Get Number Of Likes
-GET http://localhost:8080/api/tweets/1/likes?username=martina
+GET http://localhost:8080/api/tweets/2/likes?username=martina
 
 ### 4. Unlike a Tweet
-DELETE http://localhost:8080/api/tweets/1/likes?username=martina
+DELETE http://localhost:8080/api/tweets/2/likes?username=martina

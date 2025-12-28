@@ -6,11 +6,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class UserResponseDTO {
-    Long id;
     String username;
 
-    public UserResponseDTO(Long id, String username) {
-        this.id = id;
+    public UserResponseDTO(String username) {
         this.username = username;
     }
 }

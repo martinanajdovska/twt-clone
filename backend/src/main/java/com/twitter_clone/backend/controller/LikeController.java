@@ -1,5 +1,6 @@
 package com.twitter_clone.backend.controller;
 
+import com.twitter_clone.backend.model.DTO.LikeResponseDTO;
 import com.twitter_clone.backend.model.Like;
 import com.twitter_clone.backend.service.LikeService;
 import com.twitter_clone.backend.service.TweetService;
@@ -18,7 +19,7 @@ public class LikeController {
 
     //    TODO: refactor params after frontend auth
     @PostMapping("/{tweetId}/likes")
-    public ResponseEntity<Like> likeTweet(@PathVariable Long tweetId, @RequestParam String username) {
+    public ResponseEntity<LikeResponseDTO> likeTweet(@PathVariable Long tweetId, @RequestParam String username) {
         return this.likeService.save(username,tweetId)
                 .map(like -> ResponseEntity.status(HttpStatus.CREATED).body(like))
                 .orElseGet(() -> ResponseEntity.badRequest().build());

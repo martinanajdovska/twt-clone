@@ -26,7 +26,8 @@ public class TweetController {
 
     //    TODO: refactor params after frontend auth
 
-    @GetMapping()
+//    TODO: move generating feed to user controller and change api url
+    @GetMapping
     public List<TweetResponseDTO> generateFeed(@RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "5") int size,
                                                @RequestParam String username){
@@ -36,8 +37,8 @@ public class TweetController {
         return this.tweetService.generateFeed(username, pageable);
     }
 
-    @PostMapping()
-    public ResponseEntity<Tweet> save(@RequestBody TweetRequestDTO request) {
+    @PostMapping
+    public ResponseEntity<TweetResponseDTO> save(@RequestBody TweetRequestDTO request) {
         return this.tweetService
                 .save(
                         request.getUsername(),

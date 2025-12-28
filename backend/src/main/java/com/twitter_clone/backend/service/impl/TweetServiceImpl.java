@@ -1,6 +1,5 @@
 package com.twitter_clone.backend.service.impl;
 
-import com.twitter_clone.backend.config.ModelMapperConfig;
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
 import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.User;
@@ -12,8 +11,6 @@ import com.twitter_clone.backend.repository.UserRepository;
 import com.twitter_clone.backend.service.FollowService;
 import com.twitter_clone.backend.service.TweetService;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeMap;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +35,7 @@ public class TweetServiceImpl implements TweetService {
 //    TODO: image handling
 
     //    TODO: check if content length >=255 and disable submitting on frontend
-    public Optional<Tweet> save(String username, Long parentId, String content, String imageUrl) {
+    public Optional<TweetResponseDTO> save(String username, Long parentId, String content, String imageUrl) {
         if (content.isEmpty()) {
             throw new IllegalArgumentException("Can't post empty tweet");
         }
@@ -49,7 +46,8 @@ public class TweetServiceImpl implements TweetService {
             parentTweet = this.tweetRepository.findById(parentId).orElseThrow(()-> new TweetNotFoundException(parentId));
         }
 
-        return Optional.of(this.tweetRepository.save(new Tweet(user, parentTweet, content, imageUrl)));
+        Tweet tweet = this.tweetRepository.save(new Tweet(user, parentTweet, content, imageUrl));
+        return Optional.of(this.convertToDTO(tweet));
     }
 
     public List<Tweet> findAllByUserUsername(String username) {
@@ -66,7 +64,7 @@ public class TweetServiceImpl implements TweetService {
     public List<TweetResponseDTO> generateFeed(String username, Pageable pageable) {
         User user = this.userRepository.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
 
-        List<String> followedUsernames = this.followService.followedUsernames(username);
+        List<String> followedUsernames = this.followService.getFollowedUsernames(username);
 
         return tweetRepository.findTweetsByUserUsernameIn(followedUsernames, pageable)
                 .stream().map(this::convertToDTO)
