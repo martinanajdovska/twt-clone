@@ -5,4 +5,4 @@ Content-Type: application/x-www-form-urlencoded
 username=martina&password=test123
 
 ### 2. Unfollow
-DELETE http://localhost:8080/api/users/follows/koco?followerUsername=martina
+DELETE http://localhost:8080/api/users/follows/koco

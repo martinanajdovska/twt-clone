@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,17 +31,15 @@ public class TweetController {
         this.feedService = feedService;
     }
 
-//    TODO: refactor params after frontend auth
-
 //    TODO: move generating feed to user controller and change api url
     @GetMapping
     public List<TweetResponseDTO> generateFeed(@RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "5") int size,
-                                               @RequestParam String username){
+                                               @AuthenticationPrincipal UserDetails userDetails){
         Sort sort = Sort.by("createdAt").descending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return this.feedService.generateFeed(username, pageable);
+        return this.feedService.generateFeed(userDetails.getUsername(), pageable);
     }
 
     @PostMapping
@@ -57,9 +57,9 @@ public class TweetController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestParam String username) {
+    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            this.tweetService.deleteById(id, username);
+            this.tweetService.deleteById(id, userDetails.getUsername());
             return ResponseEntity.noContent().build();
         } catch (TweetNotFoundException e) {
             return ResponseEntity.badRequest().build();

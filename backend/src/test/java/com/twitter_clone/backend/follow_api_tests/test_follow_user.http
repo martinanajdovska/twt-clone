@@ -4,5 +4,5 @@ Content-Type: application/x-www-form-urlencoded
 
 username=martina&password=test123
 
-### 2. Save a Tweet
-POST http://localhost:8080/api/users/follows/koco?followerUsername=martina
+### 2. Follow user
+POST http://localhost:8080/api/users/follows/koco
