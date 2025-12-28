@@ -1,11 +1,12 @@
 package com.twitter_clone.backend.controller;
 
 import com.twitter_clone.backend.model.DTO.LikeResponseDTO;
-import com.twitter_clone.backend.model.Like;
 import com.twitter_clone.backend.service.LikeService;
 import com.twitter_clone.backend.service.TweetService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,14 +14,13 @@ import org.springframework.web.bind.annotation.*;
 public class LikeController {
     private final LikeService likeService;
 
-    public LikeController(LikeService likeService, TweetService tweetService) {
+    public LikeController(LikeService likeService) {
         this.likeService = likeService;
     }
 
-    //    TODO: refactor params after frontend auth
     @PostMapping("/{tweetId}/likes")
-    public ResponseEntity<LikeResponseDTO> likeTweet(@PathVariable Long tweetId, @RequestParam String username) {
-        return this.likeService.save(username,tweetId)
+    public ResponseEntity<LikeResponseDTO> likeTweet(@PathVariable Long tweetId, @AuthenticationPrincipal UserDetails userDetails) {
+        return this.likeService.save(userDetails.getUsername(),tweetId)
                 .map(like -> ResponseEntity.status(HttpStatus.CREATED).body(like))
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }
@@ -30,9 +30,8 @@ public class LikeController {
         return ResponseEntity.ok(this.likeService.countLikes(tweetId));
     }
 
-    //    TODO: change username param after frontend
     @DeleteMapping("/{tweetId}/likes")
-    public ResponseEntity<Void> unlikeTweet(@PathVariable Long tweetId, @RequestParam String username) {
-        this.likeService.delete(username, tweetId);
+    public ResponseEntity<Void> unlikeTweet(@PathVariable Long tweetId, @AuthenticationPrincipal UserDetails userDetails) {
+        this.likeService.delete(userDetails.getUsername(), tweetId);
         return ResponseEntity.noContent().build();
     }}
