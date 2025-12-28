@@ -10,10 +10,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TweetService {
-    Optional<Tweet> save(String username, Long parentId, String content, String imageUrl);
+    Optional<TweetResponseDTO> save(String username, Long parentId, String content, String imageUrl);
     List<Tweet> findAllByUserUsername(String username);
     Optional<Tweet> findById(Long id);
-    List<TweetResponseDTO> generateFeed(String username, Pageable pageable);
     TweetResponseDTO convertToDTO(Tweet tweet);
     void deleteById(Long id, String username);
+    TweetResponseDTO getTweetById(Long id);
+    Page<Tweet> findTweetsByUserUsernameIn(List<String> followedUsernames, Pageable pageable);
 }

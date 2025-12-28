@@ -16,14 +16,20 @@ public class TweetResponseDTO {
 
     //    TODO: handle incoming image files and save them to cloudinary?
     private String imageUrl;
-    private List<Tweet> replies;
+    private List<Long> replies;
+    private Integer likesCount;
+    private Integer repliesCount;
+    private Integer retweetsCount;
 
-    public TweetResponseDTO(Long id, String username, Long parentId, String content, String imageUrl, List<Tweet> replies) {
+    public TweetResponseDTO(Long id, String username, Long parentId, String content, String imageUrl, List<Long> replies) {
         this.id = id;
         this.username = username;
         this.parentId = parentId;
         this.content = content;
         this.imageUrl = imageUrl;
         this.replies = replies;
+        this.likesCount = 0;
+        this.repliesCount = 0;
+        this.retweetsCount = 0;
     }
 }
