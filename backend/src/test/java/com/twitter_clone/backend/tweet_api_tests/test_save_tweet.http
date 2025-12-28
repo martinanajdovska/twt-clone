@@ -10,11 +10,8 @@ Content-Type: application/json
 
 {
   "username": "martina",
-  "content": "Tweet DTO test tweet",
+  "content": "test dto test",
   "imageUrl": null,
-  "parentId": null
+  "parentId": 14
 }
 
-### 3. Get tweets
-GET http://localhost:8080/api/tweets?username=koco
-Content-Type: application/json
