@@ -21,10 +21,9 @@ public class FollowController {
         this.followService = followService;
     }
 
-    //    TODO: refactor params after frontend auth
-
     @GetMapping("/follows/{username}")
     public ResponseEntity<List<UserResponseDTO>> getFollowedUsers(@PathVariable String username) {
+
         return ResponseEntity.ok(this.followService.getFollowedUsers(username));
     }
 

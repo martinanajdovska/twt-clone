@@ -3,13 +3,10 @@ package com.twitter_clone.backend.service.impl;
 import com.twitter_clone.backend.model.DTO.UserResponseDTO;
 import com.twitter_clone.backend.model.User;
 import com.twitter_clone.backend.model.enums.Role;
-import com.twitter_clone.backend.model.exceptions.PasswordsDoNotMatchException;
 import com.twitter_clone.backend.model.exceptions.UsernameAlreadyExistsException;
-import com.twitter_clone.backend.model.exceptions.UsernameNotFoundException;
 import com.twitter_clone.backend.repository.UserRepository;
 import com.twitter_clone.backend.service.UserService;
 import org.modelmapper.ModelMapper;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,20 +26,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User register(String username, String password, String repeatPassword, Role role, String email) {
+    public User register(String username, String password, Role role, String email) {
         if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
             throw new IllegalArgumentException();
-        }
-
-        if (!password.equals(repeatPassword)) {
-            throw new PasswordsDoNotMatchException();
         }
 
         if (this.userRepository.findByUsername(username).isPresent()) {
             throw new UsernameAlreadyExistsException();
         }
+        String hashedPassword = passwordEncoder.encode(password);
 
-        User user = new User(username, passwordEncoder.encode(password), role, email);
+        User user = new User(username, hashedPassword, role, email);
 
         return this.userRepository.save(user);
     }
@@ -57,8 +51,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return this.userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+    public boolean existsByUsername(String username) {
+        return this.userRepository.existsByUsername(username);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return this.userRepository.existsByEmail(email);
     }
 
     @Override

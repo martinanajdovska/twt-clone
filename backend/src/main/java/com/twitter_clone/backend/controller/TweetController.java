@@ -43,10 +43,11 @@ public class TweetController {
     }
 
     @PostMapping
-    public ResponseEntity<TweetResponseDTO> save(@RequestBody TweetRequestDTO request) {
+    public ResponseEntity<TweetResponseDTO> save(@RequestBody TweetRequestDTO request,
+                                                 @AuthenticationPrincipal UserDetails userDetails) {
         return this.tweetService
                 .save(
-                        request.getUsername(),
+                        userDetails.getUsername(),
                         request.getParentId(),
                         request.getContent(),
                         request.getImageUrl()
