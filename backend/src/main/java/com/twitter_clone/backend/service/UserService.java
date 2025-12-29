@@ -9,9 +9,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Optional;
 
 public interface UserService {
-    User register(String username, String password, String repeatPassword, Role role, String email);
+    User register(String username, String password, Role role, String email);
     Optional<User> findByUsername(String username);
     Optional<User> findByUsernameAndPassword(String username, String password);
     UserResponseDTO convertToDTO(User user);
-    UserDetails loadUserByUsername(String username) throws UsernameNotFoundException;
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
 }
