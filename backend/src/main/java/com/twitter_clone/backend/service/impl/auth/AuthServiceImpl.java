@@ -1,4 +1,4 @@
-package com.twitter_clone.backend.service.impl;
+package com.twitter_clone.backend.service.impl.auth;
 
 import com.twitter_clone.backend.model.User;
 import com.twitter_clone.backend.model.exceptions.InvalidUserCredentialsException;
