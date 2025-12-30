@@ -1,0 +1,30 @@
+.tweet{
+    display: flex;
+    flex-direction: column;
+    width: 400px;
+    border: black solid 2px;
+    padding: 10px 30px;
+    text-decoration: none;
+    list-style: none;
+}
+a{
+    text-decoration: none;
+    list-style: none;
+    color: black;
+}
+
+.tweet-info{
+    display: flex;
+    justify-content: space-between;
+}
+
+.tweets{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 500px;
+}
+.tweets ul{
+    margin: 0;
+    padding: 0;
+}
