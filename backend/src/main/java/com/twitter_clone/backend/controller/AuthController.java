@@ -1,12 +1,12 @@
 package com.twitter_clone.backend.controller;
 
-import com.twitter_clone.backend.model.DTO.auth.JwtResponseDTO;
 import com.twitter_clone.backend.model.DTO.auth.SignInRequestDTO;
 import com.twitter_clone.backend.model.DTO.auth.SignUpRequestDTO;
 import com.twitter_clone.backend.model.enums.Role;
+import com.twitter_clone.backend.service.TokenService;
 import com.twitter_clone.backend.service.UserService;
-import com.twitter_clone.backend.service.impl.auth.UserDetailsImpl;
-import com.twitter_clone.backend.util.JwtUtil;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,33 +18,37 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    private UserService userService;
-    private AuthenticationManager authenticationManager;
-    private JwtUtil jwtUtil;
+    private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final TokenService tokenService;
 
-    public AuthController(UserService userService, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    public AuthController(UserService userService, AuthenticationManager authenticationManager, TokenService tokenService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
+        this.tokenService = tokenService;
     }
 
-    @PostMapping("/signin")
-    public ResponseEntity<?> signin(@RequestBody SignInRequestDTO signInRequest) {
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody SignInRequestDTO signInRequest, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInRequest.getUsername(), signInRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtil.generateJwtToken(authentication);
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String token = tokenService.generateToken(signInRequest.getUsername());
 
-        JwtResponseDTO res = new JwtResponseDTO();
-        res.setToken(jwt);
-        res.setId(userDetails.getId());
-        res.setUsername(userDetails.getUsername());
-        res.setRole(userDetails.getRole());
-        return ResponseEntity.ok(res);
+        Cookie cookie = new Cookie("token", token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(3600);
+        String cookieHeader = String.format("token=%s; Path=/; HttpOnly; Max-Age=%d; SameSite=Lax",
+                token, 86400);
+
+        response.addHeader("Set-Cookie", cookieHeader);
+        return ResponseEntity.ok("Login successful");
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody SignUpRequestDTO signUpRequest) {
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody SignUpRequestDTO signUpRequest) {
         if (userService.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("username is already taken");
         }
@@ -54,5 +58,15 @@ public class AuthController {
 
         userService.register(signUpRequest.getUsername(), signUpRequest.getPassword(), Role.ROLE_USER, signUpRequest.getEmail());
         return ResponseEntity.ok("User registered success");
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("token", null);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+        return ResponseEntity.ok("Logged out");
     }
 }
