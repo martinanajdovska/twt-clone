@@ -2,6 +2,7 @@ package com.twitter_clone.backend.controller;
 
 import com.twitter_clone.backend.model.DTO.FollowResponseDTO;
 import com.twitter_clone.backend.model.DTO.UserResponseDTO;
+import com.twitter_clone.backend.model.Follow;
 import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
 import com.twitter_clone.backend.service.FollowService;
 import org.springframework.http.HttpStatus;

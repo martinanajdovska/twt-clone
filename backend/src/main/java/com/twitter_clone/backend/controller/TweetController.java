@@ -2,10 +2,8 @@ package com.twitter_clone.backend.controller;
 
 import com.twitter_clone.backend.model.DTO.TweetRequestDTO;
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
-import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
 import com.twitter_clone.backend.service.FeedService;
-import com.twitter_clone.backend.service.LikeService;
 import com.twitter_clone.backend.service.TweetService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,8 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tweets")
