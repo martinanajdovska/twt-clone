@@ -1,12 +1,12 @@
-import SignInForm from "../../components/SignInForm"
+import LogInForm from "../../components/LogInForm"
 import styles from "../../styles/layout.module.css"
 
-export default function SignIn() {
+export default function LogIn() {
 
     return (
         <div className={styles.container}>
             <div className={styles.layout}>
-                <SignInForm />
+                <LogInForm />
             </div>
         </div>
     )

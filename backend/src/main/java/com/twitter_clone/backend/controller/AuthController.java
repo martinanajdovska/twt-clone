@@ -57,7 +57,7 @@ public class AuthController {
         }
 
         userService.register(signUpRequest.getUsername(), signUpRequest.getPassword(), Role.ROLE_USER, signUpRequest.getEmail());
-        return ResponseEntity.ok("User registered success");
+        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
     }
 
     @PostMapping("/logout")

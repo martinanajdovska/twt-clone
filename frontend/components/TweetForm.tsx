@@ -1,44 +1,45 @@
 'use client'
-import React, { ChangeEvent, FormEvent, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-const TweetForm = () => {
-    const router = useRouter();
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-    const [state, setState] = useState({
-        content: "",
-    })
+const TweetForm = ({token}:{token:string}) => {
+    const queryClient = useQueryClient();
+    const [content, setContent] = useState("");
 
-    function handleChange(e: ChangeEvent<HTMLTextAreaElement>) {
-        const { name, value } = e.target;
-        setState(prevState => ({
-            ...prevState,
-            [name]: value
-        }))
-    }
-
-    async function handleSubmit(e: FormEvent) {
-        e.preventDefault();
-
-        try {
-            const res = await fetch(`http://localhost:8080/api/tweets`, {
+    const { mutate: createTweet, isPending } = useMutation({
+        mutationFn: async (newTweet: { content: string }) => {
+            const response = await fetch(`${BASE_URL}/api/tweets`, {
                 method: "POST",
-                body: JSON.stringify(state),
+                body: JSON.stringify(newTweet),
                 headers: {
                     "Content-Type": "application/json"
                 },
                 credentials: 'include'
-            })
-            if (res.status === 201) {
-                router.push('/');
-                router.refresh();
-            } else {
-                alert("Error creating tweet");
+            });
+
+            if (!response.ok) {
+                throw new Error("Error creating tweet");
             }
-        } catch (err) {
+            return response;
+        },
+        onSuccess: () => {
+            setContent("");
+
+            queryClient.invalidateQueries({ queryKey: ['tweets', token] });
+        },
+        onError: (err) => {
             console.error("Connection error:", err);
-            alert("Could not connect to the server.");
+            alert("Could not create tweet. Please try again.");
         }
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!content.trim()) return;
+
+        createTweet({ content });
     }
 
     return (
@@ -47,14 +48,20 @@ const TweetForm = () => {
                 <textarea
                     name="content"
                     placeholder="Share your thoughts..."
-                    value={state.content}
+                    value={content}
                     cols={40}
                     rows={5}
-                    autoComplete="content"
-                    onChange={handleChange}
+                    onChange={(e) => setContent(e.target.value)}
+                    disabled={isPending}
+                    className="border p-2 rounded w-full"
                 />
-                 {/*TODO: upload image*/}
-                <button className="ms-3"  type="submit">Tweet</button>
+                <button
+                    className="ms-3 rounded px-4 py-2 bg-blue-500 text-black disabled:bg-gray-400"
+                    type="submit"
+                    disabled={isPending || !content.trim()}
+                >
+                    {isPending ? 'Tweeting...' : 'Tweet'}
+                </button>
             </form>
         </div>
     )
