@@ -1,6 +1,8 @@
 package com.twitter_clone.backend.service.impl;
 
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
+import com.twitter_clone.backend.model.DTO.UserResponseDTO;
+import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.User;
 import com.twitter_clone.backend.model.exceptions.UsernameNotFoundException;
 import com.twitter_clone.backend.service.*;
@@ -38,6 +40,21 @@ public class FeedServiceImpl implements FeedService {
                     return this.addTweetInfo(responseDTO);
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserResponseDTO generateProfileFeed(String username) {
+        User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
+
+        UserResponseDTO userResponseDTO = this.userService.convertToDTO(user);
+        List<Tweet> tweets = this.tweetService.findAllByUserUsername(username);
+        List<TweetResponseDTO> tweetResponseDTOS = tweets.stream().map(t->{
+            TweetResponseDTO dto = this.tweetService.convertToDTO(t);
+            return this.addTweetInfo(dto);
+        }).toList();
+        userResponseDTO.setTweets(tweetResponseDTOS);
+
+        return userResponseDTO;
     }
 
     @Override

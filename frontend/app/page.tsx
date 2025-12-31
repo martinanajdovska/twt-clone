@@ -42,7 +42,7 @@ export default async function Home() {
             <Logout/>
             <section className="row">
                 <div className="col-4">
-                    Profile info
+                    <Link href={`/users/profile`}>Profile</Link>
                 </div>
                 <div className="col-8">
                     <TweetForm token={token} />

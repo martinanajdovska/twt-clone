@@ -23,9 +23,8 @@ public class FollowController {
     }
 
     @GetMapping("/follows/{username}")
-    public ResponseEntity<List<UserResponseDTO>> getFollowedUsers(@PathVariable String username) {
-
-        return ResponseEntity.ok(this.followService.getFollowedUsers(username));
+    public ResponseEntity<List<String>> getFollowedUsers(@PathVariable String username) {
+        return ResponseEntity.ok(this.followService.getFollowedUsernames(username));
     }
 
     @PostMapping("/follows/{username}")
@@ -46,8 +45,8 @@ public class FollowController {
     }
 
     @GetMapping("/followers/{username}")
-    public ResponseEntity<List<UserResponseDTO>> getFollowersForUser(@PathVariable String username) {
+    public ResponseEntity<List<String>> getFollowersForUser(@PathVariable String username) {
 
-        return ResponseEntity.ok(this.followService.getFollowersUsers(username));
+        return ResponseEntity.ok(this.followService.getFollowersUsernames(username));
     }
 }
