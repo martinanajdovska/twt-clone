@@ -11,4 +11,5 @@ public interface LikeService {
     Integer countLikes(Long tweetId);
     void delete(String username, Long tweetId);
     LikeResponseDTO convertToDTO(Like like);
+    boolean existsByTweetIdAndUsername(Long tweetId, String username);
 }

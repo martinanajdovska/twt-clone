@@ -1,7 +1,6 @@
 package com.twitter_clone.backend.service.impl;
 
 import com.twitter_clone.backend.model.DTO.LikeResponseDTO;
-import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
 import com.twitter_clone.backend.model.Like;
 import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.User;
@@ -62,5 +61,10 @@ public class LikeServiceImpl implements LikeService {
     @Override
     public LikeResponseDTO convertToDTO(Like like) {
         return this.modelMapper.map(like, LikeResponseDTO.class);
+    }
+
+    @Override
+    public boolean existsByTweetIdAndUsername(Long tweetId, String username) {
+        return this.likeRepository.existsByTweetIdAndUserUsername(tweetId,username);
     }
 }

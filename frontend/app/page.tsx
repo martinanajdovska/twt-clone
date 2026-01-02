@@ -4,9 +4,10 @@ import Layout from '../components/layout'
 import {cookies} from 'next/headers';
 import Logout from "@/components/Logout";
 import TweetForm from "@/components/TweetForm";
-import Feed, {fetchTweets} from "@/components/Feed";
+import Feed from "@/components/Feed";
 import React from "react";
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query'
+import {fetchTweets} from "@/components/dataFetching";
 
 export default async function Home() {
     const cookieStore = await cookies();
@@ -26,8 +27,8 @@ export default async function Home() {
     }
 
     await queryClient.prefetchInfiniteQuery({
-        queryKey: ['tweets', token],
-        queryFn: ({ pageParam }) => fetchTweets({ pageParam, token }),
+        queryKey: ['feed', token],
+        queryFn: ({ pageParam }) => fetchTweets({ pageParam }),
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages, lastPageParam) => {
             if (lastPage.length < 5) {
@@ -47,7 +48,7 @@ export default async function Home() {
                 <div className="col-8">
                     <TweetForm token={token} />
                     <HydrationBoundary state={dehydrate(queryClient)}>
-                        <Feed token={token} />
+                        <Feed token={token} username=""/>
                     </HydrationBoundary>
                 </div>
             </section>

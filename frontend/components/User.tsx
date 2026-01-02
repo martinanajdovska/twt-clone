@@ -1,48 +1,45 @@
-'use client'
 import React from 'react'
-import {useQuery} from "@tanstack/react-query";
-import {ITweetResponse} from "@/dtos/ITweetResponse";
-import Tweet from "@/components/Tweet";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+import Logout from "@/components/Logout";
+import Link from "next/link";
+import TweetForm from "@/components/TweetForm";
+import Feed from "@/components/Feed";
+import {cookies} from "next/headers";
+import Layout from "@/components/layout";
+import {fetchSelfUsername} from "@/components/dataFetching";
 
-const User = () => {
-    const { data, isLoading, error } = useQuery({
-        queryKey: ['user'],
-        queryFn: async () => {
-            const response = await fetch(`${BASE_URL}/api/me`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include'
-            });
+const User = async () => {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
 
-            if (!response.ok) {
-                throw new Error('Error getting user data');
-            }
+    if (!token) {
+        return (
+            <div>
+                <Layout>
+                    <h1>Welcome!</h1>
+                    <p><Link href="/register">Sign Up</Link></p>
+                    <p><Link href="/login">Sign In</Link></p>
+                </Layout>
+            </div>
+        )
+    }
 
-            return response.json();
-        },
-    });
-
-
-    if (isLoading) return <div>Loading user...</div>;
-
-    if (error) return <div>Error loading user</div>;
+    const self = await fetchSelfUsername({token});
+    const username = self.username;
 
     return (
-        <div>
-            <div>Hello {data?.username}</div>
-            <ul className="m-0 p-0">
-                {data?.tweets?.map((tweet:ITweetResponse) => (
-                    <li key={tweet.id} className="mb-3 tweet">
-                        <Tweet {...tweet} />
-                    </li>
-                ))}
-            </ul>
+        <div className="container-fluid pt-5">
+            <Logout/>
+            <section className="row">
+                <div className="col-4">
+                    <Link href={`/`}>Back to feed</Link>
+                </div>
+                <div className="col-8">
+                    <TweetForm token={token}/>
+                    <Feed token={token} username={username}/>
+                </div>
+            </section>
         </div>
-
     )
 }
 export default User

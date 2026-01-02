@@ -1,27 +1,13 @@
 'use client'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import {useInfiniteQuery} from '@tanstack/react-query'
 import React, {useEffect} from "react";
 import {ITweetResponse} from "@/dtos/ITweetResponse";
 import Tweet from "@/components/Tweet";
-import { useInView } from 'react-intersection-observer';
+import {useInView} from 'react-intersection-observer';
+import {fetchProfileFeed, fetchTweets} from "@/components/dataFetching";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-
-export const fetchTweets = async ({ pageParam = 0, token }: {pageParam:number, token:string}) => {
-    const response = await fetch(`${BASE_URL}/api/tweets?page=${pageParam}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-    });
-    if (!response.ok) throw new Error("Failed to fetch tweets");
-    const data = await response.json();
-    return data;
-}
-
-export default function Feed({ token }: { token: string }) {
-    const { ref, inView } = useInView();
+export default function Feed({token, username = ""}: { token: string, username: string }) {
+    const {ref, inView} = useInView();
 
     const {
         data,
@@ -32,16 +18,21 @@ export default function Feed({ token }: { token: string }) {
         isFetchingNextPage,
         status,
     } = useInfiniteQuery({
-        queryKey: ['tweets', token],
-        queryFn: ({ pageParam }) => fetchTweets({ pageParam, token }),
+        // check if trying to load a user profile (username!="") or normal feed
+        // and use the relevant key and function
+        queryKey: username !== "" ? ['profile', username] : ['feed', token],
+        queryFn: async ({ pageParam }) => {
+            const res = username
+                ? await fetchProfileFeed({ pageParam, username })
+                : await fetchTweets({ pageParam });
+            // normalize the api response
+            return Array.isArray(res) ? res : res.tweets;
+        },
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages, lastPageParam) => {
-            if (lastPage.length < 5) {
-                return undefined;
-            }
-            return lastPageParam + 1
+            return lastPage.length < 5 ? undefined : lastPageParam + 1;
         },
-  })
+    })
 
     useEffect(() => {
         if (inView && hasNextPage && !isFetchingNextPage) {
@@ -57,8 +48,8 @@ export default function Feed({ token }: { token: string }) {
         <>
             {data.pages.map((group, i) => (
                 <React.Fragment key={i}>
-                    <ul className="m-0 p-0">
-                        {group.map((tweet:ITweetResponse) => (
+                    <ul key={i} className="m-0 p-0 list-none">
+                        {group.map((tweet: ITweetResponse) => (
                             <li key={tweet.id} className="mb-3 tweet">
                                 <Tweet {...tweet} />
                             </li>

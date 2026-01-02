@@ -64,8 +64,8 @@ public class TweetController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TweetResponseDTO> getTweet(@PathVariable Long id) {
-        return this.feedService.getTweetById(id)
+    public ResponseEntity<TweetResponseDTO> getTweet(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        return this.feedService.getTweetById(id, userDetails.getUsername())
                 .map(tweet->ResponseEntity.ok().body(tweet))
                 .orElse(ResponseEntity.notFound().build());
     }

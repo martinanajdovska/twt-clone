@@ -1,78 +1,41 @@
-import Link from "next/link";
 import {ITweetResponse} from "@/dtos/ITweetResponse";
 import Image from "next/image";
 import "../styles/tweets.css"
-import {useMutation} from "@tanstack/react-query";
-import React, {useState} from "react";
+import React from "react";
+import Like from "../components/Like";
+import Retweet from "@/components/Retweet";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-
-const Tweet = ({ id, username, parentId, content, imageUrl, replies, likesCount, repliesCount, retweetsCount }: ITweetResponse) => {
+const Tweet = ({ id, username, content, imageUrl, likesCount, repliesCount, retweetsCount, liked, retweeted }: ITweetResponse) => {
     // TODO: show replies when user clicks on tweet
-    // TODO: handle clicking the buttons for liking retweeting and replying
+    // TODO: handle clicking the button for replying
 
-    // TODO: check if user has already liked/retweeted tweet before
-    const [liked, setLiked] = useState(false)
-
-    const { mutate: likeTweet, isPending } = useMutation({
-        mutationFn: async (credentials) => {
-            const res = await fetch(`${BASE_URL}/api/tweets/${id}/likes`, {
-                method: `${liked?"DELETE":"POST"}`,
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: 'include'
-            });
-
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || "Error liking tweet");
-            }
-
-            return res;
-        },
-        onSuccess: () => {
-            setLiked(!liked);
-        },
-        onError: (err: Error) => {
-            alert(err.message);
-        }
-    });
-
-    function tweetInfo(){
-        //TODO: expand tweet and show replies
+    function showReplies(){
     }
 
     return (
-        // TODO: change element
-        <a onClick={tweetInfo} id="tweet">
+        <div id="tweet">
             <div>
+                {retweeted?<p>Retweeted</p>:""}
                 <div className="tweet-general">
                     <p>{username}</p>
                     <p>{content}</p>
                 </div>
                 <div>
                     {imageUrl===null?'':<Image src={imageUrl} alt="Tweet image" />}
-
                 </div>
                 <div className="tweet-info">
-                    <p><button className="rounded" onClick={(e) => {
-                        e.preventDefault();
-                        likeTweet();
-                    }}>{!liked?"Like":"Unlike"}</button> {likesCount}</p>
-
-                    <p><button className="rounded" onClick={(e) => {
-                        e.preventDefault();
-                        retweet();
-                    }}>Retweet</button> {retweetsCount}</p>
+                    <Like likesCount={likesCount} liked={liked} id={id}/>
+                    <Retweet retweetsCount={retweetsCount} retweeted={retweeted} id={id}/>
 
                     <p><button className="rounded" onClick={(e) => {
                         e.preventDefault();
                         reply();
                     }}>Reply</button> {repliesCount}</p>
                 </div>
+                {/*TODO: call and implement showReplies*/}
+                <a>Show replies</a>
             </div>
-        </a>
+        </div>
     )
 }
 

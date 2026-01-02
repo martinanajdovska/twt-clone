@@ -9,6 +9,6 @@ import java.util.Optional;
 
 public interface FeedService {
     List<TweetResponseDTO> generateFeed(String username, Pageable pageable);
-    Optional<TweetResponseDTO> getTweetById(Long id);
-    UserResponseDTO generateProfileFeed(String username);
+    Optional<TweetResponseDTO> getTweetById(Long id, String username);
+    UserResponseDTO generateProfileFeed(String username, Pageable pageable);
 }

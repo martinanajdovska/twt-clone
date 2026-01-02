@@ -4,8 +4,9 @@ export interface ITweetResponse {
     parentId: string;
     content: string;
     imageUrl: string;
-    replies: bigint[];
-    likesCount: bigint;
-    repliesCount: bigint;
-    retweetsCount: bigint;
+    likesCount: number;
+    repliesCount: number;
+    retweetsCount: number;
+    liked: boolean;
+    retweeted: boolean;
 }

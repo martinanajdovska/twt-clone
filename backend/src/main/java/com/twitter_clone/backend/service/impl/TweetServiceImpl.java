@@ -47,7 +47,10 @@ public class TweetServiceImpl implements TweetService {
         return Optional.of(this.convertToDTO(tweet));
     }
 
+    @Override
     public List<Tweet> findAllByUserUsername(String username) {
+        User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+
         return this.tweetRepository.findAllByUserUsername(username);
     }
 
@@ -81,6 +84,11 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     public Page<Tweet> findTweetsByUserUsernameIn(List<String> followedUsernames, Pageable pageable) {
-        return this.tweetRepository.findTweetsByUserUsernameIn(followedUsernames, pageable);
+        return this.tweetRepository.findTweetsByUserUsernameIsIn(followedUsernames, pageable);
+    }
+
+    @Override
+    public List<Tweet> findAllById(List<Long> ids) {
+        return this.tweetRepository.findAllByIdIsIn(ids);
     }
 }
