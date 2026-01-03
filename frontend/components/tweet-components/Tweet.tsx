@@ -1,8 +1,8 @@
 import { ITweetResponse } from "@/dtos/ITweetResponse";
 import Image from "next/image";
 import React from "react";
-import Like from "../components/Like";
-import Retweet from "@/components/Retweet";
+import Like from "./Like";
+import Retweet from "@/components/tweet-components/Retweet";
 import { useRouter } from "next/navigation";
 import { MessageCircle, MoreHorizontal, Repeat2 } from "lucide-react";
 

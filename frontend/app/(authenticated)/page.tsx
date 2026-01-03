@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import {cookies} from 'next/headers';
-import TweetForm from "@/components/TweetForm";
+import TweetForm from "@/components/tweet-components/TweetForm";
 import Feed from "@/components/Feed";
 import React from "react";
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query'

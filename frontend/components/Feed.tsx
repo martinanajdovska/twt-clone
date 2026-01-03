@@ -2,7 +2,7 @@
 import {useInfiniteQuery} from '@tanstack/react-query'
 import React, {useEffect} from "react";
 import {ITweetResponse} from "@/dtos/ITweetResponse";
-import Tweet from "@/components/Tweet";
+import Tweet from "@/components/tweet-components/Tweet";
 import {useInView} from 'react-intersection-observer';
 import {fetchProfileFeed, fetchTweets} from "@/components/dataFetching";
 

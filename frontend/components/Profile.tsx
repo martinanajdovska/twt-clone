@@ -1,65 +1,64 @@
-import Follow from "@/components/Follow";
-import React from "react";
+import React from 'react'
+import Link from "next/link";
+import TweetForm from "@/components/tweet-components/TweetForm";
+import Feed from "@/components/Feed";
+import { cookies } from "next/headers";
+import { fetchProfileFeed, fetchSelfUsername } from "@/components/dataFetching";
+import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+import ProfileHeader from "@/components/ProfileHeader";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const Profile = async ({username}: {username:string}) => {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+    const queryClient = new QueryClient()
 
 
-const Profile = async ({username, token, isSelf}: {username:string, token:string, isSelf:boolean}) => {
-
-
-    const fetchInfo = async () => {
-        const response = await fetch(`${BASE_URL}/api/users/${username}/info`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Cookie': `token=${token}`,
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Error getting user data');
-        }
-
-        const data = await response.json();
-        return data;
+    if (!token) {
+        return (
+                <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+                    <h1 className="text-3xl font-bold">Welcome!</h1>
+                    <div className="flex gap-4">
+                        <Link href="/register" className="text-primary hover:underline font-medium">Sign Up</Link>
+                        <Link href="/login" className="text-primary hover:underline font-medium">Sign In</Link>
+                    </div>
+                </div>
+        )
     }
 
+    await queryClient.prefetchInfiniteQuery({
+        queryKey: ['profile', username],
+        queryFn: ({ pageParam }) => fetchProfileFeed({ pageParam, username }),
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages, lastPageParam) => {
+            return lastPage.length < 5 ? undefined : lastPageParam + 1;
+        },
+    })
 
-
-    const data = await fetchInfo();
-    console.log(data);
+    const self = await fetchSelfUsername({token});
+    const isSelf = self.username === username;
 
     return (
-        <div className="bg-card border-x border-b border-border p-6 space-y-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl tracking-tight font-bold">{username}</h1>
-                    {data.isFollowingYou && (
-                        <span className="inline-block bg-muted text-muted-foreground text-[11px] px-1.5 py-0.5 rounded font-medium mt-1 uppercase tracking-wider">
-                            Follows you
-                        </span>
-                    )}
-                </div>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <section className="col-span-12 space-y-6">
+                    <HydrationBoundary state={dehydrate(queryClient)}>
+                        <ProfileHeader
+                            token={token}
+                            username={username}
+                            isSelf={isSelf}
+                        />
 
-                {!isSelf && (
-                    <div className="shrink-0">
-                        <Follow username={username} isFollowed={data.followed} />
-                    </div>
-                )}
+                        {isSelf && (
+                            <div className="border-b border-border">
+                                <TweetForm token={token} username={username}/>
+                            </div>
+                        )}
+
+                        <Feed token={token} username={username} />
+                    </HydrationBoundary>
+                </section>
             </div>
-
-            <div className="flex gap-6 items-center pt-2">
-                <div className="flex gap-1 items-center hover:underline cursor-pointer decoration-muted-foreground/50">
-                    <span className="font-bold text-foreground">{data.following}</span>
-                    <span className="text-muted-foreground text-sm">Following</span>
-                </div>
-                <div className="flex gap-1 items-center hover:underline cursor-pointer decoration-muted-foreground/50">
-                    <span className="font-bold text-foreground">{data.followers}</span>
-                    <span className="text-muted-foreground text-sm">Followers</span>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export default Profile;
+        </main>
+    )
+}
+export default Profile

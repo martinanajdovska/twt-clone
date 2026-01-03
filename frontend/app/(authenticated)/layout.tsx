@@ -1,8 +1,8 @@
-import Logout from "@/components/Logout";
+import Logout from "@/components/auth/Logout";
 import Link from "next/link";
 import { Home, User as UserIcon, Bell, Mail } from "lucide-react";
 import Search from "@/components/Search";
-import { ModeToggle } from "@/components/ModeToggle";
+import { ModeToggle } from "@/components/ui/ModeToggle";
 import { fetchSelfUsername } from "@/components/dataFetching";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -29,7 +29,7 @@ export default async function AuthenticatedLayout({children,}: { children: React
                             {/*TODO:*/}
                             {/*<NavLink href="/notifications" icon={<Bell size={26} />} label="Notifications" />*/}
                             {/*<NavLink href="/messages" icon={<Mail size={26} />} label="Messages" />*/}
-                            <NavLink href={`/users/${self.username}`} icon={<UserIcon size={26} />} label="Profile" />
+                            <NavLink href={`/users/${self.username}`} icon={<UserIcon size={26} />} label="ProfileHeader" />
                         </nav>
                         <div className="mt-4">
                             <Logout />

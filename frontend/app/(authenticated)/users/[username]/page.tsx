@@ -1,12 +1,12 @@
 import React from 'react'
-import User from '../../../../components/User'
+import Profile from '../../../../components/Profile'
 
 const Profile = async ({ params }: { params: Promise<{ username: string }> }) => {
     const { username } = await params;
 
     return (
         <div>
-            <User username={username}/>
+            <Profile username={username}/>
         </div>
     )
 }

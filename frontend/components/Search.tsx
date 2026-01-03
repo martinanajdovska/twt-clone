@@ -3,7 +3,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {useDebounce} from 'use-debounce';
-import {usePathname, useRouter, useSearchParams} from 'next/navigation';
+import {useRouter, useSearchParams} from 'next/navigation';
 import { Search as SearchIcon, User } from 'lucide-react';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
