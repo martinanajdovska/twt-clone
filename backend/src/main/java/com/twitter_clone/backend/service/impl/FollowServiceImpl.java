@@ -30,10 +30,10 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public List<String> getFollowedUsernames(String username) {
+    public List<String> getFollowingUsernames(String username) {
         User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
 
-        return this.followRepository.findFollowedUsernamesByFollowerId(user.getId());
+        return this.followRepository.findFollowedUsernamesByUserUsername(username);
     }
 
     @Override
@@ -52,8 +52,8 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public List<UserResponseDTO> getFollowedUsers(String username) {
-        List<String> followedUsernames = this.getFollowedUsernames(username);
+    public List<UserResponseDTO> getFollowingUsers(String username) {
+        List<String> followedUsernames = this.getFollowingUsernames(username);
         List<User> users = new ArrayList<>();
         for (String followed : followedUsernames) {
             User user = this.userService.findByUsername(followed).orElseThrow(()-> new UsernameNotFoundException(followed));
@@ -68,7 +68,7 @@ public class FollowServiceImpl implements FollowService {
     public List<String> getFollowersUsernames(String username) {
         User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
 
-        return this.followRepository.findFollowersUsernames(username);
+        return this.followRepository.findFollowersUsernamesForUserUsername(username);
     }
 
     @Override
@@ -87,6 +87,30 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public FollowResponseDTO convertToDTO(Follow follow) {
         return this.modelMapper.map(follow, FollowResponseDTO.class);
+    }
+
+    @Override
+    public Integer getFollowerCount(String username) {
+        User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
+
+        return this.followRepository.countByFollowedUsername(username);
+    }
+
+    @Override
+    public Integer getFollowingCount(String username) {
+        User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
+
+        return this.followRepository.countByFollowerUsername(username);
+    }
+
+    @Override
+    public boolean existsFollowingYou(String follower, String followed) {
+        return this.followRepository.existsByFollowedUsernameAndFollowerUsername(followed, follower);
+    }
+
+    @Override
+    public boolean existsFollowed(String follower, String followed) {
+        return this.followRepository.existsByFollowerUsernameAndFollowedUsername(follower, followed);
     }
 
 }

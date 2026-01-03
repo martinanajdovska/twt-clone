@@ -1,13 +1,10 @@
 import Link from 'next/link'
-
-import Layout from '../components/layout'
 import {cookies} from 'next/headers';
-import Logout from "@/components/Logout";
 import TweetForm from "@/components/TweetForm";
 import Feed from "@/components/Feed";
 import React from "react";
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query'
-import {fetchTweets} from "@/components/dataFetching";
+import {fetchSelfUsername, fetchTweets} from "@/components/dataFetching";
 
 export default async function Home() {
     const cookieStore = await cookies();
@@ -16,15 +13,19 @@ export default async function Home() {
 
     if (!token) {
         return (
-            <div>
-                <Layout>
-                    <h1>Welcome!</h1>
-                    <p><Link href="/register">Sign Up</Link></p>
-                    <p><Link href="/login">Sign In</Link></p>
-                </Layout>
-            </div>
+                <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                    <h1 className="text-4xl font-bold">Welcome!</h1>
+                    <div className="flex gap-4">
+                        <Link href="/register" className="text-blue-500 hover:underline">Sign Up</Link>
+                        <Link href="/login" className="text-blue-500 hover:underline">Sign In</Link>
+                    </div>
+                </div>
+
         )
     }
+
+    const self = await fetchSelfUsername({token});
+    const username = self.username;
 
     await queryClient.prefetchInfiniteQuery({
         queryKey: ['feed', token],
@@ -39,20 +40,21 @@ export default async function Home() {
     })
 
     return (
-        <div className="container-fluid pt-5">
-            <Logout/>
-            <section className="row">
-                <div className="col-4">
-                    <Link href={`/users/profile`}>Profile</Link>
+        <main className="mt-16 mb-10 max-w-2xl mx-auto px-4">
+            <section className="flex flex-col gap-6">
+
+                <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+                    <TweetForm token={token} username={username}/>
                 </div>
-                <div className="col-8">
-                    <TweetForm token={token} />
+
+                <div className="flex flex-col">
                     <HydrationBoundary state={dehydrate(queryClient)}>
                         <Feed token={token} username=""/>
                     </HydrationBoundary>
                 </div>
+
             </section>
-        </div>
+        </main>
     )
 
 }

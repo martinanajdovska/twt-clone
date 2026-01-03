@@ -1,5 +1,5 @@
 export interface ITweetResponse {
-    id: bigint;
+    id: number;
     username: string;
     parentId: string;
     content: string;

@@ -1,10 +1,11 @@
 'use client'
 import React, { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Image as ImageIcon } from 'lucide-react'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-const TweetForm = ({token}:{token:string}) => {
+const TweetForm = ({token, username}:{token:string, username:string}) => {
     const queryClient = useQueryClient();
     const [content, setContent] = useState("");
 
@@ -27,7 +28,8 @@ const TweetForm = ({token}:{token:string}) => {
         onSuccess: () => {
             setContent("");
 
-            queryClient.invalidateQueries({ queryKey: ['tweets', token] });
+            queryClient.invalidateQueries({ queryKey: ['feed', token] });
+            queryClient.invalidateQueries({ queryKey: ['profile', username] });
         },
         onError: (err) => {
             console.error("Connection error:", err);
@@ -43,26 +45,49 @@ const TweetForm = ({token}:{token:string}) => {
     }
 
     return (
-        <div className="mb-3">
-            <form onSubmit={handleSubmit}>
-                <textarea
-                    name="content"
-                    placeholder="Share your thoughts..."
-                    value={content}
-                    cols={40}
-                    rows={5}
-                    onChange={(e) => setContent(e.target.value)}
-                    disabled={isPending}
-                    className="border p-2 rounded w-full"
-                />
-                <button
-                    className="ms-3 rounded px-4 py-2 bg-blue-500 text-black disabled:bg-gray-400"
-                    type="submit"
-                    disabled={isPending || !content.trim()}
-                >
-                    {isPending ? 'Tweeting...' : 'Tweet'}
-                </button>
-            </form>
+        <div className="p-4 bg-card border-b border-border">
+            <div className="flex gap-3">
+                {/*TODO: profile picture*/}
+                <div className="h-10 w-10 rounded-full bg-accent flex-shrink-0" />
+
+                <form onSubmit={handleSubmit} className="flex-1 group">
+                    <textarea
+                        name="content"
+                        placeholder="What's happening?!"
+                        value={content}
+                        rows={content.split('\n').length > 3 ? 5 : 2}
+                        onChange={(e) => setContent(e.target.value)}
+                        disabled={isPending}
+                        className="w-full bg-transparent border-none text-xl placeholder:text-muted-foreground focus:ring-0 resize-none outline-none py-2 min-h-[50px]"
+                    />
+
+                    <div className="flex items-center justify-between pt-3 border-t border-border mt-2">
+                        <div className="flex items-center gap-1 text-primary">
+                            {/*TODO: upload image*/}
+                            <button type="button" className="p-2 hover:bg-primary/10 rounded-full transition-colors">
+                                <ImageIcon size={20} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            {content.length > 0 && (
+                                <span className={`text-xs ${content.length > 250 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                    {content.length}/280
+                                </span>
+                            )}
+                            <button
+                                type="submit"
+                                disabled={isPending || !content.trim() || content.length > 280}
+                                className="px-5 py-2 bg-primary text-primary-foreground rounded-full font-bold text-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isPending ? (
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                ) : 'Tweet'}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     )
 }

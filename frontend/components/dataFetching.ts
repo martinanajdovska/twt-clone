@@ -30,7 +30,7 @@ export const fetchProfileFeed = async ({pageParam = 0, username = ""}: { pagePar
 
     const data = await response.json();
     const tweets = await data.tweets;
-    return tweets;
+    return data;
 }
 
 // get username of logged in user

@@ -36,7 +36,7 @@ public class FeedServiceImpl implements FeedService {
     public List<TweetResponseDTO> generateFeed(String username, Pageable pageable) {
         User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
 
-        List<String> followedUsernames = this.followService.getFollowedUsernames(username);
+        List<String> followedUsernames = this.followService.getFollowingUsernames(username);
 
         return this.tweetService.findTweetsByUserUsernameIn(followedUsernames, pageable)
                 .stream().map(t-> this.addTweetInfo(t,username))
@@ -44,8 +44,9 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public UserResponseDTO generateProfileFeed(String username, Pageable pageable) {
+    public UserResponseDTO generateProfileFeed(String username, Pageable pageable, String requesterUsername) {
         User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
+        User requester = this.userService.findByUsername(requesterUsername).orElseThrow(()-> new UsernameNotFoundException(requesterUsername));
 
         UserResponseDTO userResponseDTO = this.userService.convertToDTO(user);
 
@@ -56,7 +57,7 @@ public class FeedServiceImpl implements FeedService {
 
         Page<Tweet> page = this.listToPage(tweets, pageable);
 
-        List<TweetResponseDTO> tweetResponseDTOS = page.stream().map(t-> this.addTweetInfo(t,username)).toList();
+        List<TweetResponseDTO> tweetResponseDTOS = page.stream().map(t-> this.addTweetInfo(t,requesterUsername)).toList();
         userResponseDTO.setTweets(tweetResponseDTOS);
 
         return userResponseDTO;

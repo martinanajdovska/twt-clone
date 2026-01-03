@@ -40,30 +40,47 @@ export default function Feed({token, username = ""}: { token: string, username: 
         }
     }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    return status === 'pending' ? (
-        <p>Loading...</p>
-    ) : status === 'error' ? (
-        <p>Error: {error.message}</p>
-    ) : (
-        <>
-            {data.pages.map((group, i) => (
-                <React.Fragment key={i}>
-                    <ul key={i} className="m-0 p-0 list-none">
-                        {group.map((tweet: ITweetResponse) => (
-                            <li key={tweet.id} className="mb-3 tweet">
-                                <Tweet {...tweet} />
-                            </li>
-                        ))}
-                    </ul>
-                </React.Fragment>
-            ))}
-            <div ref={ref} className="h-10 flex justify-center items-center">
+    if (status === 'pending') {
+        return (
+            <div className="flex justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (status === 'error') {
+        return <p className="text-destructive text-center p-4 font-medium">Error: {error.message}</p>;
+    }
+
+    return (
+        <div className="w-full">
+            <div className="flex flex-col">
+                {data.pages.map((group, i) => (
+                    <React.Fragment key={i}>
+                        <div className="divide-y border-x border-b border-border">
+                            {group.map((tweet: ITweetResponse) => (
+                                <div key={tweet.id} className="transition-colors hover:bg-accent/50">
+                                    <Tweet {...tweet} />
+                                    <hr/>
+                                </div>
+                            ))}
+                        </div>
+                    </React.Fragment>
+                ))}
+            </div>
+
+            <div ref={ref} className="py-8 flex justify-center items-center text-muted-foreground text-sm">
                 {isFetchingNextPage ? (
-                    <p>Loading more...</p>
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                        <span>Loading more tweets...</span>
+                    </div>
+                ) : hasNextPage ? (
+                    <span>Scroll for more</span>
                 ) : (
-                    <p>You've reached the end!</p>
+                    <span className="italic font-light">You&apos;ve reached the end of the feed</span>
                 )}
             </div>
-        </>
+        </div>
     )
 }
