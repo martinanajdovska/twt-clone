@@ -21,15 +21,15 @@ export default async function AuthenticatedLayout({children,}: { children: React
     return (
         <div className="min-h-screen bg-background py-10">
             <div className="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-10">
 
-                    <aside className="md:col-span-1 lg:col-span-3 sticky top-10 flex flex-col h-fit">
+                    <aside className="md:col-span-1 lg:col-span-3 sticky top-10 left-10 flex flex-col h-fit">
                         <nav className="flex flex-col gap-1">
                             <NavLink href="/" icon={<Home size={26} />} label="Home" />
                             {/*TODO:*/}
                             {/*<NavLink href="/notifications" icon={<Bell size={26} />} label="Notifications" />*/}
                             {/*<NavLink href="/messages" icon={<Mail size={26} />} label="Messages" />*/}
-                            <NavLink href={`/users/${self.username}`} icon={<UserIcon size={26} />} label="ProfileHeader" />
+                            <NavLink href={`/users/${self.username}`} icon={<UserIcon size={26} />} label="Profile" />
                         </nav>
                         <div className="mt-4">
                             <Logout />
@@ -42,12 +42,12 @@ export default async function AuthenticatedLayout({children,}: { children: React
                         </div>
                     </main>
 
-                    <aside className="hidden lg:block lg:col-span-3 sticky top-10 h-fit">
+                    <aside className="hidden lg:block lg:col-span-3 sticky top-10 -right-15 h-fit">
                         <div className="flex flex-col gap-6">
                             <Search />
                             <div className="p-4 bg-card border border-border rounded-3xl">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-bold">Appearance</span>
+                                <div className="flex items-center">
+                                    <span className="text-sm font-bold">Theme</span>
                                     <ModeToggle />
                                 </div>
                             </div>

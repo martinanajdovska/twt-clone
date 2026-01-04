@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 public class TweetResponseDTO {
     private Long id;
     private String username;
-    private Long parentId;
     private String content;
 
     //    TODO: handle incoming image files and save them to cloudinary?
@@ -18,11 +17,11 @@ public class TweetResponseDTO {
     private Integer retweetsCount;
     private boolean liked;
     private boolean retweeted;
+    private Long parentId;
 
-    public TweetResponseDTO(Long id, String username, Long parentId, String content, String imageUrl, Integer likesCount, Integer repliesCount, Integer retweetsCount, boolean liked, boolean retweeted) {
+    public TweetResponseDTO(Long id, String username,  String content, String imageUrl, Integer likesCount, Integer repliesCount, Integer retweetsCount, boolean liked, boolean retweeted) {
         this.id = id;
         this.username = username;
-        this.parentId = parentId;
         this.content = content;
         this.imageUrl = imageUrl;
         this.likesCount = likesCount;

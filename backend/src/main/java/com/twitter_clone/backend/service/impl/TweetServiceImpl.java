@@ -1,5 +1,6 @@
 package com.twitter_clone.backend.service.impl;
 
+import com.twitter_clone.backend.model.DTO.TweetDetailsDTO;
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
 import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.User;
@@ -13,6 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,10 +50,10 @@ public class TweetServiceImpl implements TweetService {
     }
 
     @Override
-    public List<Tweet> findAllByUserUsername(String username) {
+    public List<Tweet> findAllParentTweetsByUserUsername(String username) {
         User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
 
-        return this.tweetRepository.findAllByUserUsername(username);
+        return this.tweetRepository.findAllByUserUsernameAndParentTweetIsNull(username);
     }
 
     @Override
@@ -65,6 +67,7 @@ public class TweetServiceImpl implements TweetService {
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id, String username) {
         Tweet tweet = this.tweetRepository.findById(id).orElseThrow(() -> new TweetNotFoundException(id));
         User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
@@ -90,5 +93,13 @@ public class TweetServiceImpl implements TweetService {
     @Override
     public List<Tweet> findAllById(List<Long> ids) {
         return this.tweetRepository.findAllByIdIsIn(ids);
+    }
+
+    @Override
+    public List<Tweet> findAllRepliesOfTweet(Long id, Pageable pageable) {
+        Tweet tweet = this.tweetRepository.findById(id).orElseThrow(()->new TweetNotFoundException(id));
+        List<Tweet> replies = this.tweetRepository.findAllByParentTweet(tweet, pageable);
+
+        return replies;
     }
 }

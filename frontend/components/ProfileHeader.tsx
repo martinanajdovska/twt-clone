@@ -35,9 +35,9 @@ const ProfileHeader = async ({username, token, isSelf}: {username:string, token:
                 <div>
                     <h1 className="text-2xl tracking-tight font-bold">{username}</h1>
                     {data.isFollowingYou && (
-                        <span className="inline-block bg-muted text-muted-foreground text-[11px] px-1.5 py-0.5 rounded font-medium mt-1 uppercase tracking-wider">
+                        <p className="inline-block bg-muted text-muted-foreground text-[11px] px-1.5 py-0.5 rounded font-medium mt-1 uppercase tracking-wider">
                             Follows you
-                        </span>
+                        </p>
                     )}
                 </div>
 

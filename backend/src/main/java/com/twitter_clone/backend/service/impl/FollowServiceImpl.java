@@ -11,6 +11,7 @@ import com.twitter_clone.backend.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +47,7 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
+    @Transactional
     public void delete(String follower, String followed) {
         Follow follow = this.followRepository.findByFollowerUsernameAndFollowedUsername(follower, followed).orElseThrow(FollowNotFoundException::new);
         this.followRepository.delete(follow);

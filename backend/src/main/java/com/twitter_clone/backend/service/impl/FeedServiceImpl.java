@@ -1,5 +1,6 @@
 package com.twitter_clone.backend.service.impl;
 
+import com.twitter_clone.backend.model.DTO.TweetDetailsDTO;
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
 import com.twitter_clone.backend.model.DTO.UserResponseDTO;
 import com.twitter_clone.backend.model.Tweet;
@@ -50,10 +51,12 @@ public class FeedServiceImpl implements FeedService {
 
         UserResponseDTO userResponseDTO = this.userService.convertToDTO(user);
 
-        List<Tweet> tweets = this.tweetService.findAllByUserUsername(username);
+        List<Tweet> tweets = this.tweetService.findAllParentTweetsByUserUsername(username);
         List<Tweet> retweets = this.retweetService.findRetweetsByUserUsername(username);
 
         tweets.addAll(retweets);
+
+        tweets.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
 
         Page<Tweet> page = this.listToPage(tweets, pageable);
 
@@ -80,11 +83,20 @@ public class FeedServiceImpl implements FeedService {
         return Optional.of(addTweetInfo(tweet, username));
     }
 
+    @Override
+    public Optional<TweetDetailsDTO> getTweetDetails(Long id, String username, Pageable pageable) {
+        TweetResponseDTO tweetResponseDTO = this.getTweetById(id, username).orElseThrow(()->new TweetNotFoundException(id));
+        List<Tweet> replies = this.tweetService.findAllRepliesOfTweet(id, pageable);
+        List<TweetResponseDTO> repliesDTO = replies.stream().map(t-> this.addTweetInfo(t,username)).toList();
+        return Optional.of(new TweetDetailsDTO(tweetResponseDTO, repliesDTO));
+    }
+
     public TweetResponseDTO addTweetInfo(Tweet tweet, String username) {
         TweetResponseDTO tweetResponseDTO = this.tweetService.convertToDTO(tweet);
         tweetResponseDTO.setLikesCount(this.likeService.countLikes(tweetResponseDTO.getId()));
         tweetResponseDTO.setRepliesCount(tweet.getReplies().size());
         tweetResponseDTO.setRetweetsCount(this.retweetService.countRetweets(tweet.getId()));
+        tweetResponseDTO.setParentId(tweet.getParentTweet()!=null?tweet.getParentTweet().getId():null);
         // display tweet as already liked/retweeted if user has done that before
         tweetResponseDTO.setLiked(this.likeService.existsByTweetIdAndUsername(tweet.getId(),username));
         tweetResponseDTO.setRetweeted(this.retweetService.existsByTweetIdAndUsername(tweet.getId(),username));

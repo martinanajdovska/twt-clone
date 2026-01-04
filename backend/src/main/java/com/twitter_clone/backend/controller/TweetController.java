@@ -1,5 +1,6 @@
 package com.twitter_clone.backend.controller;
 
+import com.twitter_clone.backend.model.DTO.TweetDetailsDTO;
 import com.twitter_clone.backend.model.DTO.TweetRequestDTO;
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
 import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/tweets")
@@ -67,6 +69,19 @@ public class TweetController {
     public ResponseEntity<TweetResponseDTO> getTweet(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         return this.feedService.getTweetById(id, userDetails.getUsername())
                 .map(tweet->ResponseEntity.ok().body(tweet))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/details")
+    public ResponseEntity<TweetDetailsDTO> getDetails(@PathVariable Long id,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "5") int size,
+                                                      @AuthenticationPrincipal UserDetails userDetails){
+        Sort sort = Sort.by("createdAt").descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return this.feedService.getTweetDetails(id, userDetails.getUsername(), pageable)
+                .map(res->ResponseEntity.ok().body(res))
                 .orElse(ResponseEntity.notFound().build());
     }
 }

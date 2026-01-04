@@ -40,21 +40,21 @@ export default async function Home() {
     })
 
     return (
-        <main className="mt-16 mb-10 max-w-2xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 mt-10">
             <section className="flex flex-col gap-6">
 
                 <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-                    <TweetForm token={token} username={username}/>
+                    <TweetForm username={username}/>
                 </div>
 
                 <div className="flex flex-col">
                     <HydrationBoundary state={dehydrate(queryClient)}>
-                        <Feed token={token} username=""/>
+                        <Feed token={token} username={username} isSelf={false} isProfile={false}/>
                     </HydrationBoundary>
                 </div>
 
             </section>
-        </main>
+        </div>
     )
 
 }

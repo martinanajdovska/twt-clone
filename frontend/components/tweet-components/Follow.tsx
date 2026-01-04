@@ -57,7 +57,7 @@ const Follow = ({username, isFollowed}:
                         Processing...
                     </span>
                 ) : (
-                    isFollowedState ? "Following" : "Follow"
+                    isFollowedState ? "Unfollow" : "Follow"
                 )}
             </button>
         </div>

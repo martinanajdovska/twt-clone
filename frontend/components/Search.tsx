@@ -54,8 +54,8 @@ const Search = () => {
 
     return (
         <div className="relative w-full" ref={containerRef}>
-            <div className="relative group">
-                <div className="absolute inset-y-0 -left-7 pl-4 flex items-center pointer-events-none">
+            <div className="relative group bg-secondary rounded-lg">
+                <div className="absolute inset-y-0 -left-5 pl-4 flex items-center pointer-events-none">
                     <SearchIcon size={18} className="text-muted-foreground group-focus-within:text-primary transition-colors" />
                 </div>
                 <input

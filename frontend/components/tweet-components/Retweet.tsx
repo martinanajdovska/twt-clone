@@ -1,14 +1,17 @@
+'use client'
 import React, {useState} from 'react'
-import {useMutation} from "@tanstack/react-query";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 import { Repeat2 } from "lucide-react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-const Retweet = ({retweetsCount, retweeted, id}: { retweetsCount: number, retweeted: boolean, id: number }) => {
+const Retweet = ({retweetsCount, retweeted, id, username}: { retweetsCount: number, retweeted: boolean, id: number, username:string }) => {
+    const queryClient = useQueryClient();
+
     const [isRetweetedState, setIsRetweetedState] = useState(retweeted)
     const [retweetsCountState, setRetweetsCountState] = useState(retweetsCount)
 
-    const {mutate: retweetTweet, isPending} = useMutation({
+    const {mutate: handleRetweet, isPending} = useMutation({
         mutationFn: async () => {
             const res = await fetch(`${BASE_URL}/api/tweets/${id}/retweets`, {
                 method: `${isRetweetedState ? "DELETE" : "POST"}`,
@@ -28,6 +31,7 @@ const Retweet = ({retweetsCount, retweeted, id}: { retweetsCount: number, retwee
         onSuccess: () => {
             setIsRetweetedState(!isRetweetedState);
             setRetweetsCountState(prev => (isRetweetedState ? prev - 1 : prev + 1));
+            queryClient.invalidateQueries({queryKey: ['profile', username]});
         },
         onError: (err: Error) => {
             alert(err.message);
@@ -40,7 +44,7 @@ const Retweet = ({retweetsCount, retweeted, id}: { retweetsCount: number, retwee
                 disabled={isPending}
                 onClick={(e) => {
                     e.preventDefault();
-                    retweetTweet();
+                    handleRetweet();
                 }}
                 className={`
                     p-2 rounded-full transition-all duration-200
@@ -56,6 +60,7 @@ const Retweet = ({retweetsCount, retweeted, id}: { retweetsCount: number, retwee
                     className={`transition-transform duration-300 ${
                         isRetweetedState ? "rotate-180" : "rotate-0"
                     } ${isPending ? "animate-pulse" : ""}`}
+                    fill = {isRetweetedState ? "green" : "none"}
                 />
             </button>
 

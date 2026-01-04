@@ -1,3 +1,4 @@
+'use client'
 import {useMutation} from "@tanstack/react-query";
 import React, {useState} from 'react'
 import { Heart } from "lucide-react";
@@ -8,7 +9,7 @@ const Like = ({likesCount, liked, id}: { likesCount: number, liked: boolean, id:
     const [isLikedState, setIsLikedState] = useState(liked)
     const [likesCountState, setLikesCountState] = useState(likesCount)
 
-    const {mutate: likeTweet, isPending} = useMutation({
+    const {mutate: handleLike, isPending} = useMutation({
         mutationFn: async () => {
             const res = await fetch(`${BASE_URL}/api/tweets/${id}/likes`, {
                 method: `${isLikedState ? "DELETE" : "POST"}`,
@@ -40,7 +41,7 @@ const Like = ({likesCount, liked, id}: { likesCount: number, liked: boolean, id:
                 disabled={isPending}
                 onClick={(e) => {
                     e.preventDefault();
-                    likeTweet();
+                    handleLike();
                 }}
                 className={`
                     p-2 rounded-full transition-all duration-200
@@ -53,7 +54,7 @@ const Like = ({likesCount, liked, id}: { likesCount: number, liked: boolean, id:
             >
                 <Heart
                     size={18}
-                    fill={isLikedState ? "currentColor" : "none"}
+                    fill={isLikedState ? "red" : "none"}
                     className={isLikedState ? "animate-in zoom-in duration-300" : ""}
                 />
             </button>

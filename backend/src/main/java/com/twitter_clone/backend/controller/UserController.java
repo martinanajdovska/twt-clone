@@ -40,7 +40,7 @@ public class UserController {
                                                       @PathVariable String username,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            Sort sort = Sort.by("created_at").descending();
+            Sort sort = Sort.by("created_at").ascending();
             Pageable pageable = PageRequest.of(page, size, sort);
 
             UserResponseDTO responseDTO = this.feedService.generateProfileFeed(username, pageable, userDetails.getUsername());

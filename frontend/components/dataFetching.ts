@@ -41,6 +41,7 @@ export const fetchSelfUsername = async ({token}:{token:string}) => {
             'Content-Type': 'application/json',
             'Cookie': `token=${token}`,
         },
+        credentials: 'include'
     });
     if (!response.ok) {
         throw new Error('Error getting user data');

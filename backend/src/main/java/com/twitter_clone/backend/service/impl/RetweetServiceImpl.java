@@ -11,6 +11,7 @@ import com.twitter_clone.backend.service.TweetService;
 import com.twitter_clone.backend.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +50,7 @@ public class RetweetServiceImpl implements RetweetService {
     }
 
     @Override
+    @Transactional
     public void delete(String username, Long tweetId) {
         Retweet retweet = this.retweetRepository.findByTweetIdAndUserUsername(tweetId,username).orElseThrow(RetweetNotFoundException::new);
         if (!retweet.getUser().getUsername().equals(username)) {

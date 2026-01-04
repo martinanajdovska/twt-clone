@@ -1,12 +1,30 @@
 'use client'
-import {useInfiniteQuery} from '@tanstack/react-query'
-import React, {useEffect} from "react";
-import {ITweetResponse} from "@/dtos/ITweetResponse";
+import React, {useEffect} from 'react'
 import Tweet from "@/components/tweet-components/Tweet";
-import {useInView} from 'react-intersection-observer';
-import {fetchProfileFeed, fetchTweets} from "@/components/dataFetching";
+import TweetForm from "@/components/tweet-components/TweetForm";
+import {ITweetResponse} from "@/dtos/ITweetResponse";
+import {useInfiniteQuery} from "@tanstack/react-query";
+import {useInView} from "react-intersection-observer";
 
-export default function Feed({token, username, isSelf, isProfile}: { token: string, username: string , isSelf: boolean, isProfile:boolean }) {
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
+export const fetchTweetInfo = async ({pageParam=0, id}:{pageParam:number, id:number}) => {
+    const response = await fetch(`${BASE_URL}/api/tweets/${id}/details?page=${pageParam}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+    });
+    if (!response.ok) {
+        throw new Error('Error getting tweet data');
+    }
+
+    const data = await response.json();
+    return data;
+}
+
+const TweetDetails = ({id, username}:{id:number, username:string}) => {
     const {ref, inView} = useInView();
 
     const {
@@ -18,19 +36,11 @@ export default function Feed({token, username, isSelf, isProfile}: { token: stri
         isFetchingNextPage,
         status,
     } = useInfiniteQuery({
-        // check if trying to load a user profile or normal feed
-        // and use the relevant key and function for caching
-        queryKey: isProfile ? ['profile', username] : ['feed', token],
-        queryFn: async ({ pageParam }) => {
-            const res = isProfile
-                ? await fetchProfileFeed({ pageParam, username })
-                : await fetchTweets({ pageParam });
-            // normalize the api response
-            return Array.isArray(res) ? res : res.tweets;
-        },
+        queryKey: ['tweet', id],
+        queryFn: ({ pageParam }) => fetchTweetInfo({ pageParam , id}),
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages, lastPageParam) => {
-            return lastPage.length < 5 ? undefined : lastPageParam + 1;
+            return lastPage.replies.length < 5 ? undefined : lastPageParam + 1;
         },
     })
 
@@ -52,15 +62,22 @@ export default function Feed({token, username, isSelf, isProfile}: { token: stri
         return <p className="text-destructive text-center p-4 font-medium">Error: {error.message}</p>;
     }
 
+    const tweet = data.pages[0].tweet;
+    const isSelf = username === tweet.username;
+
     return (
         <div className="w-full">
             <div className="flex flex-col">
+                <div>
+                    <Tweet tweet={tweet} username={username} isSelf={isSelf} />
+                    <TweetForm username={username} parentId={tweet.id}/>
+                </div>
                 {data.pages.map((group, i) => (
                     <React.Fragment key={i}>
                         <div className="divide-y border-x border-b border-border">
-                            {group.map((tweet: ITweetResponse) => (
-                                <div key={tweet.id} className="transition-colors hover:bg-accent/50">
-                                    <Tweet tweet={tweet} username={username} isSelf={isSelf} />
+                            {group.replies.map((reply: ITweetResponse) => (
+                                <div key={reply.id} className="transition-colors hover:bg-accent/50">
+                                    <Tweet tweet={reply} username={username} isSelf={reply.username===username} />
                                     <hr/>
                                 </div>
                             ))}
@@ -84,3 +101,4 @@ export default function Feed({token, username, isSelf, isProfile}: { token: stri
         </div>
     )
 }
+export default TweetDetails

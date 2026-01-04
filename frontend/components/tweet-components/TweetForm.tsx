@@ -1,19 +1,19 @@
 'use client'
-import React, { useState } from 'react'
+import React, {useState} from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Image as ImageIcon } from 'lucide-react'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-const TweetForm = ({token, username}:{token:string, username:string}) => {
+const TweetForm = ({username, parentId, onSuccess}:{username:string, parentId?:number, onSuccess?: ()=>void}) => {
     const queryClient = useQueryClient();
     const [content, setContent] = useState("");
 
     const { mutate: createTweet, isPending } = useMutation({
-        mutationFn: async (newTweet: { content: string }) => {
+        mutationFn: async (content:string ) => {
             const response = await fetch(`${BASE_URL}/api/tweets`, {
                 method: "POST",
-                body: JSON.stringify(newTweet),
+                body: JSON.stringify({content: content, parentId: parentId}),
                 headers: {
                     "Content-Type": "application/json"
                 },
@@ -27,9 +27,10 @@ const TweetForm = ({token, username}:{token:string, username:string}) => {
         },
         onSuccess: () => {
             setContent("");
-
-            queryClient.invalidateQueries({ queryKey: ['feed', token] });
             queryClient.invalidateQueries({ queryKey: ['profile', username] });
+            queryClient.invalidateQueries({ queryKey: ['tweet', parentId?.toString()] });
+
+            if (onSuccess) onSuccess();
         },
         onError: (err) => {
             console.error("Connection error:", err);
@@ -41,7 +42,7 @@ const TweetForm = ({token, username}:{token:string, username:string}) => {
         e.preventDefault();
         if (!content.trim()) return;
 
-        createTweet({ content });
+        createTweet(content);
     }
 
     return (

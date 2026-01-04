@@ -12,9 +12,9 @@ import com.twitter_clone.backend.repository.LikeRepository;
 import com.twitter_clone.backend.service.LikeService;
 import com.twitter_clone.backend.service.TweetService;
 import com.twitter_clone.backend.service.UserService;
-import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
