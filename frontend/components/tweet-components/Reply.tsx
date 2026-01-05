@@ -10,7 +10,7 @@ import { useState } from "react"
 import Tweet from "@/components/tweet-components/Tweet";
 import {ITweetResponse} from "@/dtos/ITweetResponse";
 
-const Reply = ({ tweet, username, isSelf, repliesCount }: { tweet: ITweetResponse, username:string, isSelf:boolean, repliesCount:number }) => {
+const Reply = ({ tweet, username, repliesCount }: { tweet: ITweetResponse, username:string, repliesCount:number }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [repliesCountState, setRepliesCountState] = useState(repliesCount)
 
@@ -27,7 +27,7 @@ const Reply = ({ tweet, username, isSelf, repliesCount }: { tweet: ITweetRespons
 
             <DialogContent className="sm:max-w-[600px] p-0 gap-0 border-gray-800">
                 <div className="p-4">
-                    <Tweet tweet={tweet} username={username} isSelf={false}/>
+                    <Tweet tweet={tweet} username={username}/>
                     <hr/>
                     <div className="mt-2">
                         <TweetForm username={username} parentId={tweet.id} onSuccess={() => {

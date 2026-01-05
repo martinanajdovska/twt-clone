@@ -11,7 +11,7 @@ const TweetForm = ({username, parentId, onSuccess}:{username:string, parentId?:n
 
     const { mutate: createTweet, isPending } = useMutation({
         mutationFn: async (content:string ) => {
-            const response = await fetch(`${BASE_URL}/api/tweets`, {
+            const res = await fetch(`${BASE_URL}/api/tweets`, {
                 method: "POST",
                 body: JSON.stringify({content: content, parentId: parentId}),
                 headers: {
@@ -20,10 +20,10 @@ const TweetForm = ({username, parentId, onSuccess}:{username:string, parentId?:n
                 credentials: 'include'
             });
 
-            if (!response.ok) {
-                throw new Error("Error creating tweet");
-            }
-            return response;
+            if (!res.ok) {
+                const error = await res.text()
+                throw new Error(error)            }
+            return res;
         },
         onSuccess: () => {
             setContent("");
@@ -33,8 +33,7 @@ const TweetForm = ({username, parentId, onSuccess}:{username:string, parentId?:n
             if (onSuccess) onSuccess();
         },
         onError: (err) => {
-            console.error("Connection error:", err);
-            alert("Could not create tweet. Please try again.");
+            alert(err.message);
         }
     });
 
@@ -48,8 +47,14 @@ const TweetForm = ({username, parentId, onSuccess}:{username:string, parentId?:n
     return (
         <div className="p-4 bg-card border-b border-border">
             <div className="flex gap-3">
-                {/*TODO: profile picture*/}
-                <div className="h-10 w-10 rounded-full bg-accent flex-shrink-0" />
+                <div className="flex flex-col items-center">
+                    <div
+                        className="h-10 w-10 rounded-full bg-accent flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center font-bold text-sm"
+                    >
+                        {/*TODO: show profile picture instead*/}
+                        {username.charAt(0).toUpperCase()}
+                    </div>
+                </div>
 
                 <form onSubmit={handleSubmit} className="flex-1 group">
                     <textarea

@@ -1,11 +1,15 @@
 package com.twitter_clone.backend.controller;
 
 import com.twitter_clone.backend.model.DTO.RetweetResponseDTO;
+import com.twitter_clone.backend.model.exceptions.LikeNotFoundException;
+import com.twitter_clone.backend.model.exceptions.RetweetNotFoundException;
+import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
 import com.twitter_clone.backend.service.RetweetService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,20 +22,19 @@ public class RetweetController {
     }
 
     @PostMapping("/{tweetId}/retweets")
-    public ResponseEntity<RetweetResponseDTO> retweetTweet(@PathVariable Long tweetId, @AuthenticationPrincipal UserDetails userDetails) {
-        return this.retweetService.save(tweetId, userDetails.getUsername())
-                .map(retweet -> ResponseEntity.status(HttpStatus.CREATED).body(retweet))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
+    public ResponseEntity<RetweetResponseDTO> save(@PathVariable Long tweetId, @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(this.retweetService.save(tweetId, userDetails.getUsername()));
     }
 
     @GetMapping("/{tweetId}/retweets")
-    public ResponseEntity<Integer> countRetweets(@PathVariable Long tweetId) {
+    public ResponseEntity<Integer> count(@PathVariable Long tweetId) {
         return ResponseEntity.ok(this.retweetService.countRetweets(tweetId));
     }
 
     @DeleteMapping("/{tweetId}/retweets")
-    public ResponseEntity<Void> unRetweetTweet(@PathVariable Long tweetId, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Void> delete(@PathVariable Long tweetId, @AuthenticationPrincipal UserDetails userDetails) {
         this.retweetService.delete(userDetails.getUsername(), tweetId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

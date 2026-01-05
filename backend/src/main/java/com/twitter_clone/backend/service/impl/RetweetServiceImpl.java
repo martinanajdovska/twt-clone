@@ -36,12 +36,12 @@ public class RetweetServiceImpl implements RetweetService {
     }
 
     @Override
-    public Optional<RetweetResponseDTO> save(Long tweetId, String username) {
+    public RetweetResponseDTO save(Long tweetId, String username) {
         User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
         Tweet tweet = this.tweetService.findById(tweetId).orElseThrow(()->new TweetNotFoundException(tweetId));
 
         Retweet retweet = this.retweetRepository.save(new Retweet(user, tweet));
-        return Optional.of(this.convertToDTO(retweet));
+        return this.convertToDTO(retweet);
     }
 
     @Override
@@ -52,10 +52,9 @@ public class RetweetServiceImpl implements RetweetService {
     @Override
     @Transactional
     public void delete(String username, Long tweetId) {
-        Retweet retweet = this.retweetRepository.findByTweetIdAndUserUsername(tweetId,username).orElseThrow(RetweetNotFoundException::new);
-        if (!retweet.getUser().getUsername().equals(username)) {
-            throw new ActionNotAllowedException("Can't remove a retweet not made by this user");
-        }
+        Retweet retweet = this.retweetRepository.findByTweetIdAndUserUsername(tweetId,username)
+                .orElseThrow(()->new RetweetNotFoundException(username, tweetId));
+
         this.retweetRepository.delete(retweet);
     }
 
@@ -67,10 +66,15 @@ public class RetweetServiceImpl implements RetweetService {
     }
 
     @Override
-    public List<Tweet> findRetweetsByUserUsername(String username) {
+    public List<Tweet> findRetweetsByUsername(String username) {
         User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
 
         List<Long> ids = this.retweetRepository.findTweetsIdsByUserUsername(username);
         return this.tweetService.findAllById(ids);
+    }
+
+    @Override
+    public List<Retweet> findRetweetsByUsernames(List<String> usernames) {
+        return this.retweetRepository.findRetweetsByUserUsernameIsIn(usernames);
     }
 }

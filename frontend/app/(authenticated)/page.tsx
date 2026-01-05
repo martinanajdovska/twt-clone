@@ -49,7 +49,7 @@ export default async function Home() {
 
                 <div className="flex flex-col">
                     <HydrationBoundary state={dehydrate(queryClient)}>
-                        <Feed token={token} username={username} isSelf={false} isProfile={false}/>
+                        <Feed token={token} username={username} isProfile={false}/>
                     </HydrationBoundary>
                 </div>
 

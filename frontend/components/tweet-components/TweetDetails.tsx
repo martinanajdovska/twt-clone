@@ -9,18 +9,19 @@ import {useInView} from "react-intersection-observer";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export const fetchTweetInfo = async ({pageParam=0, id}:{pageParam:number, id:number}) => {
-    const response = await fetch(`${BASE_URL}/api/tweets/${id}/details?page=${pageParam}`, {
+    const res = await fetch(`${BASE_URL}/api/tweets/${id}/details?page=${pageParam}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
         },
         credentials: 'include'
     });
-    if (!response.ok) {
-        throw new Error('Error getting tweet data');
+    if (!res.ok) {
+        const error = await res.text()
+        throw new Error(error)
     }
 
-    const data = await response.json();
+    const data = await res.json();
     return data;
 }
 
@@ -63,21 +64,22 @@ const TweetDetails = ({id, username}:{id:number, username:string}) => {
     }
 
     const tweet = data.pages[0].tweet;
-    const isSelf = username === tweet.username;
 
     return (
         <div className="w-full">
             <div className="flex flex-col">
                 <div>
-                    <Tweet tweet={tweet} username={username} isSelf={isSelf} />
+                    <Tweet tweet={tweet} username={username} />
+                    <hr/>
                     <TweetForm username={username} parentId={tweet.id}/>
+                    <hr/>
                 </div>
                 {data.pages.map((group, i) => (
                     <React.Fragment key={i}>
                         <div className="divide-y border-x border-b border-border">
                             {group.replies.map((reply: ITweetResponse) => (
                                 <div key={reply.id} className="transition-colors hover:bg-accent/50">
-                                    <Tweet tweet={reply} username={username} isSelf={reply.username===username} />
+                                    <Tweet tweet={reply} username={username} />
                                     <hr/>
                                 </div>
                             ))}

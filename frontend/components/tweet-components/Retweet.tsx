@@ -22,8 +22,8 @@ const Retweet = ({retweetsCount, retweeted, id, username}: { retweetsCount: numb
             });
 
             if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || "Error retweeting tweet");
+                const error = await res.text()
+                throw new Error(error)
             }
 
             return res;

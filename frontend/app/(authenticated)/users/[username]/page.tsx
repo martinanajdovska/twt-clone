@@ -2,7 +2,7 @@ import React from 'react'
 import {cookies} from "next/headers";
 import {dehydrate, HydrationBoundary, QueryClient} from "@tanstack/react-query";
 import Link from "next/link";
-import {fetchProfileFeed, fetchSelfUsername} from "@/components/dataFetching";
+import {fetchProfileFeed, fetchProfileInfo, fetchSelfUsername} from "@/components/dataFetching";
 import ProfileHeader from "@/components/ProfileHeader";
 import TweetForm from "@/components/tweet-components/TweetForm";
 import Feed from "@/components/Feed";
@@ -26,14 +26,20 @@ const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }
         )
     }
 
-    await queryClient.prefetchInfiniteQuery({
-        queryKey: ['profile', username],
-        queryFn: ({ pageParam }) => fetchProfileFeed({ pageParam, username }),
-        initialPageParam: 0,
-        getNextPageParam: (lastPage, allPages, lastPageParam) => {
-            return lastPage.length < 5 ? undefined : lastPageParam + 1;
-        },
-    })
+    await Promise.all([
+        queryClient.prefetchInfiniteQuery({
+            queryKey: ['profile', username],
+            queryFn: ({ pageParam }) => fetchProfileFeed({ pageParam, username }),
+            initialPageParam: 0,
+            getNextPageParam: (lastPage, allPages, lastPageParam) => {
+                return lastPage.length < 5 ? undefined : lastPageParam + 1;
+            },
+        }),
+        queryClient.prefetchQuery({
+            queryKey: ['profileHeader', username],
+            queryFn: () => fetchProfileInfo({username, token}),
+        }),
+    ]);
 
     const self = await fetchSelfUsername({token});
     const isSelf = self.username === username;
@@ -55,7 +61,7 @@ const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }
                             </div>
                         )}
 
-                        <Feed token={token} username={username} isSelf={isSelf} isProfile={true}/>
+                        <Feed token={token} username={username} isProfile={true}/>
                     </HydrationBoundary>
                 </section>
             </div>

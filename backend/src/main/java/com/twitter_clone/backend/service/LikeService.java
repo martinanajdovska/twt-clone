@@ -7,7 +7,7 @@ import com.twitter_clone.backend.model.Like;
 import java.util.Optional;
 
 public interface LikeService {
-    Optional<LikeResponseDTO> save(String username, Long tweetId);
+    LikeResponseDTO save(String username, Long tweetId);
     Integer countLikes(Long tweetId);
     void delete(String username, Long tweetId);
     LikeResponseDTO convertToDTO(Like like);

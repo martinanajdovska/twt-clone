@@ -19,9 +19,9 @@ const Delete = ({username, id, parentId}: { username: string, id: number, parent
                 credentials: 'include'
             });
 
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || "Error deleting tweet");
+            if (res.status !== 204) {
+                const error = await res.text()
+                throw new Error(error)
             }
 
             return res;

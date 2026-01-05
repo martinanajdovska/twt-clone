@@ -26,9 +26,9 @@ const SignInForm = () => {
                 credentials: 'include'
             });
 
-            if (res.status !== 201) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || "Registration failed");
+            if (!res.ok) {
+                const error = await res.text()
+                throw new Error(error)
             }
 
             return res;
@@ -57,7 +57,7 @@ const SignInForm = () => {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
-            <div className="w-full max-w-md bg-card border border-border rounded-2xl p-8 shadow-sm">
+            <div className="w-full max-w-md bg-card border border-border rounded-2xl p-8 shadow-sm bg-secondary">
                 <div className="flex flex-col space-y-2 text-center mb-8">
                     <h1 className="text-3xl font-bold tracking-tight text-foreground">Create an account</h1>
                     <p className="text-sm text-muted-foreground">Enter your details below to sign up</p>

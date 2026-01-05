@@ -31,28 +31,23 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public List<String> getFollowingUsernames(String username) {
-        User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
-
-        return this.followRepository.findFollowedUsernamesByUserUsername(username);
-    }
-
-    @Override
-    public Optional<FollowResponseDTO> save(String follower, String followed) {
+    public FollowResponseDTO save(String follower, String followed) {
         User followerUser = this.userService.findByUsername(follower).orElseThrow(()-> new UsernameNotFoundException(follower));
         User followedUser = this.userService.findByUsername(followed).orElseThrow(()-> new UsernameNotFoundException(followed));
 
         Follow follow = this.followRepository.save(new Follow(followerUser, followedUser));
-        return Optional.of(convertToDTO(follow));
+        return convertToDTO(follow);
     }
 
     @Override
     @Transactional
     public void delete(String follower, String followed) {
-        Follow follow = this.followRepository.findByFollowerUsernameAndFollowedUsername(follower, followed).orElseThrow(FollowNotFoundException::new);
+        Follow follow = this.followRepository.findByFollowerUsernameAndFollowedUsername(follower, followed)
+                .orElseThrow(()->new FollowNotFoundException(follower,followed));
         this.followRepository.delete(follow);
     }
 
+//    TODO: redo this with UserInfoDTO instead
     @Override
     public List<UserResponseDTO> getFollowingUsers(String username) {
         List<String> followedUsernames = this.getFollowingUsernames(username);
@@ -66,13 +61,7 @@ public class FollowServiceImpl implements FollowService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<String> getFollowersUsernames(String username) {
-        User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
-
-        return this.followRepository.findFollowersUsernamesForUserUsername(username);
-    }
-
+    //    TODO: redo this with UserInfoDTO instead
     @Override
     public List<UserResponseDTO> getFollowersUsers(String username) {
         List<String> followersUsernames = this.getFollowersUsernames(username);
@@ -84,6 +73,20 @@ public class FollowServiceImpl implements FollowService {
 
         return users.stream().map(this.userService::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<String> getFollowingUsernames(String username) {
+        User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
+
+        return this.followRepository.findFollowedUsernamesByUserUsername(username);
+    }
+
+    @Override
+    public List<String> getFollowersUsernames(String username) {
+        User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
+
+        return this.followRepository.findFollowersUsernamesForUserUsername(username);
     }
 
     @Override

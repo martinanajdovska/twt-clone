@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface TweetRepository extends JpaRepository<Tweet,Long> {
-
+    List<Tweet> findAllByUserUsernameIsInAndParentTweetIsNull(List<String> usernames);
     List<Tweet> findAllByUserUsernameAndParentTweetIsNull(String username);
     Page<Tweet> findTweetsByUserUsernameIsIn(List<String> usernames, Pageable pageable);
     List<Tweet> findAllByIdIsIn(List<Long> ids);

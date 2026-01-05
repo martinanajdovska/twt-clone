@@ -6,7 +6,7 @@ import Tweet from "@/components/tweet-components/Tweet";
 import {useInView} from 'react-intersection-observer';
 import {fetchProfileFeed, fetchTweets} from "@/components/dataFetching";
 
-export default function Feed({token, username, isSelf, isProfile}: { token: string, username: string , isSelf: boolean, isProfile:boolean }) {
+export default function Feed({token, username, isProfile}: { token: string, username: string , isProfile:boolean }) {
     const {ref, inView} = useInView();
 
     const {
@@ -26,7 +26,7 @@ export default function Feed({token, username, isSelf, isProfile}: { token: stri
                 ? await fetchProfileFeed({ pageParam, username })
                 : await fetchTweets({ pageParam });
             // normalize the api response
-            return Array.isArray(res) ? res : res.tweets;
+            return Array.isArray(res) ? res : res.content;
         },
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages, lastPageParam) => {
@@ -60,7 +60,7 @@ export default function Feed({token, username, isSelf, isProfile}: { token: stri
                         <div className="divide-y border-x border-b border-border">
                             {group.map((tweet: ITweetResponse) => (
                                 <div key={tweet.id} className="transition-colors hover:bg-accent/50">
-                                    <Tweet tweet={tweet} username={username} isSelf={isSelf} />
+                                    <Tweet tweet={tweet} username={username} />
                                     <hr/>
                                 </div>
                             ))}

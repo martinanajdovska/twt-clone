@@ -9,9 +9,10 @@ import java.util.Optional;
 
 public interface RetweetService {
     boolean existsByTweetIdAndUsername(Long tweetId, String username);
-    Optional<RetweetResponseDTO> save(Long tweetId, String username);
+    RetweetResponseDTO save(Long tweetId, String username);
     RetweetResponseDTO convertToDTO(Retweet retweet);
     void delete(String username, Long tweetId);
     Integer countRetweets(Long tweetId);
-    List<Tweet> findRetweetsByUserUsername(String username);
+    List<Tweet> findRetweetsByUsername(String username);
+    List<Retweet> findRetweetsByUsernames(List<String> usernames);
 }

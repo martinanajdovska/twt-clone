@@ -10,8 +10,7 @@ import { Repeat2} from "lucide-react";
 import Delete from "@/components/tweet-components/Delete";
 import Reply from "@/components/tweet-components/Reply";
 
-const Tweet = ({ tweet, username, isSelf}: { tweet: ITweetResponse, username: string, isSelf:boolean }) => {
-    // TODO: show replies when user clicks on tweet
+const Tweet = ({ tweet, username}: { tweet: ITweetResponse, username: string }) => {
     const router = useRouter();
 
     const handleUserClick = (e: React.MouseEvent) => {
@@ -23,14 +22,16 @@ const Tweet = ({ tweet, username, isSelf}: { tweet: ITweetResponse, username: st
         e.stopPropagation();
         router.push(`/tweets/${tweet.id}`);
     }
-    console.log(tweet.parentId)
+
+    const isSelf = username === tweet.username;
+
     return (
         <article
             className="flex flex-col p-4 border-b border-border hover:bg-muted/30 transition-colors cursor-pointer group">
-            {tweet.retweeted && (
+            {(tweet.retweeted || tweet.retweetedBy) && (
                 <div className="flex items-center gap-2 ml-8 mb-1 text-muted-foreground">
                     <Repeat2 size={14} className="font-bold" />
-                    <span className="text-[13px] font-bold hover:underline">You retweeted</span>
+                    <span className="text-[13px] font-bold hover:underline">{tweet.retweeted?"You":tweet.retweetedBy} retweeted</span>
                 </div>
             )}
 
@@ -75,7 +76,7 @@ const Tweet = ({ tweet, username, isSelf}: { tweet: ITweetResponse, username: st
                     )}
 
                     <div className="flex items-center justify-between max-w-md mt-3 -ml-2 text-muted-foreground">
-                        <Reply tweet={tweet} username={username} isSelf={isSelf} repliesCount={tweet.repliesCount} />
+                        <Reply tweet={tweet} username={username} repliesCount={tweet.repliesCount} />
                         <Retweet retweetsCount={tweet.retweetsCount} retweeted={tweet.retweeted} id={tweet.id} username={username} />
                         <Like likesCount={tweet.likesCount} liked={tweet.liked} id={tweet.id} />
                     </div>

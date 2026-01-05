@@ -20,8 +20,8 @@ const Like = ({likesCount, liked, id}: { likesCount: number, liked: boolean, id:
             });
 
             if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || "Error liking tweet");
+                const error = await res.text()
+                throw new Error(error)
             }
 
             return res;

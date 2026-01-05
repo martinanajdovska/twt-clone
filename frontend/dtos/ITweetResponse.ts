@@ -9,4 +9,5 @@ export interface ITweetResponse {
     retweetsCount: number;
     liked: boolean;
     retweeted: boolean;
+    retweetedBy: string;
 }

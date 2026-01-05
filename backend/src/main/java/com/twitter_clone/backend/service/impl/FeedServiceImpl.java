@@ -3,6 +3,7 @@ package com.twitter_clone.backend.service.impl;
 import com.twitter_clone.backend.model.DTO.TweetDetailsDTO;
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
 import com.twitter_clone.backend.model.DTO.UserResponseDTO;
+import com.twitter_clone.backend.model.Retweet;
 import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.User;
 import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
@@ -34,25 +35,34 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public List<TweetResponseDTO> generateFeed(String username, Pageable pageable) {
-        User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
+    public Page<TweetResponseDTO> generateFeed(String username, Pageable pageable) {
+        User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
 
         List<String> followedUsernames = this.followService.getFollowingUsernames(username);
 
-        return this.tweetService.findTweetsByUserUsernameIn(followedUsernames, pageable)
-                .stream().map(t-> this.addTweetInfo(t,username))
+        List<TweetResponseDTO> tweets = this.tweetService.findAllParentTweetsByUsernames(followedUsernames)
+                .stream().map(t -> this.addTweetInfo(t, null, username))
                 .collect(Collectors.toList());
+        List<TweetResponseDTO> retweets = this.retweetService.findRetweetsByUsernames(followedUsernames)
+                .stream().map(r->{
+                    Tweet t = r.getTweet();
+                    return this.addTweetInfo(t, r.getUser().getUsername(), username);
+                }).collect(Collectors.toList());
+
+        tweets.addAll(retweets);
+
+        return this.listToPage(tweets, pageable);
     }
 
     @Override
     public UserResponseDTO generateProfileFeed(String username, Pageable pageable, String requesterUsername) {
-        User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
-        User requester = this.userService.findByUsername(requesterUsername).orElseThrow(()-> new UsernameNotFoundException(requesterUsername));
+        User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+        User requester = this.userService.findByUsername(requesterUsername).orElseThrow(() -> new UsernameNotFoundException(requesterUsername));
 
         UserResponseDTO userResponseDTO = this.userService.convertToDTO(user);
 
-        List<Tweet> tweets = this.tweetService.findAllParentTweetsByUserUsername(username);
-        List<Tweet> retweets = this.retweetService.findRetweetsByUserUsername(username);
+        List<Tweet> tweets = this.tweetService.findAllParentTweetsByUsername(username);
+        List<Tweet> retweets = this.retweetService.findRetweetsByUsername(username);
 
         tweets.addAll(retweets);
 
@@ -60,7 +70,7 @@ public class FeedServiceImpl implements FeedService {
 
         Page<Tweet> page = this.listToPage(tweets, pageable);
 
-        List<TweetResponseDTO> tweetResponseDTOS = page.stream().map(t-> this.addTweetInfo(t,requesterUsername)).toList();
+        List<TweetResponseDTO> tweetResponseDTOS = page.stream().map(t -> this.addTweetInfo(t, username, requesterUsername)).toList();
         userResponseDTO.setTweets(tweetResponseDTOS);
 
         return userResponseDTO;
@@ -78,28 +88,36 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public Optional<TweetResponseDTO> getTweetById(Long id, String username) {
-        Tweet tweet = this.tweetService.findById(id).orElseThrow(()->new TweetNotFoundException(id));
-        return Optional.of(addTweetInfo(tweet, username));
+    public TweetResponseDTO getTweetById(Long id, String username) {
+        Tweet tweet = this.tweetService.findById(id).orElseThrow(() -> new TweetNotFoundException(id));
+        User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+
+        return addTweetInfo(tweet, null, username);
     }
 
     @Override
-    public Optional<TweetDetailsDTO> getTweetDetails(Long id, String username, Pageable pageable) {
-        TweetResponseDTO tweetResponseDTO = this.getTweetById(id, username).orElseThrow(()->new TweetNotFoundException(id));
+    public TweetDetailsDTO getTweetDetails(Long id, String username, Pageable pageable) {
+        TweetResponseDTO tweetResponseDTO = this.getTweetById(id, username);
+        User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+
         List<Tweet> replies = this.tweetService.findAllRepliesOfTweet(id, pageable);
-        List<TweetResponseDTO> repliesDTO = replies.stream().map(t-> this.addTweetInfo(t,username)).toList();
-        return Optional.of(new TweetDetailsDTO(tweetResponseDTO, repliesDTO));
+        List<TweetResponseDTO> repliesDTO = replies.stream().map(t -> this.addTweetInfo(t, null, username)).toList();
+        return new TweetDetailsDTO(tweetResponseDTO, repliesDTO);
     }
 
-    public TweetResponseDTO addTweetInfo(Tweet tweet, String username) {
+    public TweetResponseDTO addTweetInfo(Tweet tweet, String username, String requester) {
         TweetResponseDTO tweetResponseDTO = this.tweetService.convertToDTO(tweet);
         tweetResponseDTO.setLikesCount(this.likeService.countLikes(tweetResponseDTO.getId()));
         tweetResponseDTO.setRepliesCount(tweet.getReplies().size());
         tweetResponseDTO.setRetweetsCount(this.retweetService.countRetweets(tweet.getId()));
-        tweetResponseDTO.setParentId(tweet.getParentTweet()!=null?tweet.getParentTweet().getId():null);
+        tweetResponseDTO.setParentId(tweet.getParentTweet() != null ? tweet.getParentTweet().getId() : null);
+
+        // show who retweeted the tweet that showed up on the feed
+        tweetResponseDTO.setRetweetedBy(!tweet.getUser().getUsername().equals(username)?username:null);
+
         // display tweet as already liked/retweeted if user has done that before
-        tweetResponseDTO.setLiked(this.likeService.existsByTweetIdAndUsername(tweet.getId(),username));
-        tweetResponseDTO.setRetweeted(this.retweetService.existsByTweetIdAndUsername(tweet.getId(),username));
+        tweetResponseDTO.setLiked(this.likeService.existsByTweetIdAndUsername(tweet.getId(), requester));
+        tweetResponseDTO.setRetweeted(this.retweetService.existsByTweetIdAndUsername(tweet.getId(), requester));
         return tweetResponseDTO;
     }
 }

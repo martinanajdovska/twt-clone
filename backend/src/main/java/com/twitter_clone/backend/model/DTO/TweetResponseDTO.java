@@ -18,8 +18,9 @@ public class TweetResponseDTO {
     private boolean liked;
     private boolean retweeted;
     private Long parentId;
+    private String retweetedBy;
 
-    public TweetResponseDTO(Long id, String username,  String content, String imageUrl, Integer likesCount, Integer repliesCount, Integer retweetsCount, boolean liked, boolean retweeted) {
+    public TweetResponseDTO(Long id, String username, String content, String imageUrl, Integer likesCount, Integer repliesCount, Integer retweetsCount, boolean liked, boolean retweeted, Long parentId, String retweetedBy) {
         this.id = id;
         this.username = username;
         this.content = content;
@@ -29,5 +30,7 @@ public class TweetResponseDTO {
         this.retweetsCount = retweetsCount;
         this.liked = liked;
         this.retweeted = retweeted;
+        this.parentId = parentId;
+        this.retweetedBy = retweetedBy;
     }
 }

@@ -23,6 +23,7 @@ public class UserController {
     private final UserService userService;
     private final FeedService feedService;
     private final ProfileService profileService;
+
     public UserController(UserService userService, FeedService feedService, ProfileService profileService) {
         this.userService = userService;
         this.feedService = feedService;
@@ -35,19 +36,16 @@ public class UserController {
     }
 
     @GetMapping("/users/{username}")
-    public ResponseEntity<UserResponseDTO> getProfile(@RequestParam(defaultValue = "0") int page,
-                                                      @RequestParam(defaultValue = "5") int size,
-                                                      @PathVariable String username,
-                                                      @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            Sort sort = Sort.by("created_at").ascending();
-            Pageable pageable = PageRequest.of(page, size, sort);
+    public ResponseEntity<UserResponseDTO> getProfileFeed(@RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "5") int size,
+                                                          @PathVariable String username,
+                                                          @AuthenticationPrincipal UserDetails userDetails) {
+//            TODO: check if it is sorting properly
+        Sort sort = Sort.by("created_at").ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-            UserResponseDTO responseDTO = this.feedService.generateProfileFeed(username, pageable, userDetails.getUsername());
-            return ResponseEntity.ok().body(responseDTO);
-        } catch (UsernameNotFoundException e){
-            return ResponseEntity.notFound().build();
-        }
+        UserResponseDTO responseDTO = this.feedService.generateProfileFeed(username, pageable, userDetails.getUsername());
+        return ResponseEntity.ok().body(responseDTO);
     }
 
     @GetMapping("/me")
@@ -56,9 +54,7 @@ public class UserController {
     }
 
     @GetMapping("/users/{username}/info")
-    public ResponseEntity<UserInfoDTO> getInfo(@PathVariable String username, @AuthenticationPrincipal UserDetails userDetails) {
-        return this.profileService.getUserInfo(username, userDetails.getUsername())
-                .map(user->ResponseEntity.ok().body(user))
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<UserInfoDTO> getProfileHeader(@PathVariable String username, @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok().body(this.profileService.getUserInfo(username, userDetails.getUsername()));
     }
 }

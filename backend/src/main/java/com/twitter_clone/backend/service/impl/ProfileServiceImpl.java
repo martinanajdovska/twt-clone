@@ -21,7 +21,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public Optional<UserInfoDTO> getUserInfo(String username, String requester) {
+    public UserInfoDTO getUserInfo(String username, String requester) {
         User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
 
         UserInfoDTO userInfoDTO = new UserInfoDTO();
@@ -31,6 +31,6 @@ public class ProfileServiceImpl implements ProfileService {
         userInfoDTO.setFollowed(this.followService.existsFollowed(requester, username));
         userInfoDTO.setFollowsYou(this.followService.existsFollowingYou(username, requester));
 
-        return Optional.of(userInfoDTO);
+        return userInfoDTO;
     }
 }

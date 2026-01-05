@@ -11,7 +11,7 @@ export const fetchTweets = async ({ pageParam = 0 }: {pageParam:number}) => {
     });
     if (!response.ok) throw new Error("Failed to fetch tweets");
     const data = await response.json();
-    return data;
+    return data.content;
 }
 
 // get profile for username
@@ -29,8 +29,7 @@ export const fetchProfileFeed = async ({pageParam = 0, username = ""}: { pagePar
     }
 
     const data = await response.json();
-    const tweets = await data.tweets;
-    return data;
+    return data.tweets;
 }
 
 // get username of logged in user
@@ -43,6 +42,25 @@ export const fetchSelfUsername = async ({token}:{token:string}) => {
         },
         credentials: 'include'
     });
+    if (!response.ok) {
+        throw new Error('Error getting user data');
+    }
+
+    const data = await response.json();
+    return data;
+}
+
+// get username, follower count
+export const fetchProfileInfo = async ({username, token}:{username:string, token?:string}) => {
+    const response = await fetch(`${BASE_URL}/api/users/${username}/info`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Cookie': `token=${token}` }),
+        },
+        credentials: 'include'
+    });
+
     if (!response.ok) {
         throw new Error('Error getting user data');
     }

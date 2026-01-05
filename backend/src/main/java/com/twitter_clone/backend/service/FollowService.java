@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface FollowService {
     List<String> getFollowingUsernames(String username);
-    Optional<FollowResponseDTO> save (String follower, String followed);
+    FollowResponseDTO save (String follower, String followed);
     void delete(String follower, String followed);
     List<UserResponseDTO> getFollowingUsers(String username);
     List<String> getFollowersUsernames(String username);

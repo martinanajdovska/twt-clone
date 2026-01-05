@@ -1,33 +1,16 @@
-import Follow from "@/components/tweet-components/Follow";
+'use client'
+import Follow from "@/components/Follow";
 import React from "react";
+import {useQuery} from "@tanstack/react-query";
+import {fetchProfileInfo} from "@/components/dataFetching";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const ProfileHeader =  ({username, token, isSelf}: {username:string, token:string, isSelf:boolean}) => {
+    const { data, isLoading } = useQuery({
+        queryKey: ['profileHeader', username],
+        queryFn: () => fetchProfileInfo({username, token}),
+    });
 
-
-const ProfileHeader = async ({username, token, isSelf}: {username:string, token:string, isSelf:boolean}) => {
-
-
-    const fetchInfo = async () => {
-        const response = await fetch(`${BASE_URL}/api/users/${username}/info`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Cookie': `token=${token}`,
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Error getting user data');
-        }
-
-        const data = await response.json();
-        return data;
-    }
-
-
-
-    const data = await fetchInfo();
-    console.log(data);
+    if (isLoading) return <div>Loading...</div>;
 
     return (
         <div className="bg-card border-x border-b border-border p-6 space-y-4">
@@ -43,7 +26,7 @@ const ProfileHeader = async ({username, token, isSelf}: {username:string, token:
 
                 {!isSelf && (
                     <div className="shrink-0">
-                        <Follow username={username} isFollowed={data.followed} />
+                        <Follow username={username} isFollowed={data.followed} token={token} />
                     </div>
                 )}
             </div>

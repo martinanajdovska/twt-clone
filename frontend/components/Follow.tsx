@@ -4,8 +4,8 @@ import {useState} from "react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-const Follow = ({username, isFollowed}:
-                {username:string, isFollowed:boolean}) => {
+const Follow = ({username, isFollowed, token}:
+                {username:string, isFollowed:boolean, token:string}) => {
     const [isFollowedState, setIsFollowedState] = useState(isFollowed)
     const queryClient = useQueryClient();
 
@@ -20,15 +20,16 @@ const Follow = ({username, isFollowed}:
             });
 
             if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || "Error following user");
+                const error = await res.text()
+                throw new Error(error)
             }
 
             return res;
         },
         onSuccess: async () => {
             setIsFollowedState(!isFollowedState);
-            await queryClient.invalidateQueries({queryKey: ['profile', username]});
+            await queryClient.invalidateQueries({queryKey: ['profileHeader', username]});
+            await queryClient.invalidateQueries({queryKey: ['feed', token]});
         },
         onError: (err: Error) => {
             alert(err.message);

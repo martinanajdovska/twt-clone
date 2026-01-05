@@ -3,6 +3,8 @@ package com.twitter_clone.backend.controller;
 import com.twitter_clone.backend.model.DTO.auth.SignInRequestDTO;
 import com.twitter_clone.backend.model.DTO.auth.SignUpRequestDTO;
 import com.twitter_clone.backend.model.enums.Role;
+import com.twitter_clone.backend.model.exceptions.EmailAlreadyExistsException;
+import com.twitter_clone.backend.model.exceptions.UsernameAlreadyExistsException;
 import com.twitter_clone.backend.service.TokenService;
 import com.twitter_clone.backend.service.UserService;
 import jakarta.servlet.http.Cookie;
@@ -49,14 +51,8 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody SignUpRequestDTO signUpRequest) {
-        if (userService.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("username is already taken");
-        }
-        if (userService.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("email is already taken");
-        }
-
         userService.register(signUpRequest.getUsername(), signUpRequest.getPassword(), Role.ROLE_USER, signUpRequest.getEmail());
+
         return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
     }
 

@@ -1,6 +1,7 @@
 package com.twitter_clone.backend.repository;
 
 import com.twitter_clone.backend.model.Retweet;
+import com.twitter_clone.backend.model.Tweet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,4 +17,5 @@ public interface RetweetRepository extends JpaRepository<Retweet, Long> {
     Optional<Retweet> findByTweetIdAndUserUsername (Long tweetId, String username);
     @Query("SELECT r.tweet.id FROM Retweet r WHERE r.user.username = :username")
     List<Long> findTweetsIdsByUserUsername(@Param("username") String username);
+    List<Retweet> findRetweetsByUserUsernameIsIn(List<String> usernames);
 }

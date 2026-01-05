@@ -3,6 +3,7 @@ package com.twitter_clone.backend.service.impl;
 import com.twitter_clone.backend.model.DTO.UserResponseDTO;
 import com.twitter_clone.backend.model.User;
 import com.twitter_clone.backend.model.enums.Role;
+import com.twitter_clone.backend.model.exceptions.EmailAlreadyExistsException;
 import com.twitter_clone.backend.model.exceptions.UsernameAlreadyExistsException;
 import com.twitter_clone.backend.repository.UserRepository;
 import com.twitter_clone.backend.service.UserService;
@@ -28,12 +29,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public User register(String username, String password, Role role, String email) {
         if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Must fill both username and password");
         }
 
-        if (this.userRepository.findByUsername(username).isPresent()) {
-            throw new UsernameAlreadyExistsException();
+        if (this.existsByUsername(username)) {
+            throw new UsernameAlreadyExistsException(username);
         }
+
+        if (this.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException(email);
+        }
+
         String hashedPassword = passwordEncoder.encode(password);
 
         User user = new User(username, hashedPassword, role, email);

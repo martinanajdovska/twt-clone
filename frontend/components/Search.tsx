@@ -11,14 +11,17 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 const fetchUsers = async (searchTerm: string) => {
     if (!searchTerm) return [];
 
-    const response = await fetch(`${BASE_URL}/api/users?search=${searchTerm}`, {
+    const res = await fetch(`${BASE_URL}/api/users?search=${searchTerm}`, {
         method: 'GET',
         headers: {'Content-Type': 'application/json'},
         credentials: 'include'
     });
 
-    if (!response.ok) throw new Error('Error getting user data');
-    return response.json();
+    if (!res.ok) {
+        const error = await res.text()
+        throw new Error(error)
+    }
+    return res.json();
 };
 
 const Search = () => {
