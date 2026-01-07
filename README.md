@@ -8,7 +8,7 @@
     <br />
     <br />
     <br />
-    <a href="https://github.com/martinanajdovska/twt-clone">View Demo</a>
+    <a href="https://drive.google.com/file/d/1gOJF939M91Z2h_UVoLcdThnrPtasmLsu/view?usp=drive_link">View Demo</a>
   </p>
 </div>
 
@@ -20,7 +20,20 @@ This Twitter Clone is built to demonstrate a modern full-stack architecture. It 
 * **Authentication:** Login and registration.
 * **Tweeting:** Create, delete and interact with tweets.
 * **Image Support:** Image uploads powered by Cloudinary.
-* **Client-side Caching:** Using TanStack Query for a lag-free user experience.
+* **Client-side Caching:** Lag-free user experience.
+* **Real-time Notifications:** Utilizing WebSocket for listening to updates.
+* **Dark/Light Mode:** Theme toggling for better user experience.
+
+**Architecture Overview:**
+* Frontend (Next.js): Acts as the Presentation Layer. It uses TanStack Query for fetching and caching data from the API and WebSockets (STOMP/SockJS) for real-time notifications.
+* Backend (Spring Boot): Acts as the RESTful API Layer. It follows a Layered Architecture (Controller -> Service -> Repository).
+* Database (PostgreSQL): Stores relational data like Users, Tweets, and Relationships.
+* External Services: Cloudinary handles the storage and optimization of binary image files.
+
+**Some API endpoints**
+* <img width="433" height="325" alt="image" src="https://github.com/user-attachments/assets/846b9572-c56a-45eb-a894-a7fa04e6b064" />
+* <img width="328" height="113" alt="Screenshot 2026-01-07 191809" src="https://github.com/user-attachments/assets/941dcf6e-9d37-4b77-8a0c-5bac0e69e967" />
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -38,13 +51,10 @@ This Twitter Clone is built to demonstrate a modern full-stack architecture. It 
 ## Getting Started
 
 The provided source code uses Docker for running the database. You need to replace all of the environment
-variables in the docker-compose.yml with your own variables, or if you prefer to run the database on your machine you can write the same environment variables
-in the application.properties file in backend/src/main/resources/application.properties
+variables in the docker-compose.yml with your own database credentials in a .env file.
 
-This project also uses Cloudinary for image storing. You need to make your own account and replace the api keys in CloudinaryConfiguration file with your own
-values. You can do so by creating environment variables inside the configuration or a .env file depending on the IDE you are using.
-
-For the frontend to communicate with the backend, you need to create a .env file inside the frontend folder and set up the public url.
+This project also uses Cloudinary for image storing. You need to make your own account and replace the credentials with your own
+values.
 
 To get a local copy up and running using docker, follow these steps. 
 
@@ -52,35 +62,34 @@ To get a local copy up and running using docker, follow these steps.
 
 * Node.js & npm**
 * Java 17 or higher
-* Docker for PostgreSQL database (optional)
-
-* Inside the frontend folder:
-* **TanStack Query**
-  ```sh
-  npm i @tanstack/react-query
-* **Shadcn**
-  ```sh
-  npx shadcn@latest init
+* Docker for PostgreSQL database
 
 ### Installation
 
-1. Get your Cloudinary keys here [https://cloudinary.com/]
+1. Get your Cloudinary keys here [https://cloudinary.com/]. You can create a free account and then you need to find the cloud name, api key and secret.
 2. Clone the repo
   ```sh
    git clone https://github.com/martinanajdovska/twt-clone.git
 ```
-3. Backend
-   * Set up your environment variables for the database, Cloudinary keys and frontend communication url
+3. Run the Docker container
+   * Create a .env file and set up your environment variables for the database following the .env.example template
+   * Change the port number if needed in the docker-compose.yml and the application.properties in the backend
+   * ```
+     docker compose up
+     ```
+4. Backend
    * Inside the backend folder
+   * Set up your environment variables for the database, Cloudinary keys and frontend communication url. You can see the variable names in the env.example file.
+   * If you are using Intellij as IDE you can set the environment variables in the configuration then run the app through the IDE. If you are using something else, you need to set the variables through the terminal and then run the following command.
    ```
     ./mvnw spring-boot:run
    ```
-4. Frontend
-   * Set up the api url in a .env file
+6. Frontend
    * Inside the frontend folder
+   * Set up the api url in a .env file, you can see the variable name used in the .env.example file
    * Install packages and run the app
      ```
       npm install
       npm run dev
      ```
-   * You should be able to access the app on http://localhost:3000
+   * You should be able to access the app on http://localhost:3000 
