@@ -1,6 +1,7 @@
 package com.twitter_clone.backend.config;
 
 import com.twitter_clone.backend.service.TokenService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -24,6 +25,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final TokenService tokenService;
     private final UserDetailsService userDetailsService;
+    @Value("${frontend_url}")
+    private String frontend;
 
     public WebSocketConfig(TokenService tokenService, UserDetailsService userDetailsService) {
         this.tokenService = tokenService;
@@ -41,7 +44,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:3000")
+                .setAllowedOrigins(frontend)
                 .withSockJS();
     }
 
