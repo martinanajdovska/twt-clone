@@ -69,9 +69,15 @@ const Tweet = ({ tweet, username}: { tweet: ITweetResponse, username: string }) 
                             <Image
                                 src={tweet.imageUrl}
                                 alt="Tweet image"
-                                className="object-cover"
-                                width={600}
-                                height={100}
+                                width={0}
+                                height={0}
+                                sizes="100vw"
+                                style={{
+                                    width: 'auto',
+                                    height: 'auto',
+                                    maxHeight: '500px'
+                                }}
+                                className="object-contain"
                             />
                         </div>
                     )}

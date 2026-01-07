@@ -36,10 +36,8 @@ public class TweetServiceImpl implements TweetService {
         this.cloudinaryService = cloudinaryService;
     }
 
-//    TODO: image handling
-
     public TweetResponseDTO save(String username, Long parentId, String content, MultipartFile file) {
-        if (content.isEmpty()) {
+        if (content.isEmpty() && file.isEmpty()) {
             throw new IllegalArgumentException("Can't post empty tweet");
         }
 

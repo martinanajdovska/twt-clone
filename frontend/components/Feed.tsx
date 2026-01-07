@@ -43,7 +43,8 @@ export default function Feed({username, isProfile}: { username: string, isProfil
                     <React.Fragment key={i}>
                         <div className="divide-y border-x border-b border-border">
                             {group.map((tweet: ITweetResponse) => (
-                                <div key={tweet.id} className="transition-colors hover:bg-accent/50">
+                                // avoiding duplicate keys when multiply users retweet the same thing
+                                <div key={tweet.id+tweet.retweetedBy} className="transition-colors hover:bg-accent/50">
                                     <Tweet tweet={tweet} username={username}/>
                                 </div>
                             ))}
