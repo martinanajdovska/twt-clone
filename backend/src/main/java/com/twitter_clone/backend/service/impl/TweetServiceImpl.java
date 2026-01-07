@@ -7,6 +7,7 @@ import com.twitter_clone.backend.model.enums.NotificationType;
 import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
 import com.twitter_clone.backend.model.exceptions.UsernameNotFoundException;
 import com.twitter_clone.backend.repository.TweetRepository;
+import com.twitter_clone.backend.service.CloudinaryService;
 import com.twitter_clone.backend.service.NotificationService;
 import com.twitter_clone.backend.service.TweetService;
 import com.twitter_clone.backend.service.UserService;
@@ -14,6 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,17 +26,19 @@ public class TweetServiceImpl implements TweetService {
     private final UserService userService;
     private final ModelMapper modelMapper;
     private final NotificationService notificationService;
+    private final CloudinaryService cloudinaryService;
 
-    public TweetServiceImpl(TweetRepository tweetRepository, UserService userService, ModelMapper modelMapper, NotificationService notificationService) {
+    public TweetServiceImpl(TweetRepository tweetRepository, UserService userService, ModelMapper modelMapper, NotificationService notificationService, CloudinaryService cloudinaryService) {
         this.tweetRepository = tweetRepository;
         this.userService = userService;
         this.modelMapper = modelMapper;
         this.notificationService = notificationService;
+        this.cloudinaryService = cloudinaryService;
     }
 
 //    TODO: image handling
 
-    public TweetResponseDTO save(String username, Long parentId, String content, String imageUrl) {
+    public TweetResponseDTO save(String username, Long parentId, String content, MultipartFile file) {
         if (content.isEmpty()) {
             throw new IllegalArgumentException("Can't post empty tweet");
         }
@@ -47,6 +51,11 @@ public class TweetServiceImpl implements TweetService {
         Tweet parentTweet = null;
         if (parentId != null) {
             parentTweet = this.tweetRepository.findById(parentId).orElseThrow(()-> new TweetNotFoundException(parentId));
+        }
+
+        String imageUrl = null;
+        if (file!=null && !file.isEmpty()) {
+            imageUrl = this.cloudinaryService.uploadFile(file, "tweet_images");
         }
 
         Tweet tweet = this.tweetRepository.save(new Tweet(user, parentTweet, content, imageUrl));

@@ -1,6 +1,6 @@
 import React from 'react'
 import {formatDistanceToNow} from "date-fns";
-import {INotificationResponse} from "@/dtos/INotificationResponse";
+import {INotificationResponse} from "@/DTO/INotificationResponse";
 import {Bell, Heart, MessageSquare, Repeat, UserIcon} from "lucide-react";
 import {useReadNotification} from "@/hooks/notifications/useReadNotification";
 import {useRouter} from "next/navigation";

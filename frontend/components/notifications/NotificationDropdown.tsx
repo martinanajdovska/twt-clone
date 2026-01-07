@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/popover";
 import {Button} from "@/components/ui/button";
 import {ScrollArea} from "@/components/ui/scroll-area";
-import {INotificationResponse} from "@/dtos/INotificationResponse";
+import {INotificationResponse} from "@/DTO/INotificationResponse";
 import Notification from "@/components/notifications/Notification";
 import {useReadNotification} from "@/hooks/notifications/useReadNotification";
 import {useGetNotifications} from "@/hooks/notifications/useGetNotifications";

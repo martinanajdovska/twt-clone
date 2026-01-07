@@ -1,7 +1,6 @@
 package com.twitter_clone.backend.controller;
 
 import com.twitter_clone.backend.model.DTO.TweetDetailsDTO;
-import com.twitter_clone.backend.model.DTO.TweetRequestDTO;
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
 import com.twitter_clone.backend.service.FeedService;
 import com.twitter_clone.backend.service.TweetService;
@@ -14,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/tweets")
@@ -36,15 +36,11 @@ public class TweetController {
     }
 
     @PostMapping
-    public ResponseEntity<TweetResponseDTO> save(@RequestBody TweetRequestDTO request,
+    public ResponseEntity<TweetResponseDTO> save(@RequestParam String content, @RequestParam(required = false) Long parentId,
+                                                 @RequestParam(required = false) MultipartFile image,
                                                  @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.tweetService
-                .save(
-                        userDetails.getUsername(),
-                        request.getParentId(),
-                        request.getContent(),
-                        request.getImageUrl()
-                ));
+                .save(userDetails.getUsername(), parentId, content, image));
     }
 
     @DeleteMapping("/{id}")

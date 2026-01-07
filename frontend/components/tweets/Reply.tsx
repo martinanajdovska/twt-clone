@@ -8,7 +8,7 @@ import { MessageCircle } from "lucide-react"
 import TweetForm from "@/components/tweets/TweetForm"
 import React, { useState } from "react"
 import Tweet from "@/components/tweets/Tweet";
-import {ITweetResponse} from "@/dtos/ITweetResponse";
+import {ITweetResponse} from "@/DTO/ITweetResponse";
 
 const Reply = ({ tweet, username, repliesCount }: { tweet: ITweetResponse, username:string, repliesCount:number }) => {
     const [isOpen, setIsOpen] = useState(false);

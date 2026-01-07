@@ -18,8 +18,8 @@ export const fetchProfileFeed = async ({pageParam = 0, username = ""}: { pagePar
     return data.tweets;
 }
 
-// get username of logged in user
-export const fetchSelfUsername = async ({token}:{token:string}) => {
+// get username and profile picture of logged in user
+export const fetchSelfUsernameAndProfilePicture = async ({token}:{token:string}) => {
     const response = await fetch(`${BASE_URL}/api/users/me/info`, {
         method: 'GET',
         headers: {
@@ -37,7 +37,7 @@ export const fetchSelfUsername = async ({token}:{token:string}) => {
 }
 
 // get profile header
-export const fetchProfileInfo = async ({username}:{username:string}) => {
+export const fetchProfileHeader = async ({username}:{username:string}) => {
     const response = await fetch(`${BASE_URL}/api/users/${username}/info`, {
         method: 'GET',
         headers: {

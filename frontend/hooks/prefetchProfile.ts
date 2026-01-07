@@ -1,4 +1,4 @@
-import {fetchProfileFeed, fetchProfileInfo} from "@/api-calls/users-api";
+import {fetchProfileFeed, fetchProfileHeader} from "@/api-calls/users-api";
 import {QueryClient} from "@tanstack/react-query";
 
 export const prefetchProfile = async ({username, token}:{username:string, token:string}) => {
@@ -15,7 +15,7 @@ export const prefetchProfile = async ({username, token}:{username:string, token:
         }),
         queryClient.prefetchQuery({
             queryKey: ['profileHeader', username],
-            queryFn: () => fetchProfileInfo({username}),
+            queryFn: () => fetchProfileHeader({username}),
         }),
     ]);
 

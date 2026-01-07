@@ -3,7 +3,7 @@ import TweetForm from "@/components/tweets/TweetForm";
 import Feed from "@/components/Feed";
 import React from "react";
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
-import {fetchSelfUsername} from "@/api-calls/users-api";
+import {fetchSelfUsernameAndProfilePicture} from "@/api-calls/users-api";
 import {redirect} from "next/navigation";
 import {prefetchFeed} from "@/hooks/tweets/prefetchFeed";
 
@@ -17,7 +17,7 @@ export default async function Home() {
         redirect("/login");
     }
 
-    const self = await fetchSelfUsername({token});
+    const self = await fetchSelfUsernameAndProfilePicture({token});
     const username = self.username;
 
 
@@ -26,7 +26,7 @@ export default async function Home() {
             <section className="flex flex-col gap-6">
                 FEED
                 <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-                    <TweetForm username={username}/>
+                    <TweetForm username={username} profilePicture={self.profilePicture} />
                 </div>
 
                 <div className="flex flex-col">

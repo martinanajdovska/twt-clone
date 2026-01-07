@@ -1,6 +1,7 @@
 export interface ITweetResponse {
     id: number;
     username: string;
+    profilePictureUrl: string;
     parentId: number;
     content: string;
     imageUrl: string;

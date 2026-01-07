@@ -3,6 +3,7 @@ package com.twitter_clone.backend.config;
 import com.twitter_clone.backend.filter.JwtAuthenticationFilter;
 import com.twitter_clone.backend.service.TokenService;
 import com.twitter_clone.backend.service.impl.auth.UserDetailsServiceImpl;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;

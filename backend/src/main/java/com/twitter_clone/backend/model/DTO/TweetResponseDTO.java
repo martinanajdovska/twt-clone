@@ -23,8 +23,9 @@ public class TweetResponseDTO {
     private Long parentId;
     private String retweetedBy;
     private String createdAt;
+    private String profilePictureUrl;
 
-    public TweetResponseDTO(Long id, String username, String content, String imageUrl, Integer likesCount, Integer repliesCount, Integer retweetsCount, boolean liked, boolean retweeted, Long parentId, String retweetedBy, String createdAt) {
+    public TweetResponseDTO(Long id, String username, String content, String imageUrl, Integer likesCount, Integer repliesCount, Integer retweetsCount, boolean liked, boolean retweeted, Long parentId, String retweetedBy, String createdAt, String profilePictureUrl) {
         this.id = id;
         this.username = username;
         this.content = content;
@@ -37,6 +38,7 @@ public class TweetResponseDTO {
         this.parentId = parentId;
         this.retweetedBy = retweetedBy;
         this.createdAt = createdAt;
+        this.profilePictureUrl = profilePictureUrl;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {

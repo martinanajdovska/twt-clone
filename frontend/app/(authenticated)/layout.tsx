@@ -3,7 +3,7 @@ import Link from "next/link";
 import {Home, User as UserIcon} from "lucide-react";
 import Search from "@/components/ui/Search";
 import {ModeToggle} from "@/components/ui/ModeToggle";
-import {fetchSelfUsername} from "@/api-calls/users-api";
+import {fetchSelfUsernameAndProfilePicture} from "@/api-calls/users-api";
 import {cookies} from "next/headers";
 import {redirect} from "next/navigation";
 import React from "react";
@@ -18,7 +18,7 @@ export default async function AuthenticatedLayout({children,}: { children: React
         redirect("/login");
     }
 
-    const self = await fetchSelfUsername({token});
+    const self = await fetchSelfUsernameAndProfilePicture({token});
 
     return (
         <div className="min-h-screen bg-background py-10">

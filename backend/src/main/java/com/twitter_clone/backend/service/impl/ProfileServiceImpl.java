@@ -29,6 +29,7 @@ public class ProfileServiceImpl implements ProfileService {
         userInfoDTO.setFollowing(this.followService.getFollowingCount(username));
         userInfoDTO.setFollowed(this.followService.existsFollowed(requester, username));
         userInfoDTO.setFollowsYou(this.followService.existsFollowingYou(username, requester));
+        userInfoDTO.setImageUrl(user.getImageUrl());
 
         return userInfoDTO;
     }

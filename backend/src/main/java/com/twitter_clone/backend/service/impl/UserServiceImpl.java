@@ -1,15 +1,19 @@
 package com.twitter_clone.backend.service.impl;
 
 import com.twitter_clone.backend.model.DTO.UserResponseDTO;
+import com.twitter_clone.backend.model.DTO.UsernameAndProfilePictureDTO;
 import com.twitter_clone.backend.model.User;
 import com.twitter_clone.backend.model.enums.Role;
 import com.twitter_clone.backend.model.exceptions.EmailAlreadyExistsException;
 import com.twitter_clone.backend.model.exceptions.UsernameAlreadyExistsException;
 import com.twitter_clone.backend.repository.UserRepository;
+import com.twitter_clone.backend.service.CloudinaryService;
 import com.twitter_clone.backend.service.UserService;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,11 +23,13 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
+    private final CloudinaryService cloudinaryService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper, CloudinaryService cloudinaryService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
+        this.cloudinaryService = cloudinaryService;
     }
 
     @Override
@@ -69,6 +75,26 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<String> findByUsernameContaining(String username) {
         return this.userRepository.findAllByUsernameContaining(username);
+    }
+
+    @Override
+    public void updateProfileImage(String username, MultipartFile file) {
+        User user = this.userRepository.findByUsername(username).orElseThrow(()->new UsernameNotFoundException(username));
+        String imageUrl = null;
+        if (file!=null && !file.isEmpty()) {
+            imageUrl = this.cloudinaryService.uploadFile(file, "profile_pictures");
+        }
+        user.setImageUrl(imageUrl);
+        this.userRepository.save(user);
+    }
+
+    @Override
+    public UsernameAndProfilePictureDTO getUsernameAndProfilePicture(String username) {
+        User user = this.userRepository.findByUsername(username).orElseThrow(()->new UsernameNotFoundException(username));
+        UsernameAndProfilePictureDTO usernameAndProfilePictureDTO = new UsernameAndProfilePictureDTO();
+        usernameAndProfilePictureDTO.setUsername(username);
+        usernameAndProfilePictureDTO.setProfilePicture(user.getImageUrl());
+        return usernameAndProfilePictureDTO;
     }
 
     @Override

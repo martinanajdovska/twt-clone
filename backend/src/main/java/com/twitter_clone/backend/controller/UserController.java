@@ -2,6 +2,7 @@ package com.twitter_clone.backend.controller;
 
 import com.twitter_clone.backend.model.DTO.UserInfoDTO;
 import com.twitter_clone.backend.model.DTO.UserResponseDTO;
+import com.twitter_clone.backend.model.DTO.UsernameAndProfilePictureDTO;
 import com.twitter_clone.backend.service.FeedService;
 import com.twitter_clone.backend.service.ProfileService;
 import com.twitter_clone.backend.service.UserService;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -45,12 +47,18 @@ public class UserController {
     }
 
     @GetMapping("/users/me/info")
-    public ResponseEntity<Map<String, String>> getUsername(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok().body((Map.of("username", userDetails.getUsername())));
+    public ResponseEntity<UsernameAndProfilePictureDTO> getUsername(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok().body(this.userService.getUsernameAndProfilePicture(userDetails.getUsername()));
     }
 
     @GetMapping("/users/{username}/info")
     public ResponseEntity<UserInfoDTO> getProfileHeader(@PathVariable String username, @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok().body(this.profileService.getUserInfo(username, userDetails.getUsername()));
+    }
+
+    @PatchMapping("/users/me/image")
+    public ResponseEntity<Void> updateProfileImage(@AuthenticationPrincipal UserDetails userDetails, @RequestParam MultipartFile image) {
+        this.userService.updateProfileImage(userDetails.getUsername(), image);
+        return ResponseEntity.ok().build();
     }
 }

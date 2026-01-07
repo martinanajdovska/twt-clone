@@ -2,11 +2,11 @@
 import React, {useEffect} from 'react'
 import Tweet from "@/components/tweets/Tweet";
 import TweetForm from "@/components/tweets/TweetForm";
-import {ITweetResponse} from "@/dtos/ITweetResponse";
+import {ITweetResponse} from "@/DTO/ITweetResponse";
 import {useInView} from "react-intersection-observer";
 import {useFetchTweetDetails} from "@/hooks/tweets/useFetchTweetDetails";
 
-const TweetDetails = ({id, username}:{id:number, username:string}) => {
+const TweetDetails = ({id, username, profilePicture}:{id:number, username:string, profilePicture:string}) => {
     const {ref, inView} = useInView();
 
     const {
@@ -53,7 +53,7 @@ const TweetDetails = ({id, username}:{id:number, username:string}) => {
                     )}
                     <Tweet tweet={tweet} username={username} />
 
-                    <TweetForm username={username} parentId={tweet.id}/>
+                    <TweetForm username={username} parentId={tweet.id} profilePicture={profilePicture}/>
 
                 </div>
                 {data.pages.map((group, i) => (

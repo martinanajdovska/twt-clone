@@ -22,6 +22,7 @@ public class ModelMapperConfig {
         TypeMap<Tweet, TweetResponseDTO> tweetMapper = modelMapper.createTypeMap(Tweet.class, TweetResponseDTO.class);
         tweetMapper.addMappings(mapper -> {
                     mapper.map(src -> src.getUser().getUsername(), TweetResponseDTO::setUsername);
+                    mapper.map(src -> src.getUser().getImageUrl(), TweetResponseDTO::setProfilePictureUrl);
         });
 
         TypeMap<Follow, FollowResponseDTO> followMapper = modelMapper.createTypeMap(Follow.class, FollowResponseDTO.class);

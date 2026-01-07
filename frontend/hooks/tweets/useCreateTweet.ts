@@ -5,13 +5,10 @@ export const useCreateTweet = ({username, parentId}:{username:string, parentId?:
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({content, parentId}:{content:string, parentId?:number} ) => {
+        mutationFn: async (formData: FormData) => {
             const res = await fetch(`${BASE_URL}/api/tweets`, {
                 method: "POST",
-                body: JSON.stringify({content: content, parentId: parentId}),
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                body: formData,
                 credentials: 'include'
             });
 

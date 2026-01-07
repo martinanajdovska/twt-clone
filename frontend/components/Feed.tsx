@@ -1,6 +1,6 @@
 'use client'
 import React, {useEffect} from "react";
-import {ITweetResponse} from "@/dtos/ITweetResponse";
+import {ITweetResponse} from "@/DTO/ITweetResponse";
 import Tweet from "@/components/tweets/Tweet";
 import {useInView} from 'react-intersection-observer';
 import {useFetchFeed} from "@/hooks/tweets/useFetchFeed";
@@ -45,7 +45,6 @@ export default function Feed({username, isProfile}: { username: string, isProfil
                             {group.map((tweet: ITweetResponse) => (
                                 <div key={tweet.id} className="transition-colors hover:bg-accent/50">
                                     <Tweet tweet={tweet} username={username}/>
-
                                 </div>
                             ))}
                         </div>

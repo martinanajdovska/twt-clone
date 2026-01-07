@@ -1,6 +1,6 @@
 import React from 'react'
 import TweetDetails from "@/components/tweets/TweetDetails";
-import {fetchSelfUsername} from "@/api-calls/users-api";
+import {fetchSelfUsernameAndProfilePicture} from "@/api-calls/users-api";
 import {cookies} from "next/headers";
 import {dehydrate, HydrationBoundary} from "@tanstack/react-query";
 import {redirect} from "next/navigation";
@@ -17,13 +17,13 @@ const TweetDetailsPage = async ({params}: { params: Promise<{ id: number }> }) =
         redirect("/login");
     }
 
-    const self = await fetchSelfUsername({token});
+    const self = await fetchSelfUsernameAndProfilePicture({token});
     const username = self.username;
 
     return (
         <div>
             <HydrationBoundary state={dehydrate(queryClient)}>
-                <TweetDetails id={id} username={username}/>
+                <TweetDetails id={id} username={username} profilePicture={self.profilePicture}/>
             </HydrationBoundary>
         </div>
     )

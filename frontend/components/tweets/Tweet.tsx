@@ -1,5 +1,5 @@
 'use client'
-import { ITweetResponse } from "@/dtos/ITweetResponse";
+import { ITweetResponse } from "@/DTO/ITweetResponse";
 import Image from "next/image";
 import React from "react";
 import Like from "./Like";
@@ -9,6 +9,7 @@ import { Repeat2} from "lucide-react";
 
 import Delete from "@/components/tweets/Delete";
 import Reply from "@/components/tweets/Reply";
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 
 const Tweet = ({ tweet, username}: { tweet: ITweetResponse, username: string }) => {
     const router = useRouter();
@@ -35,13 +36,13 @@ const Tweet = ({ tweet, username}: { tweet: ITweetResponse, username: string }) 
             )}
 
             <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                    <div
-                        onClick={handleUserClick}
-                        className="h-10 w-10 rounded-full bg-accent z-3 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center font-bold text-sm"
-                    >
-                        {tweet.username.charAt(0).toUpperCase()}
-                    </div>
+                <div className="flex-shrink-0 w-10 h-10" onClick={handleUserClick}>
+                    <Avatar className="h-full w-full">
+                        <AvatarImage src={tweet.profilePictureUrl} className="object-cover" />
+                        <AvatarFallback className="bg-accent flex items-center justify-center font-bold text-sm">
+                            {tweet.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
                 </div>
 
                 <div className="flex flex-col flex-1">
@@ -64,12 +65,13 @@ const Tweet = ({ tweet, username}: { tweet: ITweetResponse, username: string }) 
                     </div>
 
                     {tweet.imageUrl && (
-                        <div className="relative mt-3 rounded-2xl overflow-hidden border border-border aspect-video">
+                        <div className="relative mt-3 rounded-2xl overflow-hidden border border-border">
                             <Image
                                 src={tweet.imageUrl}
                                 alt="Tweet image"
-                                fill
                                 className="object-cover"
+                                width={600}
+                                height={100}
                             />
                         </div>
                     )}

@@ -1,7 +1,7 @@
 import React from 'react'
 import {cookies} from "next/headers";
 import {dehydrate, HydrationBoundary} from "@tanstack/react-query";
-import {fetchSelfUsername} from "@/api-calls/users-api";
+import {fetchSelfUsernameAndProfilePicture} from "@/api-calls/users-api";
 import ProfileHeader from "@/components/ProfileHeader";
 import TweetForm from "@/components/tweets/TweetForm";
 import Feed from "@/components/Feed";
@@ -20,7 +20,7 @@ const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }
 
     const queryClient = await prefetchProfile({username, token});
 
-    const self = await fetchSelfUsername({token});
+    const self = await fetchSelfUsernameAndProfilePicture({token});
     const isSelf = self.username === username;
 
     return (
@@ -37,7 +37,7 @@ const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }
 
                         {isSelf && (
                             <div className="border-b border-border shadow-sm">
-                                <TweetForm username={self.username}/>
+                                <TweetForm username={self.username} profilePicture={self.profilePicture} />
                             </div>
                         )}
 
