@@ -3,6 +3,9 @@ package com.twitter_clone.backend.model.DTO;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Data
 @NoArgsConstructor
 public class TweetResponseDTO {
@@ -19,8 +22,9 @@ public class TweetResponseDTO {
     private boolean retweeted;
     private Long parentId;
     private String retweetedBy;
+    private String createdAt;
 
-    public TweetResponseDTO(Long id, String username, String content, String imageUrl, Integer likesCount, Integer repliesCount, Integer retweetsCount, boolean liked, boolean retweeted, Long parentId, String retweetedBy) {
+    public TweetResponseDTO(Long id, String username, String content, String imageUrl, Integer likesCount, Integer repliesCount, Integer retweetsCount, boolean liked, boolean retweeted, Long parentId, String retweetedBy, String createdAt) {
         this.id = id;
         this.username = username;
         this.content = content;
@@ -32,5 +36,11 @@ public class TweetResponseDTO {
         this.retweeted = retweeted;
         this.parentId = parentId;
         this.retweetedBy = retweetedBy;
+        this.createdAt = createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        this.createdAt = createdAt.format(formatter);;
     }
 }

@@ -1,13 +1,10 @@
 'use client'
 import React, {ChangeEvent, useState} from 'react'
-import {useRouter} from 'next/navigation'
-import {useMutation} from '@tanstack/react-query'
 import Link from "next/link";
+import {useRegister} from "@/hooks/auth/useRegister";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 const SignInForm = () => {
-    const router = useRouter();
 
     const [state, setState] = useState({
         username: "",
@@ -15,32 +12,7 @@ const SignInForm = () => {
         email: ""
     })
 
-    const {mutate: handleRegister, isPending} = useMutation({
-        mutationFn: async (userData: typeof state) => {
-            const res = await fetch(`${BASE_URL}/api/auth/register`, {
-                method: "POST",
-                body: JSON.stringify(userData),
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: 'include'
-            });
-
-            if (!res.ok) {
-                const error = await res.text()
-                throw new Error(error)
-            }
-
-            return res;
-        },
-        onSuccess: () => {
-            router.push('/');
-            router.refresh();
-        },
-        onError: (err: Error) => {
-            alert(err.message);
-        }
-    });
+    const { mutate: handleRegister, isPending } = useRegister();
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
         const {name, value} = e.target;
@@ -52,7 +24,7 @@ const SignInForm = () => {
 
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
-        handleRegister(state);
+        handleRegister({...state});
     }
 
     return (

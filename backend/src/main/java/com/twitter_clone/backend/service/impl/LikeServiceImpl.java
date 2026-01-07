@@ -4,6 +4,7 @@ import com.twitter_clone.backend.model.DTO.LikeResponseDTO;
 import com.twitter_clone.backend.model.Like;
 import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.User;
+import com.twitter_clone.backend.model.enums.NotificationType;
 import com.twitter_clone.backend.model.exceptions.LikeNotFoundException;
 import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
 import com.twitter_clone.backend.model.exceptions.UsernameNotFoundException;
@@ -22,12 +23,14 @@ public class LikeServiceImpl implements LikeService {
     private final UserService userService;
     private final TweetService tweetService;
     private final ModelMapper modelMapper;
+    private final NotificationServiceImpl notificationService;
 
-    public LikeServiceImpl(LikeRepository likeRepository, UserService userService, TweetService tweetService, ModelMapper modelMapper) {
+    public LikeServiceImpl(LikeRepository likeRepository, UserService userService, TweetService tweetService, ModelMapper modelMapper, NotificationServiceImpl notificationService) {
         this.likeRepository = likeRepository;
         this.userService = userService;
         this.tweetService = tweetService;
         this.modelMapper = modelMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -36,6 +39,10 @@ public class LikeServiceImpl implements LikeService {
         Tweet tweet = this.tweetService.findById(tweetId).orElseThrow(()->new TweetNotFoundException(tweetId));
 
         Like like = this.likeRepository.save(new Like(user, tweet));
+
+        if (!tweet.getUser().getUsername().equals(username)) {
+            notificationService.createNotification(tweet.getUser().getUsername(), username, "liked your tweet", "/tweets/"+tweetId.toString(), NotificationType.LIKE);
+        }
         return this.convertToDTO(like);
     }
 

@@ -9,10 +9,12 @@ import java.util.List;
 @NoArgsConstructor
 public class TweetDetailsDTO {
     TweetResponseDTO tweet;
+    TweetResponseDTO parentTweet;
     List<TweetResponseDTO> replies;
 
-    public TweetDetailsDTO(TweetResponseDTO tweet, List<TweetResponseDTO> replies) {
+    public TweetDetailsDTO(TweetResponseDTO tweet, TweetResponseDTO parentTweet, List<TweetResponseDTO> replies) {
         this.tweet = tweet;
+        this.parentTweet = parentTweet;
         this.replies = replies;
     }
 }

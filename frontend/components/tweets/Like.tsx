@@ -1,48 +1,36 @@
 'use client'
-import {useMutation} from "@tanstack/react-query";
 import React, {useState} from 'react'
 import { Heart } from "lucide-react";
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+import {useLikeTweet} from "@/hooks/tweets/useLikeTweet";
 
 const Like = ({likesCount, liked, id}: { likesCount: number, liked: boolean, id: number }) => {
     const [isLikedState, setIsLikedState] = useState(liked)
     const [likesCountState, setLikesCountState] = useState(likesCount)
 
-    const {mutate: handleLike, isPending} = useMutation({
-        mutationFn: async () => {
-            const res = await fetch(`${BASE_URL}/api/tweets/${id}/likes`, {
-                method: `${isLikedState ? "DELETE" : "POST"}`,
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: 'include'
-            });
+    const { mutate: handleLike, isPending } = useLikeTweet();
 
-            if (!res.ok) {
-                const error = await res.text()
-                throw new Error(error)
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+
+        const newLikedState = !isLikedState;
+        setIsLikedState(newLikedState);
+        setLikesCountState(prev => newLikedState ? prev + 1 : prev - 1);
+
+        handleLike({id, isLiked:isLikedState}, {
+            onError: (err) => {
+                // rollback if it fails on the server
+                setIsLikedState(!newLikedState);
+                setLikesCountState(prev => !newLikedState ? prev + 1 : prev - 1);
+                alert(err.message);
             }
-
-            return res;
-        },
-        onSuccess: () => {
-            setIsLikedState(!isLikedState);
-            setLikesCountState(prev => (isLikedState ? prev - 1 : prev + 1));
-        },
-        onError: (err: Error) => {
-            alert(err.message);
-        }
-    });
+        });
+    };
 
     return (
         <div className="flex items-center gap-1 group">
             <button
                 disabled={isPending}
-                onClick={(e) => {
-                    e.preventDefault();
-                    handleLike();
-                }}
+                onClick={handleClick}
                 className={`
                     p-2 rounded-full transition-all duration-200
                     ${isLikedState

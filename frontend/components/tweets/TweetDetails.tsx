@@ -1,29 +1,10 @@
 'use client'
 import React, {useEffect} from 'react'
-import Tweet from "@/components/tweet-components/Tweet";
-import TweetForm from "@/components/tweet-components/TweetForm";
+import Tweet from "@/components/tweets/Tweet";
+import TweetForm from "@/components/tweets/TweetForm";
 import {ITweetResponse} from "@/dtos/ITweetResponse";
-import {useInfiniteQuery} from "@tanstack/react-query";
 import {useInView} from "react-intersection-observer";
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-
-export const fetchTweetInfo = async ({pageParam=0, id}:{pageParam:number, id:number}) => {
-    const res = await fetch(`${BASE_URL}/api/tweets/${id}/details?page=${pageParam}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'include'
-    });
-    if (!res.ok) {
-        const error = await res.text()
-        throw new Error(error)
-    }
-
-    const data = await res.json();
-    return data;
-}
+import {useFetchTweetDetails} from "@/hooks/tweets/useFetchTweetDetails";
 
 const TweetDetails = ({id, username}:{id:number, username:string}) => {
     const {ref, inView} = useInView();
@@ -36,14 +17,7 @@ const TweetDetails = ({id, username}:{id:number, username:string}) => {
         isFetching,
         isFetchingNextPage,
         status,
-    } = useInfiniteQuery({
-        queryKey: ['tweet', id],
-        queryFn: ({ pageParam }) => fetchTweetInfo({ pageParam , id}),
-        initialPageParam: 0,
-        getNextPageParam: (lastPage, allPages, lastPageParam) => {
-            return lastPage.replies.length < 5 ? undefined : lastPageParam + 1;
-        },
-    })
+    } = useFetchTweetDetails(id);
 
     useEffect(() => {
         if (inView && hasNextPage && !isFetchingNextPage) {
@@ -64,15 +38,23 @@ const TweetDetails = ({id, username}:{id:number, username:string}) => {
     }
 
     const tweet = data.pages[0].tweet;
+    const parentTweet = data.pages[0].parentTweet;
 
     return (
         <div className="w-full">
             <div className="flex flex-col">
                 <div>
+                    {parentTweet && (
+                        <div className="relative">
+                            <div className="absolute left-[20px] top-[40px] bottom-0 w-[2px] bg-border shadow-sm" />
+
+                            <Tweet tweet={parentTweet} username={username} />
+                        </div>
+                    )}
                     <Tweet tweet={tweet} username={username} />
-                    <hr/>
+
                     <TweetForm username={username} parentId={tweet.id}/>
-                    <hr/>
+
                 </div>
                 {data.pages.map((group, i) => (
                     <React.Fragment key={i}>
@@ -80,7 +62,7 @@ const TweetDetails = ({id, username}:{id:number, username:string}) => {
                             {group.replies.map((reply: ITweetResponse) => (
                                 <div key={reply.id} className="transition-colors hover:bg-accent/50">
                                     <Tweet tweet={reply} username={username} />
-                                    <hr/>
+
                                 </div>
                             ))}
                         </div>

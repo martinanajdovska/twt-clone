@@ -1,51 +1,36 @@
 'use client'
 import React, {useState} from 'react'
-import {useMutation, useQueryClient} from "@tanstack/react-query";
 import { Repeat2 } from "lucide-react";
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+import {useRetweet} from "@/hooks/tweets/useRetweet";
 
 const Retweet = ({retweetsCount, retweeted, id, username}: { retweetsCount: number, retweeted: boolean, id: number, username:string }) => {
-    const queryClient = useQueryClient();
-
     const [isRetweetedState, setIsRetweetedState] = useState(retweeted)
     const [retweetsCountState, setRetweetsCountState] = useState(retweetsCount)
 
-    const {mutate: handleRetweet, isPending} = useMutation({
-        mutationFn: async () => {
-            const res = await fetch(`${BASE_URL}/api/tweets/${id}/retweets`, {
-                method: `${isRetweetedState ? "DELETE" : "POST"}`,
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: 'include'
-            });
+    const { mutate: handleRetweet, isPending } = useRetweet(username);
 
-            if (!res.ok) {
-                const error = await res.text()
-                throw new Error(error)
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+
+        const newLikedState = !isRetweetedState;
+        setIsRetweetedState(newLikedState);
+        setRetweetsCountState(prev => newLikedState ? prev + 1 : prev - 1);
+
+        handleRetweet({id, isRetweeted:isRetweetedState}, {
+            onError: (err) => {
+                // rollback if it fails on the server
+                setIsRetweetedState(!newLikedState);
+                setRetweetsCountState(prev => !newLikedState ? prev + 1 : prev - 1);
+                alert(err.message);
             }
-
-            return res;
-        },
-        onSuccess: () => {
-            setIsRetweetedState(!isRetweetedState);
-            setRetweetsCountState(prev => (isRetweetedState ? prev - 1 : prev + 1));
-            queryClient.invalidateQueries({queryKey: ['profile', username]});
-        },
-        onError: (err: Error) => {
-            alert(err.message);
-        }
-    });
+        });
+    };
 
     return (
         <div className="flex items-center gap-1 group">
             <button
                 disabled={isPending}
-                onClick={(e) => {
-                    e.preventDefault();
-                    handleRetweet();
-                }}
+                onClick={handleClick}
                 className={`
                     p-2 rounded-full transition-all duration-200
                     ${isRetweetedState

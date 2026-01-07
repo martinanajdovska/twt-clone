@@ -3,13 +3,14 @@ package com.twitter_clone.backend.service.impl;
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
 import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.User;
+import com.twitter_clone.backend.model.enums.NotificationType;
 import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
 import com.twitter_clone.backend.model.exceptions.UsernameNotFoundException;
 import com.twitter_clone.backend.repository.TweetRepository;
+import com.twitter_clone.backend.service.NotificationService;
 import com.twitter_clone.backend.service.TweetService;
 import com.twitter_clone.backend.service.UserService;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +23,13 @@ public class TweetServiceImpl implements TweetService {
     private final TweetRepository tweetRepository;
     private final UserService userService;
     private final ModelMapper modelMapper;
+    private final NotificationService notificationService;
 
-    public TweetServiceImpl(TweetRepository tweetRepository, UserService userService, ModelMapper modelMapper) {
+    public TweetServiceImpl(TweetRepository tweetRepository, UserService userService, ModelMapper modelMapper, NotificationService notificationService) {
         this.tweetRepository = tweetRepository;
         this.userService = userService;
         this.modelMapper = modelMapper;
+        this.notificationService = notificationService;
     }
 
 //    TODO: image handling
@@ -47,6 +50,10 @@ public class TweetServiceImpl implements TweetService {
         }
 
         Tweet tweet = this.tweetRepository.save(new Tweet(user, parentTweet, content, imageUrl));
+
+        if (parentId != null && !username.equals(parentTweet.getUser().getUsername())) {
+            notificationService.createNotification(parentTweet.getUser().getUsername(), username, "replied to your tweet", "/tweets/"+tweet.getId().toString(), NotificationType.REPLY);
+        }
         return this.convertToDTO(tweet);
     }
 
@@ -98,7 +105,7 @@ public class TweetServiceImpl implements TweetService {
     @Override
     public List<Tweet> findAllRepliesOfTweet(Long id, Pageable pageable) {
         Tweet tweet = this.tweetRepository.findById(id).orElseThrow(()->new TweetNotFoundException(id));
-        List<Tweet> replies = this.tweetRepository.findAllByParentTweet(tweet, pageable);
+        List<Tweet> replies = this.tweetRepository.findAllByParentTweetOrderByCreatedAtDesc(tweet, pageable);
 
         return replies;
     }

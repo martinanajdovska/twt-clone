@@ -1,49 +1,30 @@
 'use client'
-import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {useState} from "react";
+import {useFollow} from "@/hooks/useFollow";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-
-const Follow = ({username, isFollowed, token}:
-                {username:string, isFollowed:boolean, token:string}) => {
+const Follow = ({username, isFollowed, token}: {username:string, isFollowed:boolean, token:string}) => {
     const [isFollowedState, setIsFollowedState] = useState(isFollowed)
-    const queryClient = useQueryClient();
 
-    const {mutate: followUser, isPending} = useMutation({
-        mutationFn: async () => {
-            const res = await fetch(`${BASE_URL}/api/users/follows/${username}`, {
-                method: `${isFollowedState ? "DELETE" : "POST"}`,
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: 'include'
-            });
+    const { mutate: handleFollow, isPending } = useFollow({username, token});
 
-            if (!res.ok) {
-                const error = await res.text()
-                throw new Error(error)
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+
+        setIsFollowedState(!isFollowedState);
+
+        handleFollow({username, isFollowed:isFollowedState}, {
+            onError: () => {
+                // rollback if it fails on server
+                setIsFollowedState(!isFollowedState);
             }
-
-            return res;
-        },
-        onSuccess: async () => {
-            setIsFollowedState(!isFollowedState);
-            await queryClient.invalidateQueries({queryKey: ['profileHeader', username]});
-            await queryClient.invalidateQueries({queryKey: ['feed', token]});
-        },
-        onError: (err: Error) => {
-            alert(err.message);
-        }
-    });
+        });
+    };
 
     return (
         <div className="flex items-center">
             <button
                 disabled={isPending}
-                onClick={(e) => {
-                    e.preventDefault();
-                    followUser();
-                }}
+                onClick={handleClick}
                 className={`
                     px-4 py-1.5 rounded-full font-bold text-sm transition-all
                     ${isFollowedState

@@ -21,6 +21,12 @@ public class GlobalExceptionHandler {
                 .body(e.getMessage());
     }
 
+    @ExceptionHandler(NotificationNotFoundException.class)
+    public ResponseEntity<String> handleNotificationNotFound(NotificationNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(e.getMessage());
+    }
+
     @ExceptionHandler(TweetNotFoundException.class)
     public ResponseEntity<String> handleTweetNotFound(TweetNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

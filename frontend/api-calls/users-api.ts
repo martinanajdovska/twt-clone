@@ -1,20 +1,6 @@
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+import {BASE_URL} from "@/lib/constants";
 
-// get feed for logged in user
-export const fetchTweets = async ({ pageParam = 0 }: {pageParam:number}) => {
-    const response = await fetch(`${BASE_URL}/api/tweets?page=${pageParam}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-    });
-    if (!response.ok) throw new Error("Failed to fetch tweets");
-    const data = await response.json();
-    return data.content;
-}
-
-// get profile for username
+// get profile feed for username
 export const fetchProfileFeed = async ({pageParam = 0, username = ""}: { pageParam: number, username: string }) => {
     const response = await fetch(`${BASE_URL}/api/users/${username}?page=${pageParam}`, {
         method: 'GET',
@@ -34,13 +20,13 @@ export const fetchProfileFeed = async ({pageParam = 0, username = ""}: { pagePar
 
 // get username of logged in user
 export const fetchSelfUsername = async ({token}:{token:string}) => {
-    const response = await fetch(`${BASE_URL}/api/me`, {
+    const response = await fetch(`${BASE_URL}/api/users/me/info`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            // fails with credentials instead of token
             'Cookie': `token=${token}`,
         },
-        credentials: 'include'
     });
     if (!response.ok) {
         throw new Error('Error getting user data');
@@ -50,13 +36,12 @@ export const fetchSelfUsername = async ({token}:{token:string}) => {
     return data;
 }
 
-// get username, follower count
-export const fetchProfileInfo = async ({username, token}:{username:string, token?:string}) => {
+// get profile header
+export const fetchProfileInfo = async ({username}:{username:string}) => {
     const response = await fetch(`${BASE_URL}/api/users/${username}/info`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            ...(token && { 'Cookie': `token=${token}` }),
         },
         credentials: 'include'
     });
@@ -68,3 +53,20 @@ export const fetchProfileInfo = async ({username, token}:{username:string, token
     const data = await response.json();
     return data;
 }
+
+// get users by username
+export const fetchUsers = async (searchTerm: string) => {
+    if (!searchTerm) return [];
+
+    const res = await fetch(`${BASE_URL}/api/users?search=${searchTerm}`, {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'include'
+    });
+
+    if (!res.ok) {
+        const error = await res.text()
+        throw new Error(error)
+    }
+    return res.json();
+};

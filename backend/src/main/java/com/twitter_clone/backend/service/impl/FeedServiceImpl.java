@@ -3,7 +3,6 @@ package com.twitter_clone.backend.service.impl;
 import com.twitter_clone.backend.model.DTO.TweetDetailsDTO;
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
 import com.twitter_clone.backend.model.DTO.UserResponseDTO;
-import com.twitter_clone.backend.model.Retweet;
 import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.User;
 import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
@@ -15,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -100,9 +98,14 @@ public class FeedServiceImpl implements FeedService {
         TweetResponseDTO tweetResponseDTO = this.getTweetById(id, username);
         User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
 
+        TweetResponseDTO parentTweetDTO = null;
+        if (tweetResponseDTO.getParentId()!=null){
+            parentTweetDTO = this.getTweetById(tweetResponseDTO.getParentId(), username);
+        }
+
         List<Tweet> replies = this.tweetService.findAllRepliesOfTweet(id, pageable);
         List<TweetResponseDTO> repliesDTO = replies.stream().map(t -> this.addTweetInfo(t, null, username)).toList();
-        return new TweetDetailsDTO(tweetResponseDTO, repliesDTO);
+        return new TweetDetailsDTO(tweetResponseDTO, parentTweetDTO, repliesDTO);
     }
 
     public TweetResponseDTO addTweetInfo(Tweet tweet, String username, String requester) {

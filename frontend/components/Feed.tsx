@@ -1,12 +1,11 @@
 'use client'
-import {useInfiniteQuery} from '@tanstack/react-query'
 import React, {useEffect} from "react";
 import {ITweetResponse} from "@/dtos/ITweetResponse";
-import Tweet from "@/components/tweet-components/Tweet";
+import Tweet from "@/components/tweets/Tweet";
 import {useInView} from 'react-intersection-observer';
-import {fetchProfileFeed, fetchTweets} from "@/components/dataFetching";
+import {useFetchFeed} from "@/hooks/tweets/useFetchFeed";
 
-export default function Feed({token, username, isProfile}: { token: string, username: string , isProfile:boolean }) {
+export default function Feed({username, isProfile}: { username: string, isProfile: boolean }) {
     const {ref, inView} = useInView();
 
     const {
@@ -17,22 +16,7 @@ export default function Feed({token, username, isProfile}: { token: string, user
         isFetching,
         isFetchingNextPage,
         status,
-    } = useInfiniteQuery({
-        // check if trying to load a user profile or normal feed
-        // and use the relevant key and function for caching
-        queryKey: isProfile ? ['profile', username] : ['feed', token],
-        queryFn: async ({ pageParam }) => {
-            const res = isProfile
-                ? await fetchProfileFeed({ pageParam, username })
-                : await fetchTweets({ pageParam });
-            // normalize the api response
-            return Array.isArray(res) ? res : res.content;
-        },
-        initialPageParam: 0,
-        getNextPageParam: (lastPage, allPages, lastPageParam) => {
-            return lastPage.length < 5 ? undefined : lastPageParam + 1;
-        },
-    })
+    } = useFetchFeed({username, isProfile})
 
     useEffect(() => {
         if (inView && hasNextPage && !isFetchingNextPage) {
@@ -60,8 +44,8 @@ export default function Feed({token, username, isProfile}: { token: string, user
                         <div className="divide-y border-x border-b border-border">
                             {group.map((tweet: ITweetResponse) => (
                                 <div key={tweet.id} className="transition-colors hover:bg-accent/50">
-                                    <Tweet tweet={tweet} username={username} />
-                                    <hr/>
+                                    <Tweet tweet={tweet} username={username}/>
+
                                 </div>
                             ))}
                         </div>

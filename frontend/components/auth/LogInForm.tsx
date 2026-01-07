@@ -1,48 +1,15 @@
 'use client'
 import React, { ChangeEvent, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from "next/link";
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+import {useLogin} from "@/hooks/auth/useLogin";
 
 const LogInForm = () => {
-    const router = useRouter();
-    const queryClient = useQueryClient();
-
     const [state, setState] = useState({
         username: "",
         password: ""
     })
 
-    const { mutate: handleLogin, isPending } = useMutation({
-        mutationFn: async (credentials: typeof state) => {
-            const res = await fetch(`${BASE_URL}/api/auth/login`, {
-                method: "POST",
-                body: JSON.stringify(credentials),
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: 'include'
-            });
-
-            if (!res.ok) {
-                const error = await res.text()
-                throw new Error(error)
-            }
-
-            return res;
-        },
-        onSuccess: () => {
-            queryClient.clear();
-
-            router.push('/');
-            router.refresh();
-        },
-        onError: (err: Error) => {
-            alert(err.message);
-        }
-    });
+    const { mutate: handleLogin, isPending } = useLogin();
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
         const { name, value } = e.target;
@@ -54,7 +21,7 @@ const LogInForm = () => {
 
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
-        handleLogin(state);
+        handleLogin({... state});
     }
 
     return (

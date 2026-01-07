@@ -5,24 +5,7 @@ import {useQuery} from '@tanstack/react-query';
 import {useDebounce} from 'use-debounce';
 import {useRouter, useSearchParams} from 'next/navigation';
 import { Search as SearchIcon, User } from 'lucide-react';
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-
-const fetchUsers = async (searchTerm: string) => {
-    if (!searchTerm) return [];
-
-    const res = await fetch(`${BASE_URL}/api/users?search=${searchTerm}`, {
-        method: 'GET',
-        headers: {'Content-Type': 'application/json'},
-        credentials: 'include'
-    });
-
-    if (!res.ok) {
-        const error = await res.text()
-        throw new Error(error)
-    }
-    return res.json();
-};
+import {fetchUsers} from "@/api-calls/users-api";
 
 const Search = () => {
     const searchParams = useSearchParams();
@@ -37,7 +20,6 @@ const Search = () => {
         queryFn: () => fetchUsers(debouncedSearch),
         enabled: debouncedSearch.length > 0,
     });
-
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

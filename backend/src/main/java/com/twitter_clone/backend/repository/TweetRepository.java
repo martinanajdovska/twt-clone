@@ -15,5 +15,5 @@ public interface TweetRepository extends JpaRepository<Tweet,Long> {
     List<Tweet> findAllByUserUsernameAndParentTweetIsNull(String username);
     Page<Tweet> findTweetsByUserUsernameIsIn(List<String> usernames, Pageable pageable);
     List<Tweet> findAllByIdIsIn(List<Long> ids);
-    List<Tweet> findAllByParentTweet(Tweet tweet, Pageable pageable);
+    List<Tweet> findAllByParentTweetOrderByCreatedAtDesc(Tweet tweet, Pageable pageable);
 }

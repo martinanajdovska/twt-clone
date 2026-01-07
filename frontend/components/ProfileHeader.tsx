@@ -2,26 +2,38 @@
 import Follow from "@/components/Follow";
 import React from "react";
 import {useQuery} from "@tanstack/react-query";
-import {fetchProfileInfo} from "@/components/dataFetching";
+import {fetchProfileInfo} from "@/api-calls/users-api";
 
 const ProfileHeader =  ({username, token, isSelf}: {username:string, token:string, isSelf:boolean}) => {
     const { data, isLoading } = useQuery({
         queryKey: ['profileHeader', username],
-        queryFn: () => fetchProfileInfo({username, token}),
+        queryFn: () => fetchProfileInfo({username}),
     });
 
     if (isLoading) return <div>Loading...</div>;
 
     return (
-        <div className="bg-card border-x border-b border-border p-6 space-y-4">
+        <div className="bg-card border-x border-b border-border p-6 space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                    <div
+                        className="h-10 w-10 rounded-full bg-accent z-3 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center font-bold text-sm"
+                    >
+                        {username.charAt(0).toUpperCase()}
+                    </div>
+
+                    <div className="flex-col">
+                        {data.followsYou && (
+                            <p className="inline-block bg-muted text-muted-foreground text-[11px] px-1.5 py-0.5 rounded font-medium mt-1 uppercase tracking-wider">
+                                Follows you
+                            </p>
+                        )}
+                        <h1 className="text-2xl tracking-tight font-bold ml-3">{username}</h1>
+
+                    </div>
+                </div>
                 <div>
-                    <h1 className="text-2xl tracking-tight font-bold">{username}</h1>
-                    {data.isFollowingYou && (
-                        <p className="inline-block bg-muted text-muted-foreground text-[11px] px-1.5 py-0.5 rounded font-medium mt-1 uppercase tracking-wider">
-                            Follows you
-                        </p>
-                    )}
+
                 </div>
 
                 {!isSelf && (
@@ -31,7 +43,7 @@ const ProfileHeader =  ({username, token, isSelf}: {username:string, token:strin
                 )}
             </div>
 
-            <div className="flex gap-6 items-center pt-2">
+            <div className="flex gap-6 items-center pt-2 ">
                 <div className="flex gap-1 items-center hover:underline cursor-pointer decoration-muted-foreground/50">
                     <span className="font-bold text-foreground">{data.following}</span>
                     <span className="text-muted-foreground text-sm">Following</span>
@@ -40,6 +52,7 @@ const ProfileHeader =  ({username, token, isSelf}: {username:string, token:strin
                     <span className="font-bold text-foreground">{data.followers}</span>
                     <span className="text-muted-foreground text-sm">Followers</span>
                 </div>
+
             </div>
         </div>
     );

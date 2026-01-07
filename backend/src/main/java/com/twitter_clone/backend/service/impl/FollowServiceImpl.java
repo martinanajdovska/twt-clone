@@ -4,9 +4,11 @@ import com.twitter_clone.backend.model.DTO.FollowResponseDTO;
 import com.twitter_clone.backend.model.DTO.UserResponseDTO;
 import com.twitter_clone.backend.model.Follow;
 import com.twitter_clone.backend.model.User;
+import com.twitter_clone.backend.model.enums.NotificationType;
 import com.twitter_clone.backend.model.exceptions.FollowNotFoundException;
 import com.twitter_clone.backend.repository.FollowRepository;
 import com.twitter_clone.backend.service.FollowService;
+import com.twitter_clone.backend.service.NotificationService;
 import com.twitter_clone.backend.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,11 +24,13 @@ public class FollowServiceImpl implements FollowService {
     private final FollowRepository followRepository;
     private final UserService userService;
     private final ModelMapper modelMapper;
+    private final NotificationService notificationService;
 
-    public FollowServiceImpl(FollowRepository followRepository, UserService userService, ModelMapper modelMapper) {
+    public FollowServiceImpl(FollowRepository followRepository, UserService userService, ModelMapper modelMapper, NotificationService notificationService) {
         this.followRepository = followRepository;
         this.userService = userService;
         this.modelMapper = modelMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -36,6 +39,9 @@ public class FollowServiceImpl implements FollowService {
         User followedUser = this.userService.findByUsername(followed).orElseThrow(()-> new UsernameNotFoundException(followed));
 
         Follow follow = this.followRepository.save(new Follow(followerUser, followedUser));
+
+        notificationService.createNotification(followed, follower, "followed you!", "/users/"+follower, NotificationType.FOLLOW);
+
         return convertToDTO(follow);
     }
 

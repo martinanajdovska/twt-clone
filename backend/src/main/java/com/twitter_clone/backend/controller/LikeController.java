@@ -1,14 +1,11 @@
 package com.twitter_clone.backend.controller;
 
 import com.twitter_clone.backend.model.DTO.LikeResponseDTO;
-import com.twitter_clone.backend.model.exceptions.LikeNotFoundException;
-import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
 import com.twitter_clone.backend.service.LikeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

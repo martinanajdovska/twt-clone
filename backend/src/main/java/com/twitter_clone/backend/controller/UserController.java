@@ -2,13 +2,11 @@ package com.twitter_clone.backend.controller;
 
 import com.twitter_clone.backend.model.DTO.UserInfoDTO;
 import com.twitter_clone.backend.model.DTO.UserResponseDTO;
-import com.twitter_clone.backend.model.exceptions.UsernameNotFoundException;
 import com.twitter_clone.backend.service.FeedService;
 import com.twitter_clone.backend.service.ProfileService;
 import com.twitter_clone.backend.service.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -40,15 +38,13 @@ public class UserController {
                                                           @RequestParam(defaultValue = "5") int size,
                                                           @PathVariable String username,
                                                           @AuthenticationPrincipal UserDetails userDetails) {
-//            TODO: check if it is sorting properly
-        Sort sort = Sort.by("created_at").ascending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, size);
 
         UserResponseDTO responseDTO = this.feedService.generateProfileFeed(username, pageable, userDetails.getUsername());
         return ResponseEntity.ok().body(responseDTO);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/users/me/info")
     public ResponseEntity<Map<String, String>> getUsername(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok().body((Map.of("username", userDetails.getUsername())));
     }

@@ -1,51 +1,28 @@
 'use client'
 import React, {useState} from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Image as ImageIcon } from 'lucide-react'
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+import {useCreateTweet} from "@/hooks/tweets/useCreateTweet";
 
 const TweetForm = ({username, parentId, onSuccess}:{username:string, parentId?:number, onSuccess?: ()=>void}) => {
-    const queryClient = useQueryClient();
     const [content, setContent] = useState("");
 
-    const { mutate: createTweet, isPending } = useMutation({
-        mutationFn: async (content:string ) => {
-            const res = await fetch(`${BASE_URL}/api/tweets`, {
-                method: "POST",
-                body: JSON.stringify({content: content, parentId: parentId}),
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: 'include'
-            });
-
-            if (!res.ok) {
-                const error = await res.text()
-                throw new Error(error)            }
-            return res;
-        },
-        onSuccess: () => {
-            setContent("");
-            queryClient.invalidateQueries({ queryKey: ['profile', username] });
-            queryClient.invalidateQueries({ queryKey: ['tweet', parentId?.toString()] });
-
-            if (onSuccess) onSuccess();
-        },
-        onError: (err) => {
-            alert(err.message);
-        }
-    });
+    const { mutate: createTweet, isPending } = useCreateTweet({username, parentId});
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!content.trim()) return;
 
-        createTweet(content);
+        createTweet({content, parentId}, {
+            onSuccess: () => {
+                setContent("");
+                if (onSuccess) onSuccess();
+            }
+        });
     }
 
     return (
-        <div className="p-4 bg-card border-b border-border">
+        <div className="p-4 bg-card border-b border-border shadow-sm">
             <div className="flex gap-3">
                 <div className="flex flex-col items-center">
                     <div

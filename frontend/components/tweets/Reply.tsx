@@ -5,9 +5,9 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { MessageCircle } from "lucide-react"
-import TweetForm from "@/components/tweet-components/TweetForm"
-import { useState } from "react"
-import Tweet from "@/components/tweet-components/Tweet";
+import TweetForm from "@/components/tweets/TweetForm"
+import React, { useState } from "react"
+import Tweet from "@/components/tweets/Tweet";
 import {ITweetResponse} from "@/dtos/ITweetResponse";
 
 const Reply = ({ tweet, username, repliesCount }: { tweet: ITweetResponse, username:string, repliesCount:number }) => {
@@ -27,8 +27,11 @@ const Reply = ({ tweet, username, repliesCount }: { tweet: ITweetResponse, usern
 
             <DialogContent className="sm:max-w-[600px] p-0 gap-0 border-gray-800">
                 <div className="p-4">
-                    <Tweet tweet={tweet} username={username}/>
-                    <hr/>
+                    <div className="relative">
+                        <div className="absolute left-[20px] top-[40px] bottom-0 w-[2px] bg-border shadow-sm" />
+
+                        <Tweet tweet={tweet} username={username} />
+                    </div>
                     <div className="mt-2">
                         <TweetForm username={username} parentId={tweet.id} onSuccess={() => {
                             setIsOpen(false)

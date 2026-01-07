@@ -3,15 +3,16 @@ import { ITweetResponse } from "@/dtos/ITweetResponse";
 import Image from "next/image";
 import React from "react";
 import Like from "./Like";
-import Retweet from "@/components/tweet-components/Retweet";
+import Retweet from "@/components/tweets/Retweet";
 import { useRouter } from "next/navigation";
 import { Repeat2} from "lucide-react";
 
-import Delete from "@/components/tweet-components/Delete";
-import Reply from "@/components/tweet-components/Reply";
+import Delete from "@/components/tweets/Delete";
+import Reply from "@/components/tweets/Reply";
 
 const Tweet = ({ tweet, username}: { tweet: ITweetResponse, username: string }) => {
     const router = useRouter();
+    const isSelf = username === tweet.username;
 
     const handleUserClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -23,11 +24,9 @@ const Tweet = ({ tweet, username}: { tweet: ITweetResponse, username: string }) 
         router.push(`/tweets/${tweet.id}`);
     }
 
-    const isSelf = username === tweet.username;
-
     return (
         <article
-            className="flex flex-col p-4 border-b border-border hover:bg-muted/30 transition-colors cursor-pointer group">
+            className="flex flex-col p-4 border-b border-border hover:bg-muted/30 transition-colors cursor-pointer group shadow-sm">
             {(tweet.retweeted || tweet.retweetedBy) && (
                 <div className="flex items-center gap-2 ml-8 mb-1 text-muted-foreground">
                     <Repeat2 size={14} className="font-bold" />
@@ -39,7 +38,7 @@ const Tweet = ({ tweet, username}: { tweet: ITweetResponse, username: string }) 
                 <div className="flex flex-col items-center">
                     <div
                         onClick={handleUserClick}
-                        className="h-10 w-10 rounded-full bg-accent flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center font-bold text-sm"
+                        className="h-10 w-10 rounded-full bg-accent z-3 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center font-bold text-sm"
                     >
                         {tweet.username.charAt(0).toUpperCase()}
                     </div>
@@ -79,6 +78,7 @@ const Tweet = ({ tweet, username}: { tweet: ITweetResponse, username: string }) 
                         <Reply tweet={tweet} username={username} repliesCount={tweet.repliesCount} />
                         <Retweet retweetsCount={tweet.retweetsCount} retweeted={tweet.retweeted} id={tweet.id} username={username} />
                         <Like likesCount={tweet.likesCount} liked={tweet.liked} id={tweet.id} />
+                        <span>{tweet.createdAt}</span>
                     </div>
                 </div>
             </div>

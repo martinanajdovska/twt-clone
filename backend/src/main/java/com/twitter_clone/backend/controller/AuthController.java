@@ -3,8 +3,6 @@ package com.twitter_clone.backend.controller;
 import com.twitter_clone.backend.model.DTO.auth.SignInRequestDTO;
 import com.twitter_clone.backend.model.DTO.auth.SignUpRequestDTO;
 import com.twitter_clone.backend.model.enums.Role;
-import com.twitter_clone.backend.model.exceptions.EmailAlreadyExistsException;
-import com.twitter_clone.backend.model.exceptions.UsernameAlreadyExistsException;
 import com.twitter_clone.backend.service.TokenService;
 import com.twitter_clone.backend.service.UserService;
 import jakarta.servlet.http.Cookie;

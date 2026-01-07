@@ -10,4 +10,5 @@ export interface ITweetResponse {
     liked: boolean;
     retweeted: boolean;
     retweetedBy: string;
+    createdAt: string;
 }

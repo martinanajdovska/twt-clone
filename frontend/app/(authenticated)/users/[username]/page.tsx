@@ -1,45 +1,24 @@
 import React from 'react'
 import {cookies} from "next/headers";
-import {dehydrate, HydrationBoundary, QueryClient} from "@tanstack/react-query";
-import Link from "next/link";
-import {fetchProfileFeed, fetchProfileInfo, fetchSelfUsername} from "@/components/dataFetching";
+import {dehydrate, HydrationBoundary} from "@tanstack/react-query";
+import {fetchSelfUsername} from "@/api-calls/users-api";
 import ProfileHeader from "@/components/ProfileHeader";
-import TweetForm from "@/components/tweet-components/TweetForm";
+import TweetForm from "@/components/tweets/TweetForm";
 import Feed from "@/components/Feed";
+import {redirect} from "next/navigation";
+import {prefetchProfile} from "@/hooks/prefetchProfile";
 
 const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }) => {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-    const queryClient = new QueryClient()
 
     const {username} = await params
 
     if (!token) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-                <h1 className="text-3xl font-bold">Welcome!</h1>
-                <div className="flex gap-4">
-                    <Link href="/register" className="text-primary hover:underline font-medium">Sign Up</Link>
-                    <Link href="/login" className="text-primary hover:underline font-medium">Sign In</Link>
-                </div>
-            </div>
-        )
+        redirect("/login");
     }
 
-    await Promise.all([
-        queryClient.prefetchInfiniteQuery({
-            queryKey: ['profile', username],
-            queryFn: ({ pageParam }) => fetchProfileFeed({ pageParam, username }),
-            initialPageParam: 0,
-            getNextPageParam: (lastPage, allPages, lastPageParam) => {
-                return lastPage.length < 5 ? undefined : lastPageParam + 1;
-            },
-        }),
-        queryClient.prefetchQuery({
-            queryKey: ['profileHeader', username],
-            queryFn: () => fetchProfileInfo({username, token}),
-        }),
-    ]);
+    const queryClient = await prefetchProfile({username, token});
 
     const self = await fetchSelfUsername({token});
     const isSelf = self.username === username;
@@ -48,6 +27,7 @@ const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <section className="col-span-12 space-y-6">
+                    PROFILE
                     <HydrationBoundary state={dehydrate(queryClient)}>
                         <ProfileHeader
                             token={token}
@@ -56,12 +36,12 @@ const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }
                         />
 
                         {isSelf && (
-                            <div className="border-b border-border">
+                            <div className="border-b border-border shadow-sm">
                                 <TweetForm username={self.username}/>
                             </div>
                         )}
 
-                        <Feed token={token} username={username} isProfile={true}/>
+                        <Feed username={username} isProfile={true}/>
                     </HydrationBoundary>
                 </section>
             </div>

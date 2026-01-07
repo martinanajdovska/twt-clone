@@ -4,8 +4,10 @@ import com.twitter_clone.backend.model.DTO.RetweetResponseDTO;
 import com.twitter_clone.backend.model.Retweet;
 import com.twitter_clone.backend.model.Tweet;
 import com.twitter_clone.backend.model.User;
+import com.twitter_clone.backend.model.enums.NotificationType;
 import com.twitter_clone.backend.model.exceptions.*;
 import com.twitter_clone.backend.repository.RetweetRepository;
+import com.twitter_clone.backend.service.NotificationService;
 import com.twitter_clone.backend.service.RetweetService;
 import com.twitter_clone.backend.service.TweetService;
 import com.twitter_clone.backend.service.UserService;
@@ -14,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class RetweetServiceImpl implements RetweetService {
@@ -22,12 +23,14 @@ public class RetweetServiceImpl implements RetweetService {
     private final UserService userService;
     private final TweetService tweetService;
     private final ModelMapper modelMapper;
+    private final NotificationService notificationService;
 
-    public RetweetServiceImpl(RetweetRepository retweetRepository, UserService userService, TweetService tweetService, ModelMapper modelMapper) {
+    public RetweetServiceImpl(RetweetRepository retweetRepository, UserService userService, TweetService tweetService, ModelMapper modelMapper, NotificationService notificationService) {
         this.retweetRepository = retweetRepository;
         this.userService = userService;
         this.tweetService = tweetService;
         this.modelMapper = modelMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -41,6 +44,11 @@ public class RetweetServiceImpl implements RetweetService {
         Tweet tweet = this.tweetService.findById(tweetId).orElseThrow(()->new TweetNotFoundException(tweetId));
 
         Retweet retweet = this.retweetRepository.save(new Retweet(user, tweet));
+
+        if (!tweet.getUser().getUsername().equals(username)) {
+            notificationService.createNotification(tweet.getUser().getUsername(), username, "retweeted your tweet", "/tweets/"+tweetId.toString(), NotificationType.RETWEET);
+        }
+
         return this.convertToDTO(retweet);
     }
 

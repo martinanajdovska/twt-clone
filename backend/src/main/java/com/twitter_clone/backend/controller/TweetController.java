@@ -3,8 +3,6 @@ package com.twitter_clone.backend.controller;
 import com.twitter_clone.backend.model.DTO.TweetDetailsDTO;
 import com.twitter_clone.backend.model.DTO.TweetRequestDTO;
 import com.twitter_clone.backend.model.DTO.TweetResponseDTO;
-import com.twitter_clone.backend.model.exceptions.TweetNotFoundException;
-import com.twitter_clone.backend.model.exceptions.UsernameNotFoundException;
 import com.twitter_clone.backend.service.FeedService;
 import com.twitter_clone.backend.service.TweetService;
 import org.springframework.data.domain.Page;
@@ -16,8 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/tweets")
@@ -34,8 +30,7 @@ public class TweetController {
     public ResponseEntity<Page<TweetResponseDTO>> generateFeed(@RequestParam(defaultValue = "0") int page,
                                                                @RequestParam(defaultValue = "5") int size,
                                                                @AuthenticationPrincipal UserDetails userDetails) {
-        Sort sort = Sort.by("createdAt").descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, size);
 
         return ResponseEntity.ok(this.feedService.generateFeed(userDetails.getUsername(), pageable));
     }
