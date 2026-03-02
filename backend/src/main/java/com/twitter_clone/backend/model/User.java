@@ -4,11 +4,6 @@ import com.twitter_clone.backend.model.enums.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Collection;
-import java.util.Collections;
 
 @Data
 @Entity
@@ -25,12 +20,12 @@ public class User {
     private String email;
     private String imageUrl;
 
-//    TODO: profile picture?
+    // TODO: profile picture?
 
     @Enumerated(value = EnumType.STRING)
     private Role role;
 
-    public User(String username, String password, Role role,  String email) {
+    public User(String username, String password, Role role, String email) {
         this.username = username;
         this.password = password;
         this.role = role;

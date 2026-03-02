@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -31,18 +30,20 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<String>> getSearchResults(@RequestParam String search, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<String>> getSearchResults(@RequestParam String search,
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok().body(this.userService.findByUsernameContaining(search));
     }
 
     @GetMapping("/users/{username}")
     public ResponseEntity<UserResponseDTO> getProfileFeed(@RequestParam(defaultValue = "0") int page,
-                                                          @RequestParam(defaultValue = "5") int size,
-                                                          @PathVariable String username,
-                                                          @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestParam(defaultValue = "5") int size,
+            @PathVariable String username,
+            @AuthenticationPrincipal UserDetails userDetails) {
         Pageable pageable = PageRequest.of(page, size);
 
-        UserResponseDTO responseDTO = this.feedService.generateProfileFeed(username, pageable, userDetails.getUsername());
+        UserResponseDTO responseDTO = this.feedService.generateProfileFeed(username, pageable,
+                userDetails.getUsername());
         return ResponseEntity.ok().body(responseDTO);
     }
 
@@ -52,12 +53,14 @@ public class UserController {
     }
 
     @GetMapping("/users/{username}/info")
-    public ResponseEntity<UserInfoDTO> getProfileHeader(@PathVariable String username, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<UserInfoDTO> getProfileHeader(@PathVariable String username,
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok().body(this.profileService.getUserInfo(username, userDetails.getUsername()));
     }
 
     @PatchMapping("/users/me/image")
-    public ResponseEntity<Void> updateProfileImage(@AuthenticationPrincipal UserDetails userDetails, @RequestParam MultipartFile image) {
+    public ResponseEntity<Void> updateProfileImage(@AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam MultipartFile image) {
         this.userService.updateProfileImage(userDetails.getUsername(), image);
         return ResponseEntity.ok().build();
     }

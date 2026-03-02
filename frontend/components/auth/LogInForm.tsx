@@ -1,15 +1,24 @@
 'use client'
-import React, { ChangeEvent, useState } from 'react'
+import React, { ChangeEvent, useState, useEffect } from 'react'
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {useLogin} from "@/hooks/auth/useLogin";
 
 const LogInForm = () => {
+    const searchParams = useSearchParams();
     const [state, setState] = useState({
         username: "",
         password: ""
     })
 
     const { mutate: handleLogin, isPending } = useLogin();
+
+    useEffect(() => {
+        if (searchParams.get('session_expired') === '1') {
+            document.cookie = 'token=; Path=/; Max-Age=0';
+            window.history.replaceState({}, '', '/login');
+        }
+    }, [searchParams]);
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
         const { name, value } = e.target;

@@ -7,6 +7,7 @@ import com.twitter_clone.backend.service.TokenService;
 import com.twitter_clone.backend.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -22,16 +25,20 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
 
-    public AuthController(UserService userService, AuthenticationManager authenticationManager, TokenService tokenService) {
+    @Value("${frontend_url}")
+    private String frontendUrl;
+
+    public AuthController(UserService userService, AuthenticationManager authenticationManager,
+            TokenService tokenService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
     }
 
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody SignInRequestDTO signInRequest, HttpServletResponse response) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInRequest.getUsername(), signInRequest.getPassword()));
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(signInRequest.getUsername(), signInRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = tokenService.generateToken(signInRequest.getUsername());
 
@@ -49,7 +56,8 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody SignUpRequestDTO signUpRequest) {
-        userService.register(signUpRequest.getUsername(), signUpRequest.getPassword(), Role.ROLE_USER, signUpRequest.getEmail());
+        userService.register(signUpRequest.getUsername(), signUpRequest.getPassword(), Role.ROLE_USER,
+                signUpRequest.getEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
     }
@@ -62,5 +70,15 @@ public class AuthController {
         cookie.setMaxAge(0);
         response.addCookie(cookie);
         return ResponseEntity.ok("Logged out");
+    }
+
+    @GetMapping("/clear-session")
+    public void clearSession(HttpServletResponse response) throws IOException {
+        Cookie cookie = new Cookie("token", null);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+        response.sendRedirect(frontendUrl + "/login?session_expired=1");
     }
 }

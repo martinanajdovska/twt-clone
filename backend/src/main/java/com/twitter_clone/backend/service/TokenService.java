@@ -9,7 +9,7 @@ import java.util.Date;
 
 @Service
 public class TokenService {
-    @Value("${backend.jwt-secret}")
+    @Value("${backend_jwt_secret}")
     private String secret;
 
     public String generateToken(String username) {

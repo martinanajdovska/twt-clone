@@ -7,6 +7,7 @@ import {fetchSelfUsernameAndProfilePicture} from "@/api-calls/users-api";
 import {cookies} from "next/headers";
 import {redirect} from "next/navigation";
 import React from "react";
+import {BASE_URL} from "@/lib/constants";
 import NotificationListener from "@/listeners/NotificationListener";
 import NotificationDropdown from "@/components/notifications/NotificationDropdown";
 
@@ -18,7 +19,12 @@ export default async function AuthenticatedLayout({children,}: { children: React
         redirect("/login");
     }
 
-    const self = await fetchSelfUsernameAndProfilePicture({token});
+    let self;
+    try {
+        self = await fetchSelfUsernameAndProfilePicture({token});
+    } catch {
+        redirect(`${BASE_URL}/api/auth/clear-session`);
+    }
 
     return (
         <div className="min-h-screen bg-background py-10">
