@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
 import * as multer from 'multer';
 
+import { FirebaseModule } from './firebase/firebase.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TweetsModule } from './tweets/tweets.module';
@@ -39,6 +40,7 @@ import { Notification } from './entities/notification.entity';
       storage: multer.memoryStorage(),
       limits: { fileSize: 3 * 1024 * 1024 },
     }),
+    FirebaseModule,
     AuthModule,
     UsersModule,
     TweetsModule,

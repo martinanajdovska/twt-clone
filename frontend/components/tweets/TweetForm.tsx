@@ -6,7 +6,7 @@ import {useCreateTweet} from "@/hooks/tweets/useCreateTweet";
 import Image from "next/image";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 
-const TweetForm = ({username, parentId, onSuccess, profilePicture}:{username:string, parentId?:number, onSuccess?: ()=>void, profilePicture:string}) => {
+const TweetForm = ({username, parentId, onSuccess, profilePicture}:{username:string, parentId?:number, onSuccess?: ()=>void, profilePicture?:string}) => {
     const [content, setContent] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);

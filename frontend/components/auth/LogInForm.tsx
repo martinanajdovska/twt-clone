@@ -2,12 +2,12 @@
 import React, { ChangeEvent, useState, useEffect } from 'react'
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import {useLogin} from "@/hooks/auth/useLogin";
+import { useLogin } from "@/hooks/auth/useLogin";
 
 const LogInForm = () => {
     const searchParams = useSearchParams();
     const [state, setState] = useState({
-        username: "",
+        email: "",
         password: ""
     })
 
@@ -30,7 +30,7 @@ const LogInForm = () => {
 
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
-        handleLogin({... state});
+        handleLogin({ email: state.email, password: state.password });
     }
 
     return (
@@ -38,21 +38,21 @@ const LogInForm = () => {
             <div className="w-full max-w-md bg-card border border-border rounded-2xl p-8 shadow-sm bg-secondary">
                 <div className="flex flex-col space-y-2 text-center mb-8">
                     <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
-                    <p className="text-sm text-muted-foreground">Enter your credentials to access your account</p>
+                    <p className="text-sm text-muted-foreground">Sign in with your email and password</p>
                 </div>
 
                 <form className="flex flex-col gap-4" onSubmit={onSubmit}>
                     <div className="space-y-1">
-                        <label className="text-sm font-medium" htmlFor="username">Username</label>
+                        <label className="text-sm font-medium" htmlFor="email">Email</label>
                         <input
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
-                            type="text"
-                            name="username"
-                            id="username"
-                            placeholder="Username"
-                            value={state.username}
+                            type="email"
+                            name="email"
+                            id="email"
+                            placeholder="you@example.com"
+                            value={state.email}
                             onChange={handleChange}
-                            autoComplete="username"
+                            autoComplete="email"
                             required
                         />
                     </div>

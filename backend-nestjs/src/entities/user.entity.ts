@@ -23,11 +23,14 @@ export class User {
   @Column({ unique: true })
   username: string;
 
-  @Column()
-  password: string;
+  @Column({ type: 'varchar', nullable: true })
+  password: string | null;
 
   @Column({ unique: true })
   email: string;
+
+  @Column({ type: 'varchar', unique: true, nullable: true })
+  firebaseUid: string | null;
 
   @Column({ type: 'varchar', nullable: true })
   imageUrl: string | null;

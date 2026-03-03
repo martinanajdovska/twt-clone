@@ -38,6 +38,7 @@ export class UsersService {
       username,
       email,
       password: hashedPassword,
+      firebaseUid: null,
       role,
     });
     return this.userRepo.save(user);
@@ -47,8 +48,43 @@ export class UsersService {
     return this.userRepo.findOne({ where: { username } });
   }
 
+  async findByFirebaseUid(firebaseUid: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { firebaseUid } });
+  }
+
   async findById(id: number): Promise<User | null> {
     return this.userRepo.findOne({ where: { id } });
+  }
+
+  async findOrCreateFromFirebase(
+    firebaseUid: string,
+    email: string,
+    preferredUsername?: string,
+  ): Promise<User> {
+    let user = await this.findByFirebaseUid(firebaseUid);
+    if (user) return user;
+    user = await this.userRepo.findOne({ where: { email } });
+    if (user) {
+      user.firebaseUid = firebaseUid;
+      return this.userRepo.save(user);
+    }
+    let username = preferredUsername?.trim();
+    if (!username) {
+      username = email.replace(/@.*$/, '').replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase() || 'user';
+    }
+    let base = username;
+    let suffix = 0;
+    while (await this.existsByUsername(username)) {
+      username = `${base}${++suffix}`;
+    }
+    const newUser = this.userRepo.create({
+      username,
+      email,
+      password: null,
+      firebaseUid,
+      role: Role.USER,
+    });
+    return this.userRepo.save(newUser);
   }
 
   async existsByUsername(username: string): Promise<boolean> {

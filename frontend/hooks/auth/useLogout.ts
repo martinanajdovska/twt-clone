@@ -1,26 +1,29 @@
-import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {BASE_URL} from "@/lib/constants";
-import {useRouter} from "next/navigation";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { getFirebaseAuth } from '@/lib/firebase';
+import { BASE_URL } from '@/lib/constants';
 
 export const useLogout = () => {
-    const queryClient = useQueryClient();
-    const router = useRouter();
+  const queryClient = useQueryClient();
+  const router = useRouter();
 
-    return useMutation({
-        mutationFn: async () => {
-            const response = await fetch(`${BASE_URL}/api/auth/logout`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                throw new Error("Logout failed");
-            }
-            return response;
-        },
+  return useMutation({
+    mutationFn: async () => {
+      const auth = getFirebaseAuth();
+      if (auth?.currentUser) {
+        await signOut(auth);
+      }
+      const response = await fetch(`${BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+      return response;
+    },
         onSuccess: () => {
             queryClient.clear();
             router.push('/login');
