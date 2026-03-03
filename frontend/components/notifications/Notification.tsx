@@ -24,19 +24,19 @@ const Notification = ({notification}:{notification: INotificationResponse}) => {
         }
     };
 
-    function openNotification({link, id, isRead}:{link: string, id: number, isRead: boolean}) {
-        router.push(link);
+    async function openNotification({link, id, isRead}:{link: string, id: number, isRead: boolean}) {
         if (!isRead) {
-            readNotification({id});
+            await readNotification({id});
         }
+        router.push(link);
     }
 
     return (
         <div
-            onClick={() => {openNotification({link:notification.link, id:notification.id, isRead:notification.read});
+            onClick={() => {openNotification({link:notification.link, id:notification.id, isRead: notification.read ?? notification.isRead ?? false});
             }}
             key={notification.id}
-            className={`flex gap-3 p-4 border-b hover:bg-accent/50 cursor-pointer transition-colors ${!notification.read ? 'bg-primary/5' : ''}`}
+            className={`flex gap-3 p-4 border-b hover:bg-accent/50 cursor-pointer transition-colors ${!(notification.read ?? notification.isRead) ? 'bg-primary/5' : ''}`}
         >
             <div className="mt-1">{getIcon(notification.type)}</div>
             <div className="flex flex-col gap-1">

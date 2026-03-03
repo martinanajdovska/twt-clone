@@ -3,7 +3,8 @@ export interface INotificationResponse {
     actor: string;
     message: string;
     link: string;
-    read: boolean;
+    read?: boolean;
+    isRead?: boolean;
     createdAt: Date;
     type: string;
 }

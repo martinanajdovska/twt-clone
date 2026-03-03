@@ -23,7 +23,7 @@ export default function NotificationDropdown() {
 
     const {data: notifications = []} = useGetNotifications();
 
-    const unreadCount = notifications.filter((n: INotificationResponse) => !n.read).length;
+    const unreadCount = notifications.filter((n: INotificationResponse) => !(n.read ?? n.isRead)).length;
 
     return (
         <Popover>

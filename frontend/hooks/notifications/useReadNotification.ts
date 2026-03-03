@@ -4,7 +4,7 @@ import {BASE_URL} from "@/lib/constants";
 export const useReadNotification = () => {
     const queryClient = useQueryClient();
 
-    return useMutation({
+    const mutation = useMutation({
         mutationFn: async ({id}:{id: number} ) => {
             const res = await fetch(`${BASE_URL}/api/notifications/${id}`, {
                 method: "PATCH",
@@ -28,4 +28,6 @@ export const useReadNotification = () => {
             alert(err.message);
         }
     });
+
+    return { ...mutation, readNotification: mutation.mutateAsync };
 };
