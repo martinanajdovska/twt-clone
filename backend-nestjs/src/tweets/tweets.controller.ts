@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TweetsService } from './tweets.service';
@@ -57,7 +58,7 @@ export class TweetsController {
 
   @Delete(':id')
   async delete(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: string,
     @CurrentUsername() username: string,
   ) {
     await this.tweetsService.deleteById(parseInt(id, 10), username);
@@ -65,7 +66,7 @@ export class TweetsController {
 
   @Get(':id')
   async getTweet(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: string,
     @CurrentUsername() username: string,
   ) {
     return this.feedService.getTweetById(parseInt(id, 10), username);
@@ -73,7 +74,7 @@ export class TweetsController {
 
   @Get(':id/details')
   async getDetails(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: string,
     @Query('page') page = '0',
     @Query('size') size = '5',
     @CurrentUsername() username: string,

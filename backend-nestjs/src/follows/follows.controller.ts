@@ -5,6 +5,7 @@ import {
   Delete,
   Param,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { FollowsService } from './follows.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';

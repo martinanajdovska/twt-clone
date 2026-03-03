@@ -28,7 +28,7 @@ export default async function AuthenticatedLayout({children,}: { children: React
 
     return (
         <div className="min-h-screen bg-background py-10">
-            <NotificationListener token={token}/>
+            <NotificationListener />
 
             <div className="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-10">

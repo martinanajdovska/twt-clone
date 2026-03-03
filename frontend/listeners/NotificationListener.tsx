@@ -1,54 +1,39 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
+import { io } from 'socket.io-client';
 import { toast } from 'sonner';
-import {useQueryClient} from "@tanstack/react-query";
-import {BASE_URL} from "@/lib/constants";
+import { useQueryClient } from '@tanstack/react-query';
+import { BASE_URL } from '@/lib/constants';
 
-export default function NotificationListener({ token }: { token: string }) {
-    const queryClient = useQueryClient();
+export default function NotificationListener() {
+  const queryClient = useQueryClient();
 
-    useEffect(() => {
-        const client = new Client({
-            webSocketFactory: () => new SockJS(`${BASE_URL}/ws`),
+  useEffect(() => {
+    const socket = io(BASE_URL, {
+      path: '/ws',
+      withCredentials: true,
+      autoConnect: true,
+    });
 
-            connectHeaders: {
-                Cookie: `token=${token}`,
-            },
+    socket.on('connect', () => {
+      console.log('Socket connected');
+    });
 
-            debug: (str) => console.log(str),
+    socket.on('notification', (notification: { message?: string; actor?: string }) => {
+      const description = notification?.message ?? `${notification?.actor ?? 'Someone'} did something`;
+      toast.message('New Activity', { description });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    });
 
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
-        });
+    socket.on('connect_error', (err: Error) => {
+      console.error('Socket connection error', err.message);
+    });
 
-        client.onConnect = (frame) => {
-            console.log('Connected: ' + frame);
+    return () => {
+      socket.disconnect();
+    };
+  }, [queryClient]);
 
-            client.subscribe('/user/queue/notifications', (message) => {
-                if (message.body) {
-                    toast.message("New Activity", {
-                        description: message.body,
-                    });
-
-                    queryClient.invalidateQueries({ queryKey: ['notifications'] });
-                }
-            });
-        };
-
-        client.onStompError = (frame) => {
-            console.error('STOMP error', frame.headers['message']);
-        };
-
-        client.activate();
-
-        return () => {
-            client.deactivate();
-        };
-    }, [token]);
-
-    return null;
+  return null;
 }

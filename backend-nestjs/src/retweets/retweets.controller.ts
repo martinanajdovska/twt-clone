@@ -5,6 +5,7 @@ import {
   Delete,
   Param,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { RetweetsService } from './retweets.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -17,20 +18,20 @@ export class RetweetsController {
 
   @Post(':tweetId/retweets')
   async save(
-    @Param('tweetId') tweetId: string,
+    @Param('tweetId', ParseIntPipe) tweetId: string,
     @CurrentUsername() username: string,
   ) {
     return this.retweetsService.save(parseInt(tweetId, 10), username);
   }
 
   @Get(':tweetId/retweets')
-  async count(@Param('tweetId') tweetId: string) {
+  async count(@Param('tweetId', ParseIntPipe) tweetId: string) {
     return this.retweetsService.countRetweets(parseInt(tweetId, 10));
   }
 
   @Delete(':tweetId/retweets')
   async delete(
-    @Param('tweetId') tweetId: string,
+    @Param('tweetId', ParseIntPipe) tweetId: string,
     @CurrentUsername() username: string,
   ) {
     await this.retweetsService.delete(username, parseInt(tweetId, 10));

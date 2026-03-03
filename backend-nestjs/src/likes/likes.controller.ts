@@ -5,6 +5,7 @@ import {
   Delete,
   Param,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { LikesService } from './likes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -17,20 +18,20 @@ export class LikesController {
 
   @Post(':tweetId/likes')
   async save(
-    @Param('tweetId') tweetId: string,
+    @Param('tweetId', ParseIntPipe) tweetId: string,
     @CurrentUsername() username: string,
   ) {
     return this.likesService.save(username, parseInt(tweetId, 10));
   }
 
   @Get(':tweetId/likes')
-  async count(@Param('tweetId') tweetId: string) {
+  async count(@Param('tweetId', ParseIntPipe) tweetId: string) {
     return this.likesService.countLikes(parseInt(tweetId, 10));
   }
 
   @Delete(':tweetId/likes')
   async delete(
-    @Param('tweetId') tweetId: string,
+    @Param('tweetId', ParseIntPipe) tweetId: string,
     @CurrentUsername() username: string,
   ) {
     await this.likesService.delete(username, parseInt(tweetId, 10));

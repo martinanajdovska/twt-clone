@@ -147,7 +147,7 @@ export class FeedService {
 
   private async addTweetInfo(
     tweet: Tweet,
-    retweetedByUsername: string | null,
+    username: string | null,
     requesterUsername: string,
   ): Promise<TweetResponseDto> {
     const dto = this.tweetsService.toResponseDto(tweet);
@@ -155,7 +155,7 @@ export class FeedService {
     dto.repliesCount = Array.isArray(tweet.replies) ? tweet.replies.length : 0;
     dto.retweetsCount = await this.retweetsService.countRetweets(tweet.id);
     dto.parentId = tweet.parentTweet?.id ?? null;
-    dto.retweetedBy = retweetedByUsername ?? null;
+    dto.retweetedBy = tweet.user.username !== username ? username: null;
     dto.liked = await this.likesService.existsByTweetIdAndUsername(
       tweet.id,
       requesterUsername,
