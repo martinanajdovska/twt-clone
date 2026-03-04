@@ -1,18 +1,68 @@
 'use client'
-import React, {useRef, useState} from 'react'
-import {ImageIcon, X} from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
+import { ImageIcon, User, X } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { useDebounce } from 'use-debounce'
 
-import {useCreateTweet} from "@/hooks/tweets/useCreateTweet";
-import Image from "next/image";
-import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import { useCreateTweet } from '@/hooks/tweets/useCreateTweet'
+import { getMentionTrigger } from '@/hooks/tweets/useMentionSuggestions'
+import { fetchUsers } from '@/api-calls/users-api'
+import Image from 'next/image'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-const TweetForm = ({username, parentId, onSuccess, profilePicture}:{username:string, parentId?:number, onSuccess?: ()=>void, profilePicture?:string}) => {
-    const [content, setContent] = useState("");
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+const TweetForm = ({ username, parentId, onSuccess, profilePicture }: { username: string; parentId?: number; onSuccess?: () => void; profilePicture?: string }) => {
+    const [content, setContent] = useState('')
+    const [cursorPosition, setCursorPosition] = useState(0)
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [mentionHighlightIndex, setMentionHighlightIndex] = useState(0)
 
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const { mutate: createTweet, isPending } = useCreateTweet({ username, parentId });
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const formContainerRef = useRef<HTMLDivElement>(null)
+    const { mutate: createTweet, isPending } = useCreateTweet({ username, parentId })
+
+    const mentionTrigger = getMentionTrigger(content, cursorPosition)
+    const mentionQuery = mentionTrigger?.query ?? ''
+    const [debouncedMentionQuery] = useDebounce(mentionQuery, 300)
+
+    const { data: mentionUsers = [], isLoading: mentionLoading } = useQuery({
+        queryKey: ['mention-search', debouncedMentionQuery],
+        queryFn: () => fetchUsers(debouncedMentionQuery),
+        enabled: mentionTrigger !== null,
+    })
+
+    const showMentionDropdown = mentionTrigger !== null
+    const displayMentionUsers = mentionQuery.length > 0 ? mentionUsers : []
+
+    useEffect(() => {
+        setMentionHighlightIndex(0)
+    }, [displayMentionUsers.length])
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (formContainerRef.current && !formContainerRef.current.contains(e.target as Node)) {
+                setMentionHighlightIndex(0)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    const insertMention = (selectedUsername: string) => {
+        if (!mentionTrigger || !textareaRef.current) return
+        const { atIndex } = mentionTrigger
+        const before = content.slice(0, atIndex)
+        const after = content.slice(cursorPosition)
+        const newContent = `${before}@${selectedUsername} ${after}`
+        setContent(newContent)
+        const newCursor = atIndex + selectedUsername.length + 2 // '@' + username + ' '
+        requestAnimationFrame(() => {
+            textareaRef.current?.focus()
+            textareaRef.current?.setSelectionRange(newCursor, newCursor)
+        })
+        setMentionHighlightIndex(0)
+    }
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -29,25 +79,52 @@ const TweetForm = ({username, parentId, onSuccess, profilePicture}:{username:str
     };
 
     const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!content.trim() && !selectedFile) return;
+        e.preventDefault()
+        if (!content.trim() && !selectedFile) return
 
-        const formData = new FormData();
-        formData.append("content", content);
-        if (parentId) formData.append("parentId", parentId.toString());
-        if (selectedFile) formData.append("image", selectedFile);
+        const formData = new FormData()
+        formData.append('content', content)
+        if (parentId) formData.append('parentId', parentId.toString())
+        if (selectedFile) formData.append('image', selectedFile)
 
         createTweet(formData, {
             onSuccess: () => {
-                setContent("");
-                removeImage();
-                if (onSuccess) onSuccess();
-            }
-        });
+                setContent('')
+                removeImage()
+                if (onSuccess) onSuccess()
+            },
+        })
+    }
+
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setContent(e.target.value)
+        setCursorPosition(e.target.selectionStart ?? 0)
+    }
+
+    const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (!showMentionDropdown || displayMentionUsers.length === 0) return
+        if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            setMentionHighlightIndex((i) => Math.min(i + 1, displayMentionUsers.length - 1))
+            return
+        }
+        if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            setMentionHighlightIndex((i) => Math.max(i - 1, 0))
+            return
+        }
+        if (e.key === 'Enter' && displayMentionUsers.length > 0) {
+            e.preventDefault()
+            insertMention(displayMentionUsers[mentionHighlightIndex])
+            return
+        }
+        if (e.key === 'Escape') {
+            setMentionHighlightIndex(0)
+        }
     }
 
     return (
-        <div className="p-4 bg-card border-b border-border shadow-sm">
+        <div ref={formContainerRef} className="p-4 bg-card border-b border-border shadow-sm">
             <div className="flex gap-3">
                 <div className="flex-shrink-0 w-10 h-10">
                     <Avatar className="h-full w-full">
@@ -58,24 +135,63 @@ const TweetForm = ({username, parentId, onSuccess, profilePicture}:{username:str
                     </Avatar>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex-1 group">
+                <form onSubmit={handleSubmit} className="flex-1 group relative">
                     <textarea
+                        ref={textareaRef}
                         name="content"
                         placeholder="What's happening?!"
                         value={content}
                         rows={content.split('\n').length > 3 ? 5 : 2}
-                        onChange={(e) => setContent(e.target.value)}
+                        onChange={handleTextareaChange}
+                        onSelect={(e) => setCursorPosition((e.target as HTMLTextAreaElement).selectionStart)}
+                        onKeyDown={handleTextareaKeyDown}
+                        onKeyUp={(e) => setCursorPosition((e.target as HTMLTextAreaElement).selectionStart)}
+                        onClick={() => setCursorPosition(textareaRef.current?.selectionStart ?? 0)}
                         disabled={isPending}
                         className="w-full bg-transparent border-none text-xl placeholder:text-muted-foreground focus:ring-0 resize-none outline-none py-2 min-h-[50px]"
                     />
 
+                    {showMentionDropdown && (
+                        <div className="absolute left-0 right-0 mt-1 z-50 bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto">
+                            {mentionQuery.length === 0 ? (
+                                <div className="px-4 py-3 text-sm text-muted-foreground">
+                                    Type to search users
+                                </div>
+                            ) : mentionLoading ? (
+                                <div className="px-4 py-4 flex items-center justify-center">
+                                    <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                </div>
+                            ) : displayMentionUsers.length > 0 ? (
+                                <div className="flex flex-col py-1">
+                                    {displayMentionUsers.map((u: string, i: number) => (
+                                        <button
+                                            key={u}
+                                            type="button"
+                                            onClick={() => insertMention(u)}
+                                            className={`px-4 py-3 hover:bg-muted flex items-center gap-3 transition-colors text-left ${i === mentionHighlightIndex ? 'bg-muted' : ''}`}
+                                        >
+                                            <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                                                <User size={18} className="text-muted-foreground" />
+                                            </div>
+                                            <span className="font-bold text-sm text-foreground">@{u}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="px-4 py-3 text-sm text-muted-foreground">
+                                    No users found for &quot;{mentionQuery}&quot;
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {previewUrl && (
                         <div className="relative mt-2 mb-4 group">
                             <Image src={previewUrl}
-                                   width={300}
-                                   height={300}
-                                   className="rounded-2xl max-h-80 w-full object-cover border"
-                                   alt="Preview" />
+                                width={300}
+                                height={300}
+                                className="rounded-2xl max-h-80 w-full object-cover border"
+                                alt="Preview" />
                             <button
                                 type="button"
                                 onClick={removeImage}

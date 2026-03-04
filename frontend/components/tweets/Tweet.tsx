@@ -10,6 +10,7 @@ import { MoreHorizontal, Repeat2 } from "lucide-react"
 
 import Delete from "@/components/tweets/Delete"
 import Reply from "@/components/tweets/Reply"
+import TweetContent from "@/components/tweets/TweetContent"
 import AddCommunityNote from "@/components/community-notes/AddCommunityNote"
 import AllCommunityNotesDialog from "@/components/community-notes/AllCommunityNotesDialog"
 import CommunityNoteDisplay from "@/components/community-notes/CommunityNoteDisplay"
@@ -93,7 +94,7 @@ const Tweet = ({ tweet, username }: { tweet: ITweetResponse; username: string })
                         onClick={showTweetInfo}
                         className="mt-1 text-[15px] leading-normal text-foreground whitespace-pre-wrap"
                     >
-                        {tweet.content}
+                        <TweetContent content={tweet.content ?? ''} />
                     </div>
 
                     {tweet.imageUrl && (
