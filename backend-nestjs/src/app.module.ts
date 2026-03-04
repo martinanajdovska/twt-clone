@@ -21,7 +21,12 @@ import { Like } from './entities/like.entity';
 import { Retweet } from './entities/retweet.entity';
 import { Follow } from './entities/follow.entity';
 import { Notification } from './entities/notification.entity';
+import { CommunityNote } from './entities/community-note.entity';
+import { NoteRating } from './entities/note-rating.entity';
 import { GrokModule } from './grok/grok.module';
+import { CommunityNotesModule } from './community-notes/community-notes.module';
+import { CommunityNotesService } from './community-notes/community-notes.service';
+import { CommunityNotesController } from './community-notes/community-notes.controller';
 
 @Module({
   imports: [
@@ -33,7 +38,7 @@ import { GrokModule } from './grok/grok.module';
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      entities: [User, Tweet, Like, Retweet, Follow, Notification],
+      entities: [User, Tweet, Like, Retweet, Follow, Notification, CommunityNote, NoteRating],
       synchronize: true,
       logging: process.env.NODE_ENV !== 'production',
     }),
@@ -52,6 +57,7 @@ import { GrokModule } from './grok/grok.module';
     NotificationsModule,
     CloudinaryModule,
     GrokModule,
+    CommunityNotesModule,
   ],
 })
 export class AppModule {}

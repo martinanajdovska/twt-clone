@@ -12,4 +12,5 @@ export interface ITweetResponse {
     retweeted: boolean;
     retweetedBy: string;
     createdAt: string;
+    notes: { id: number; content: string; }[]
 }

@@ -100,14 +100,14 @@ export class TweetsService {
   async findById(id: number): Promise<Tweet | null> {
     return this.tweetRepo.findOne({
       where: { id },
-      relations: ['user', 'parentTweet', 'replies'],
+      relations: ['user', 'parentTweet', 'replies', 'notes', 'notes.ratings'],
     });
   }
 
   async findAllParentTweetsByUsername(username: string): Promise<Tweet[]> {
     return this.tweetRepo.find({
       where: { user: { username }, parentTweet: IsNull() },
-      relations: ['user', 'replies'],
+      relations: ['user', 'replies', 'notes', 'notes.ratings'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -118,6 +118,8 @@ export class TweetsService {
       .createQueryBuilder('t')
       .leftJoinAndSelect('t.user', 'user')
       .leftJoinAndSelect('t.replies', 'replies')
+      .leftJoinAndSelect('t.notes', 'notes')
+      .leftJoinAndSelect('notes.ratings', 'ratings')
       .where('t.parent_id IS NULL')
       .andWhere('user.username IN (:...usernames)', { usernames })
       .orderBy('t.created_at', 'DESC')
@@ -133,7 +135,7 @@ export class TweetsService {
     if (!tweet) throw new NotFoundException('Tweet not found');
     return this.tweetRepo.find({
       where: { parentTweet: { id: tweetId } },
-      relations: ['user'],
+      relations: ['user', 'notes', 'notes.ratings'],
       order: { createdAt: 'DESC' },
       skip: page * size,
       take: size,
@@ -157,6 +159,16 @@ export class TweetsService {
       tweet.createdAt instanceof Date
         ? tweet.createdAt.toISOString().slice(0, 10)
         : String(tweet.createdAt).slice(0, 10);
+
+    const sortedNotes = (tweet.notes ?? [])
+        .filter(n => n.isVisible)
+        .map(n => ({
+          id: n.id,
+          content: n.content,
+          helpfulCount: (n.ratings ?? []).filter(r => r.helpful).length,
+        }))
+        .sort((a, b) => b.helpfulCount - a.helpfulCount);
+        
     return {
       id: tweet.id,
       username: tweet.user?.username ?? '',
@@ -171,6 +183,7 @@ export class TweetsService {
       retweetedBy: null,
       createdAt: created,
       profilePictureUrl: tweet.user?.imageUrl ?? null,
+      notes: sortedNotes,
     };
   }
 }

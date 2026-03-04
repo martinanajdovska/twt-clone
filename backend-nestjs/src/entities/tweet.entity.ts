@@ -10,6 +10,7 @@ import {
 import { User } from './user.entity';
 import { Like } from './like.entity';
 import { Retweet } from './retweet.entity';
+import { CommunityNote } from './community-note.entity';
 
 @Entity()
 export class Tweet {
@@ -41,4 +42,7 @@ export class Tweet {
 
   @OneToMany(() => Retweet, (r) => r.tweet)
   retweets: Retweet[];
+
+  @OneToMany(() => CommunityNote, note => note.tweet, {nullable: true, onDelete: 'CASCADE'})
+  notes: CommunityNote[];
 }
