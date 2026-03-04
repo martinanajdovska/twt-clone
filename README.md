@@ -24,6 +24,8 @@ This Twitter Clone is built to demonstrate a modern full-stack architecture. It 
 - **Client-side Caching:** Lag-free user experience.
 - **Real-time Notifications:** Utilizing WebSocket for listening to updates.
 - **Dark/Light Mode:** Theme toggling for better user experience.
+- **Grok:** Tag grok in a tweet and have a conversation.
+- **Community Notes:** Add a community note to a tweet if it's misleading.
 
 **Architecture Overview:**
 
@@ -66,7 +68,7 @@ To get a local copy up and running using docker, follow these steps.
 
 ### Installation
 
-1. Get your Cloudinary keys here [https://cloudinary.com/]. You can create a free account and then you need to find the cloud name, api key and secret.
+1. You need free keys from Cloudinary for image storing, Firebase for authentication and Gemini for the grok feature.
 2. Clone the repo
 
 ```sh

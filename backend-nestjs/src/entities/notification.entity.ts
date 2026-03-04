@@ -10,6 +10,7 @@ export enum NotificationType {
   RETWEET = 'RETWEET',
   REPLY = 'REPLY',
   FOLLOW = 'FOLLOW',
+  COMMUNITY_NOTE = 'COMMUNITY_NOTE',
 }
 
 @Entity()

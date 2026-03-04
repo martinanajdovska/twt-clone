@@ -3,7 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
-  OneToOne,
 } from 'typeorm';
 import { Tweet } from './tweet.entity';
 import { Like } from './like.entity';

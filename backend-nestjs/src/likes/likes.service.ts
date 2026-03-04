@@ -24,7 +24,7 @@ export class LikesService {
     if (!tweet) throw new NotFoundException('Tweet not found');
     const like = this.likeRepo.create({ user, tweet });
     const saved = await this.likeRepo.save(like);
-    if (tweet.user?.username !== username) {
+    if (tweet.user!.username !== username) {
       await this.notificationsService.createNotification(
         tweet.user!.username,
         username,
@@ -60,5 +60,13 @@ export class LikesService {
         where: { tweet: { id: tweetId }, user: { username } },
       })) > 0
     );
+  }
+
+  async findLikerUsernamesByTweetId(tweetId: number): Promise<string[]> {
+    const likes = await this.likeRepo.find({
+      where: { tweet: { id: tweetId } },
+      relations: ['user'],
+    });
+    return likes.map((l) => l.user!.username);
   }
 }

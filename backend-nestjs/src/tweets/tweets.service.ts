@@ -54,7 +54,7 @@ export class TweetsService {
     const tweet = this.tweetRepo.create({
       user,
       parentTweet,
-      content: content?.trim() || '',
+      content: content!.trim(),
       imageUrl,
     });
     const saved = await this.tweetRepo.save(tweet);
@@ -86,7 +86,7 @@ export class TweetsService {
 
           await this.tweetRepo.save(replyTweet);
           await this.notificationsService.createNotification(
-            saved.user.username || '',
+            saved.user.username,
             'grok',
             'replied to your tweet',
             `/tweets/${replyTweet.id}`,
@@ -142,6 +142,14 @@ export class TweetsService {
     });
   }
 
+  async findReplyAuthorUsernamesByTweetId(tweetId: number): Promise<string[]> {
+    const replies = await this.tweetRepo.find({
+      where: { parentTweet: { id: tweetId } },
+      relations: ['user'],
+    });
+    return replies.map((t) => t.user!.username);
+  }
+
   async deleteById(id: number, username: string): Promise<void> {
     const tweet = await this.tweetRepo.findOne({
       where: { id },
@@ -173,7 +181,7 @@ export class TweetsService {
 
     return {
       id: tweet.id,
-      username: tweet.user?.username ?? '',
+      username: tweet.user!.username,
       content: tweet.content ?? '',
       imageUrl: tweet.imageUrl ?? null,
       likesCount: 0,
@@ -184,7 +192,7 @@ export class TweetsService {
       parentId: tweet.parentTweet?.id ?? null,
       retweetedBy: null,
       createdAt: created,
-      profilePictureUrl: tweet.user?.imageUrl ?? null,
+      profilePictureUrl: tweet.user!.imageUrl ?? null,
       communityNote,
     };
   }

@@ -23,7 +23,7 @@ import { CommunityNotesModule } from 'src/community-notes/community-notes.module
     forwardRef(() => RetweetsModule),
     FollowsModule,
     GrokModule,
-    CommunityNotesModule,
+    forwardRef(() => CommunityNotesModule),
   ],
   controllers: [TweetsController],
   providers: [TweetsService, FeedService],

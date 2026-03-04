@@ -25,7 +25,7 @@ export class RetweetsService {
     if (!tweet) throw new NotFoundException('Tweet not found');
     const retweet = this.retweetRepo.create({ user, tweet });
     const saved = await this.retweetRepo.save(retweet);
-    if (tweet.user?.username !== username) {
+    if (tweet.user!.username !== username) {
       await this.notificationsService.createNotification(
         tweet.user!.username,
         username,
@@ -82,5 +82,13 @@ export class RetweetsService {
       .orderBy('r.created_at', 'DESC')
       .getMany();
     return list;
+  }
+
+  async findRetweeterUsernamesByTweetId(tweetId: number): Promise<string[]> {
+    const retweets = await this.retweetRepo.find({
+      where: { tweet: { id: tweetId } },
+      relations: ['user'],
+    });
+    return retweets.map((r) => r.user!.username);
   }
 }

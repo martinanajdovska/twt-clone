@@ -19,7 +19,6 @@ export class GrokService {
           systemInstruction: "You are Grok, an AI assistant on Twitter. Keep replies fun.",
         },
       });
-      console.log(response.text);
       return response.text || '';
   }
 }

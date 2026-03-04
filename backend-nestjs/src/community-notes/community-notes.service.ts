@@ -2,18 +2,26 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommunityNote } from 'src/entities/community-note.entity';
 import { NoteRating } from 'src/entities/note-rating.entity';
-import { User } from 'src/entities/user.entity';
+import { NotificationType } from 'src/entities/notification.entity';
 import { UsersService } from 'src/users/users.service';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { TweetsService } from 'src/tweets/tweets.service';
+import { LikesService } from 'src/likes/likes.service';
+import { RetweetsService } from 'src/retweets/retweets.service';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class CommunityNotesService {
-  private readonly HELPFUL_THRESHOLD = 2; 
+  private readonly HELPFUL_THRESHOLD = 2;
 
   constructor(
     @InjectRepository(CommunityNote) private noteRepo: Repository<CommunityNote>,
     @InjectRepository(NoteRating) private ratingRepo: Repository<NoteRating>,
     private usersService: UsersService,
+    private notificationsService: NotificationsService,
+    private tweetsService: TweetsService,
+    private likesService: LikesService,
+    private retweetsService: RetweetsService,
   ) {}
 
   async submitNote(tweetId: number, author: string, content: string) {
@@ -34,7 +42,7 @@ export class CommunityNotesService {
 
     const note = await this.noteRepo.findOne({
       where: { id: noteId },
-      relations: ['author', 'ratings'],
+      relations: ['author', 'ratings', 'tweet'],
     });
 
     if (!note) throw new NotFoundException('Note not found');
@@ -61,7 +69,42 @@ export class CommunityNotesService {
     if (note.isVisible !== shouldBeVisible) {
       note.isVisible = shouldBeVisible;
       await this.noteRepo.save(note);
+      if (shouldBeVisible && note.tweet) {
+        await this.notifyEngagers(note);
+      }
     }
+  }
+
+  private async notifyEngagers(note: CommunityNote): Promise<void> {
+    const tweetId = note.tweet.id;
+    const noteAuthorUsername = note.author.username;
+
+    const [replyAuthors, likers, retweeters] = await Promise.all([
+      this.tweetsService.findReplyAuthorUsernamesByTweetId(tweetId),
+      this.likesService.findLikerUsernamesByTweetId(tweetId),
+      this.retweetsService.findRetweeterUsernamesByTweetId(tweetId),
+    ]);
+
+    const usernames = new Set<string>([
+      ...replyAuthors,
+      ...likers,
+      ...retweeters,
+    ]);
+    usernames.delete(noteAuthorUsername);
+
+    const message = 'A Community Note was added to a tweet you engaged with';
+    const link = `/tweets/${tweetId}`;
+    await Promise.all(
+      Array.from(usernames).map((username) =>
+        this.notificationsService.createNotification(
+          username,
+          'Community',
+          message,
+          link,
+          NotificationType.COMMUNITY_NOTE,
+        ),
+      ),
+    );
   }
 
   async getNotesForTweet(tweetId: number) {
@@ -81,7 +124,7 @@ export class CommunityNotesService {
       id: n.id,
       content: n.content,
       isVisible: n.isVisible,
-      authorUsername: n.author?.username ?? '',
+      authorUsername: n.author!.username,
       helpfulCount: (n.ratings ?? []).filter((r) => r.helpful).length,
       notHelpfulCount: (n.ratings ?? []).filter((r) => !r.helpful).length,
     }));
