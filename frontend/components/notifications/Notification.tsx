@@ -35,10 +35,10 @@ const Notification = ({notification}:{notification: INotificationResponse}) => {
 
     return (
         <div
-            onClick={() => {openNotification({link:notification.link, id:notification.id, isRead: notification.read ?? notification.isRead ?? false});
+            onClick={() => {openNotification({link:notification.link, id:notification.id, isRead: notification.isRead});
             }}
             key={notification.id}
-            className={`flex gap-3 p-4 border-b hover:bg-accent/50 cursor-pointer transition-colors ${!(notification.read ?? notification.isRead) ? 'bg-primary/5' : ''}`}
+            className={`flex gap-3 p-4 border-b hover:bg-accent/50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-primary/5' : ''}`}
         >
             <div className="mt-1">{getIcon(notification.type)}</div>
             <div className="flex flex-col gap-1">
