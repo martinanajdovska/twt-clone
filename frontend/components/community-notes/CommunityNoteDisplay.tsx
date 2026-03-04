@@ -5,12 +5,10 @@ import { useRateNote } from "@/hooks/community-notes/useRateNote"
 
 type Note = { id: number; content: string }
 
-const CommunityNoteDisplay = ({ notes }: { notes: Note[] }) => {
+const CommunityNoteDisplay = ({ note }: { note: Note | null }) => {
     const { mutate: rateNote } = useRateNote()
 
-    if (notes.length === 0) return null
-
-    const note = notes[0]
+    if (!note) return null
 
     return (
         <div className="border-l-4 border-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 dark:border-yellow-500 p-3 mt-2 text-sm rounded-r">

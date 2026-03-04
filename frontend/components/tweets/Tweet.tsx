@@ -134,7 +134,7 @@ const Tweet = ({ tweet, username }: { tweet: ITweetResponse; username: string })
                         <span>{tweet.createdAt}</span>
                     </div>
 
-                    <CommunityNoteDisplay notes={tweet.notes} />
+                    <CommunityNoteDisplay note={tweet.communityNote} />
                 </div>
             </div>
         </article>

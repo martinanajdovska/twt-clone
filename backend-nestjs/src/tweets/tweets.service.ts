@@ -168,7 +168,9 @@ export class TweetsService {
           helpfulCount: (n.ratings ?? []).filter(r => r.helpful).length,
         }))
         .sort((a, b) => b.helpfulCount - a.helpfulCount);
-        
+
+    const communityNote = sortedNotes.length > 0 ? sortedNotes[0] : null;
+
     return {
       id: tweet.id,
       username: tweet.user?.username ?? '',
@@ -183,7 +185,7 @@ export class TweetsService {
       retweetedBy: null,
       createdAt: created,
       profilePictureUrl: tweet.user?.imageUrl ?? null,
-      notes: sortedNotes,
+      communityNote,
     };
   }
 }
