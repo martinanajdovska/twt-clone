@@ -6,12 +6,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Tweet } from '../entities/tweet.entity';
-import { User } from '../entities/user.entity';
+import { Role } from '../entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../entities/notification.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { TweetResponseDto } from './dto/tweet-response.dto';
+import { GrokService } from 'src/grok/grok.service';
 
 @Injectable()
 export class TweetsService {
@@ -21,6 +22,7 @@ export class TweetsService {
     private usersService: UsersService,
     private notificationsService: NotificationsService,
     private cloudinaryService: CloudinaryService,
+    private grokService: GrokService,
   ) {}
 
   async save(
@@ -69,6 +71,29 @@ export class TweetsService {
         NotificationType.REPLY,
       );
     }
+    if (parentTweet && parentTweet.user.role === Role.GROK || tweet.content && tweet.content.startsWith('@grok ')) {
+        const reply = await this.grokService.generateReply(tweet.content || '');
+
+        if (reply && reply.trim() !== '') {
+          const grok = await this.usersService.findByUsername('grok');
+          if (!grok) throw new NotFoundException('Grok not found');
+
+          const replyTweet = this.tweetRepo.create({
+            user: grok,
+            parentTweet: saved,
+            content: reply,
+          });
+
+          await this.tweetRepo.save(replyTweet);
+          await this.notificationsService.createNotification(
+            saved.user.username || '',
+            'grok',
+            'replied to your tweet',
+            `/tweets/${replyTweet.id}`,
+            NotificationType.REPLY,
+          );
+        }
+      }
     return this.toResponseDto(saved);
   }
 

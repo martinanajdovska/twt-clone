@@ -13,6 +13,7 @@ import { Follow } from './follow.entity';
 export enum Role {
   USER = 'ROLE_USER',
   ADMIN = 'ROLE_ADMIN',
+  GROK = 'ROLE_GROK',
 }
 
 @Entity('twitter_user')

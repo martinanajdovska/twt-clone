@@ -21,6 +21,7 @@ import { Like } from './entities/like.entity';
 import { Retweet } from './entities/retweet.entity';
 import { Follow } from './entities/follow.entity';
 import { Notification } from './entities/notification.entity';
+import { GrokModule } from './grok/grok.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { Notification } from './entities/notification.entity';
     ProfileModule,
     NotificationsModule,
     CloudinaryModule,
+    GrokModule,
   ],
 })
 export class AppModule {}
