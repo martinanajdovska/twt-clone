@@ -14,6 +14,7 @@ import TweetContent from "@/components/tweets/TweetContent"
 import AddCommunityNote from "@/components/community-notes/AddCommunityNote"
 import AllCommunityNotesDialog from "@/components/community-notes/AllCommunityNotesDialog"
 import CommunityNoteDisplay from "@/components/community-notes/CommunityNoteDisplay"
+import { formatRelativeTime } from "@/lib/relativeTime"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -57,7 +58,7 @@ const Tweet = ({ tweet, username }: { tweet: ITweetResponse; username: string })
                     </Avatar>
                 </div>
 
-                <div className="flex flex-col flex-1">
+                <div className="flex flex-col flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1">
                             <span
@@ -92,7 +93,7 @@ const Tweet = ({ tweet, username }: { tweet: ITweetResponse; username: string })
 
                     <div
                         onClick={showTweetInfo}
-                        className="mt-1 text-[15px] leading-normal text-foreground whitespace-pre-wrap"
+                        className="mt-1 text-[15px] leading-normal text-foreground whitespace-pre-wrap break-words overflow-hidden"
                     >
                         <TweetContent content={tweet.content ?? ''} />
                     </div>
@@ -132,7 +133,7 @@ const Tweet = ({ tweet, username }: { tweet: ITweetResponse; username: string })
                             liked={tweet.liked}
                             id={tweet.id}
                         />
-                        <span>{tweet.createdAt}</span>
+                        <span title={tweet.createdAt}>{formatRelativeTime(tweet.createdAt)}</span>
                     </div>
 
                     <CommunityNoteDisplay note={tweet.communityNote} />

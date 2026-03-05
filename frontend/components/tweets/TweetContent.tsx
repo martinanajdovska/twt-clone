@@ -42,7 +42,7 @@ export default function TweetContent({ content }: { content: string }) {
   }
 
   return (
-    <span className="text-[15px] leading-normal text-foreground whitespace-pre-wrap">
+    <span className="text-[15px] leading-normal text-foreground whitespace-pre-wrap break-words">
       {parts.length > 0 ? parts : content}
     </span>
   )

@@ -34,8 +34,8 @@ export class TweetsService {
     if (!content?.trim() && !file) {
       throw new BadRequestException("Can't post empty tweet");
     }
-    if (content && content.length >= 255) {
-      throw new BadRequestException("Can't post tweet longer than 255 characters");
+    if (content && content.length > 280) {
+      throw new BadRequestException("Tweet cannot exceed 280 characters");
     }
     const user = await this.usersService.findByUsername(username);
     if (!user) throw new NotFoundException('User not found');
@@ -187,8 +187,8 @@ export class TweetsService {
   toResponseDto(tweet: Tweet, currentUsername: string): TweetResponseDto {
     const created =
       tweet.createdAt instanceof Date
-        ? tweet.createdAt.toISOString().slice(0, 10)
-        : String(tweet.createdAt).slice(0, 10);
+        ? tweet.createdAt.toISOString()
+        : String(tweet.createdAt);
 
     const sortedNotes = (tweet.notes ?? [])
         .filter(n => n.isVisible)

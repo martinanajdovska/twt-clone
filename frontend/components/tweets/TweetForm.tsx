@@ -1,6 +1,8 @@
 'use client'
 import React, { useEffect, useRef, useState } from 'react'
 import { ImageIcon, User, X } from 'lucide-react'
+
+const MAX_TWEET_LENGTH = 280
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
 
@@ -97,8 +99,9 @@ const TweetForm = ({ username, parentId, onSuccess, profilePicture }: { username
     }
 
     const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setContent(e.target.value)
-        setCursorPosition(e.target.selectionStart ?? 0)
+        const value = e.target.value.slice(0, MAX_TWEET_LENGTH)
+        setContent(value)
+        setCursorPosition(Math.min(e.target.selectionStart ?? 0, value.length))
     }
 
     const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -141,6 +144,7 @@ const TweetForm = ({ username, parentId, onSuccess, profilePicture }: { username
                         name="content"
                         placeholder="What's happening?!"
                         value={content}
+                        maxLength={MAX_TWEET_LENGTH}
                         rows={content.split('\n').length > 3 ? 5 : 2}
                         onChange={handleTextareaChange}
                         onSelect={(e) => setCursorPosition((e.target as HTMLTextAreaElement).selectionStart)}
@@ -223,9 +227,22 @@ const TweetForm = ({ username, parentId, onSuccess, profilePicture }: { username
                         </div>
 
                         <div className="flex items-center gap-4">
+                            {content.length > 0 && (
+                                <span
+                                    className={`text-sm tabular-nums ${
+                                        content.length > MAX_TWEET_LENGTH
+                                            ? 'text-destructive font-bold'
+                                            : content.length >= MAX_TWEET_LENGTH - 20
+                                              ? 'text-amber-500'
+                                              : 'text-muted-foreground'
+                                    }`}
+                                >
+                                    {content.length}/{MAX_TWEET_LENGTH}
+                                </span>
+                            )}
                             <button
                                 type="submit"
-                                disabled={isPending || (!content.trim() && !selectedFile)}
+                                disabled={isPending || content.length > MAX_TWEET_LENGTH || (!content.trim() && !selectedFile)}
                                 className="px-5 py-2 bg-primary text-primary-foreground rounded-full font-bold disabled:opacity-50"
                             >
                                 {isPending ? "Sending..." : "Tweet"}
