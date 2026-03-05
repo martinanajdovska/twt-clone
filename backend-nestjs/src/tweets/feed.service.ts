@@ -120,6 +120,29 @@ export class FeedService {
     return this.addTweetInfo(tweet, null, username);
   }
 
+  async getTweetQuotes(
+    tweetId: number,
+    username: string,
+    pageable: { page: number; size: number },
+  ): Promise<Page<TweetResponseDto>> {
+    const quotes = await this.tweetsService.findAllQuotesOfTweet(
+      tweetId,
+      pageable.page,
+      pageable.size,
+    );
+    const totalElements = await this.tweetsService.countQuotes(tweetId);
+    const content: TweetResponseDto[] = [];
+    for (const t of quotes) {
+      content.push(await this.addTweetInfo(t, null, username));
+    }
+    return {
+      content,
+      totalElements,
+      size: pageable.size,
+      number: pageable.page,
+    };
+  }
+
   async getTweetDetails(
     id: number,
     username: string,
@@ -157,6 +180,8 @@ export class FeedService {
     dto.likesCount = await this.likesService.countLikes(tweet.id);
     dto.repliesCount = await this.tweetsService.countReplies(tweet.id);
     dto.retweetsCount = await this.retweetsService.countRetweets(tweet.id);
+    dto.quotesCount = await this.tweetsService.countQuotes(tweet.id);
+    dto.bookmarksCount = await this.bookmarksService.countBookmarks(tweet.id);
     dto.parentId = tweet.parentTweet?.id ?? null;
     dto.retweetedBy = tweet.user.username !== username ? username: null;
     dto.liked = await this.likesService.existsByTweetIdAndUsername(

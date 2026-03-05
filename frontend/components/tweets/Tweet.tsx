@@ -15,6 +15,7 @@ import AddCommunityNote from "@/components/community-notes/AddCommunityNote"
 import AllCommunityNotesDialog from "@/components/community-notes/AllCommunityNotesDialog"
 import CommunityNoteDisplay from "@/components/community-notes/CommunityNoteDisplay"
 import RetweetMenu from "@/components/tweets/RetweetMenu"
+import TweetDetailStats from "@/components/tweets/TweetDetailStats"
 import { formatRelativeTime } from "@/lib/relativeTime"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -24,7 +25,15 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-const Tweet = ({ tweet, username }: { tweet: ITweetResponse; username: string }) => {
+const Tweet = ({
+    tweet,
+    username,
+    detailView = false,
+}: {
+    tweet: ITweetResponse;
+    username: string;
+    detailView?: boolean;
+}) => {
     const router = useRouter()
     const isSelf = username === tweet.username
 
@@ -154,22 +163,36 @@ const Tweet = ({ tweet, username }: { tweet: ITweetResponse; username: string })
                         </div>
                     )}
 
+                    {detailView && (
+                        <TweetDetailStats
+                            tweetId={tweet.id}
+                            likesCount={tweet.likesCount}
+                            retweetsCount={tweet.retweetsCount}
+                            quotesCount={tweet.quotesCount ?? 0}
+                            bookmarksCount={tweet.bookmarksCount ?? 0}
+                            username={username}
+                        />
+                    )}
+
                     <div className="flex items-center justify-between max-w-md mt-3 -ml-2 text-muted-foreground">
                         <Reply
                             tweet={tweet}
                             username={username}
                             repliesCount={tweet.repliesCount}
+                            hideCount={detailView}
                         />
                         <RetweetMenu
                             tweet={tweet}
                             username={username}
                             retweetsCount={tweet.retweetsCount}
                             retweeted={tweet.retweeted}
+                            hideCount={detailView}
                         />
                         <Like
                             likesCount={tweet.likesCount}
                             liked={tweet.liked}
                             id={tweet.id}
+                            hideCount={detailView}
                         />
                         <Bookmark
                             id={tweet.id}

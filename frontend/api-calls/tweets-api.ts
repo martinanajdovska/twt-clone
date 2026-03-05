@@ -30,3 +30,27 @@ export const fetchTweetDetails = async ({pageParam=0, id}:{pageParam:number, id:
     const data = await res.json();
     return data;
 }
+
+export const fetchTweetQuotes = async ({
+    tweetId,
+    pageParam = 0,
+    pageSize = 10,
+}: {
+    tweetId: number;
+    pageParam?: number;
+    pageSize?: number;
+}) => {
+    const res = await fetch(
+        `${BASE_URL}/api/tweets/${tweetId}/quotes?page=${pageParam}&size=${pageSize}`,
+        {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+        }
+    );
+    if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error);
+    }
+    return res.json();
+};

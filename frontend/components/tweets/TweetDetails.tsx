@@ -1,13 +1,13 @@
 'use client'
-import React, {useEffect} from 'react'
+import React, { useEffect } from 'react'
 import Tweet from "@/components/tweets/Tweet";
 import TweetForm from "@/components/tweets/TweetForm";
-import {ITweetResponse} from "@/DTO/ITweetResponse";
-import {useInView} from "react-intersection-observer";
-import {useFetchTweetDetails} from "@/hooks/tweets/useFetchTweetDetails";
+import { ITweetResponse } from "@/DTO/ITweetResponse";
+import { useInView } from "react-intersection-observer";
+import { useFetchTweetDetails } from "@/hooks/tweets/useFetchTweetDetails";
 
-const TweetDetails = ({id, username, profilePicture}:{id:number, username:string, profilePicture:string}) => {
-    const {ref, inView} = useInView();
+const TweetDetails = ({ id, username, profilePicture }: { id: number, username: string, profilePicture: string }) => {
+    const { ref, inView } = useInView();
 
     const {
         data,
@@ -51,9 +51,9 @@ const TweetDetails = ({id, username, profilePicture}:{id:number, username:string
                             <Tweet tweet={parentTweet} username={username} />
                         </div>
                     )}
-                    <Tweet tweet={tweet} username={username} />
+                    <Tweet tweet={tweet} username={username} detailView />
 
-                    <TweetForm username={username} parentId={tweet.id} profilePicture={profilePicture}/>
+                    <TweetForm username={username} parentId={tweet.id} profilePicture={profilePicture} />
 
                 </div>
                 {data.pages.map((group, i) => (

@@ -10,7 +10,7 @@ import React, { useState, useEffect } from "react"
 import Tweet from "@/components/tweets/Tweet";
 import { ITweetResponse } from "@/DTO/ITweetResponse";
 
-const Reply = ({ tweet, username, repliesCount }: { tweet: ITweetResponse, username: string, repliesCount: number }) => {
+const Reply = ({ tweet, username, repliesCount, hideCount = false }: { tweet: ITweetResponse, username: string, repliesCount: number, hideCount: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [repliesCountState, setRepliesCountState] = useState(repliesCount);
 
@@ -25,7 +25,7 @@ const Reply = ({ tweet, username, repliesCount }: { tweet: ITweetResponse, usern
                     <div className="p-2 rounded-full group-hover/reply:bg-blue-500/10">
                         <MessageCircle size={18} />
                     </div>
-                    <span className="text-sm">{repliesCountState}</span>
+                    {!hideCount && <span className="text-sm">{repliesCountState}</span>}
                 </button>
             </DialogTrigger>
 

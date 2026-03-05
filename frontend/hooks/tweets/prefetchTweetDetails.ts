@@ -5,7 +5,7 @@ export const prefetchTweetDetails = async (id:number) => {
     const queryClient = new QueryClient()
 
     await queryClient.prefetchInfiniteQuery({
-        queryKey: ['tweet', id],
+        queryKey: ['tweet', String(id)],
         queryFn: ({pageParam}) => fetchTweetDetails({pageParam, id}),
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages, lastPageParam) => {

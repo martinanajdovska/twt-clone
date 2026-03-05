@@ -18,9 +18,10 @@ type Props = {
   username: string
   retweetsCount: number
   retweeted: boolean
+  hideCount: boolean
 }
 
-const RetweetMenu = ({ tweet, username, retweetsCount, retweeted }: Props) => {
+const RetweetMenu = ({ tweet, username, retweetsCount, retweeted, hideCount = false }: Props) => {
   const [retweetsCountState, setRetweetsCountState] = useState(retweetsCount)
   const [isRetweetedState, setIsRetweetedState] = useState(retweeted)
   const [quoteOpen, setQuoteOpen] = useState(false)
@@ -52,6 +53,7 @@ const RetweetMenu = ({ tweet, username, retweetsCount, retweeted }: Props) => {
               retweetsCount={retweetsCountState}
               retweeted={isRetweetedState}
               isPending={isPending}
+              hideCount={hideCount}
             />
           </div>
         </DropdownMenuTrigger>

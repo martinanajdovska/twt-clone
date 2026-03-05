@@ -75,6 +75,21 @@ export class TweetsController {
     return this.feedService.getTweetById(parseInt(id, 10), username);
   }
 
+  @Get(':id/quotes')
+  async getQuotes(
+    @Param('id', ParseIntPipe) id: string,
+    @Query('page') page = '0',
+    @Query('size') size = '20',
+    @CurrentUsername() username: string,
+  ) {
+    const pageNum = Math.max(0, parseInt(page, 10));
+    const sizeNum = Math.min(50, Math.max(1, parseInt(size, 10)));
+    return this.feedService.getTweetQuotes(parseInt(id, 10), username, {
+      page: pageNum,
+      size: sizeNum,
+    });
+  }
+
   @Get(':id/details')
   async getDetails(
     @Param('id', ParseIntPipe) id: string,

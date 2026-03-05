@@ -21,8 +21,9 @@ export const useRetweet = (username:string) => {
 
             return res;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['profile', username]});
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['profile', username] });
+            queryClient.invalidateQueries({ queryKey: ['tweet', variables.id.toString()] });
         },
         onError: (err: Error) => {
             alert(err.message);

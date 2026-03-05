@@ -13,6 +13,8 @@ export interface TweetResponseDto {
   likesCount: number;
   repliesCount: number;
   retweetsCount: number;
+  quotesCount: number;
+  bookmarksCount: number;
   liked: boolean;
   retweeted: boolean;
   bookmarked: boolean;

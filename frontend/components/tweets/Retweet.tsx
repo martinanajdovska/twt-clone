@@ -8,6 +8,7 @@ type Props = {
   retweeted: boolean
   isPending: boolean
   onRetweet?: () => void
+  hideCount: boolean
 }
 
 const Retweet = ({
@@ -15,6 +16,7 @@ const Retweet = ({
   retweeted,
   isPending,
   onRetweet,
+  hideCount = false,
 }: Props) => {
   const content = (
     <>
@@ -36,21 +38,21 @@ const Retweet = ({
       >
         <Repeat2
           size={18}
-          className={`transition-transform duration-300 ${
-            retweeted ? 'rotate-180' : 'rotate-0'
-          } ${isPending ? 'animate-pulse' : ''}`}
+          className={`transition-transform duration-300 ${retweeted ? 'rotate-180' : 'rotate-0'
+            } ${isPending ? 'animate-pulse' : ''}`}
           fill={retweeted ? 'green' : 'none'}
         />
       </button>
-      <span
-        className={`text-sm font-medium transition-colors ${
-          retweeted
+      {!hideCount && (
+        <span
+          className={`text-sm font-medium transition-colors ${retweeted
             ? 'text-emerald-500'
             : 'text-muted-foreground group-hover:text-emerald-500'
-        }`}
-      >
-        {retweetsCount}
-      </span>
+            }`}
+        >
+          {retweetsCount}
+        </span>
+      )}
     </>
   )
 

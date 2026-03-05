@@ -1,9 +1,9 @@
 'use client'
-import React, {useState} from 'react'
+import React, { useState } from 'react'
 import { Heart } from "lucide-react";
-import {useLikeTweet} from "@/hooks/tweets/useLikeTweet";
+import { useLikeTweet } from "@/hooks/tweets/useLikeTweet";
 
-const Like = ({likesCount, liked, id}: { likesCount: number, liked: boolean, id: number }) => {
+const Like = ({ likesCount, liked, id, hideCount = false }: { likesCount: number, liked: boolean, id: number, hideCount: boolean }) => {
     const [isLikedState, setIsLikedState] = useState(liked)
     const [likesCountState, setLikesCountState] = useState(likesCount)
 
@@ -16,7 +16,7 @@ const Like = ({likesCount, liked, id}: { likesCount: number, liked: boolean, id:
         setIsLikedState(newLikedState);
         setLikesCountState(prev => newLikedState ? prev + 1 : prev - 1);
 
-        handleLike({id, isLiked:isLikedState}, {
+        handleLike({ id, isLiked: isLikedState }, {
             onError: (err) => {
                 // rollback if it fails on the server
                 setIsLikedState(!newLikedState);
@@ -34,8 +34,8 @@ const Like = ({likesCount, liked, id}: { likesCount: number, liked: boolean, id:
                 className={`
                     p-2 rounded-full transition-all duration-200
                     ${isLikedState
-                    ? "text-pink-600 bg-pink-600/10"
-                    : "text-muted-foreground group-hover:text-pink-600 group-hover:bg-pink-600/10"}
+                        ? "text-pink-600 bg-pink-600/10"
+                        : "text-muted-foreground group-hover:text-pink-600 group-hover:bg-pink-600/10"}
                     ${isPending ? "opacity-50" : "active:scale-90"}
                 `}
                 aria-label={isLikedState ? "Unlike" : "Like"}
@@ -47,11 +47,12 @@ const Like = ({likesCount, liked, id}: { likesCount: number, liked: boolean, id:
                 />
             </button>
 
-            <span className={`text-sm font-medium transition-colors ${
-                isLikedState ? "text-pink-600" : "text-muted-foreground group-hover:text-pink-600"
-            }`}>
-                {likesCountState}
-            </span>
+            {!hideCount && (
+                <span className={`text-sm font-medium transition-colors ${isLikedState ? "text-pink-600" : "text-muted-foreground group-hover:text-pink-600"
+                    }`}>
+                    {likesCountState}
+                </span>
+            )}
         </div>
     );
 }

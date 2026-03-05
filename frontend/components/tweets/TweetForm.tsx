@@ -22,7 +22,7 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const formContainerRef = useRef<HTMLDivElement>(null)
-    const { mutate: createTweet, isPending } = useCreateTweet({ username, parentId })
+    const { mutate: createTweet, isPending } = useCreateTweet({ username, parentId, quoteId })
 
     const mentionTrigger = getMentionTrigger(content, cursorPosition)
     const mentionQuery = mentionTrigger?.query ?? ''

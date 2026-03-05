@@ -184,6 +184,36 @@ export class TweetsService {
       .getCount();
   }
 
+  async countQuotes(tweetId: number): Promise<number> {
+    return this.tweetRepo
+      .createQueryBuilder('tweet')
+      .where('tweet.quoted_tweet_id = :tweetId', { tweetId })
+      .getCount();
+  }
+
+  async findAllQuotesOfTweet(
+    tweetId: number,
+    page: number,
+    size: number,
+  ): Promise<Tweet[]> {
+    const tweet = await this.tweetRepo.findOne({ where: { id: tweetId } });
+    if (!tweet) throw new NotFoundException('Tweet not found');
+    return this.tweetRepo.find({
+      where: { quotedTweet: { id: tweetId } },
+      relations: [
+        'user',
+        'quotedTweet',
+        'quotedTweet.user',
+        'notes',
+        'notes.ratings',
+        'notes.ratings.user',
+      ],
+      order: { createdAt: 'DESC' },
+      skip: page * size,
+      take: size,
+    });
+  }
+
   async findAllRepliesOfTweet(
     tweetId: number,
     page: number,
@@ -271,6 +301,8 @@ export class TweetsService {
       likesCount: 0,
       repliesCount: 0,
       retweetsCount: 0,
+      quotesCount: 0,
+      bookmarksCount: 0,
       liked: false,
       retweeted: false,
       bookmarked: false,

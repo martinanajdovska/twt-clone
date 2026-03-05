@@ -41,6 +41,12 @@ export class BookmarksService {
     await this.bookmarkRepo.remove(bookmark);
   }
 
+  async countBookmarks(tweetId: number): Promise<number> {
+    return this.bookmarkRepo.count({
+      where: { tweet: { id: tweetId } },
+    });
+  }
+
   async existsByTweetIdAndUsername(tweetId: number, username: string): Promise<boolean> {
     return (
       (await this.bookmarkRepo.count({

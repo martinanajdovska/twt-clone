@@ -1,9 +1,9 @@
 import {useInfiniteQuery} from "@tanstack/react-query";
 import {fetchTweetDetails} from "@/api-calls/tweets-api";
 
-export const useFetchTweetDetails = (id:number) => {
+export const useFetchTweetDetails = (id: number) => {
     return useInfiniteQuery({
-        queryKey: ['tweet', id],
+        queryKey: ['tweet', String(id)],
         queryFn: ({ pageParam }) => fetchTweetDetails({ pageParam , id}),
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages, lastPageParam) => {
