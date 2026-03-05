@@ -28,6 +28,10 @@ export class Tweet {
   @OneToMany(() => Tweet, (t) => t.parentTweet)
   replies: Tweet[];
 
+  @ManyToOne(() => Tweet, { nullable: true })
+  @JoinColumn({ name: 'quoted_tweet_id' })
+  quotedTweet: Tweet | null;
+
   @Column({ type: 'varchar', nullable: true })
   content: string | null;
 

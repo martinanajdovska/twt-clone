@@ -117,11 +117,50 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* doesnt work with tailwind classes */
+.quoted-tweet-card {
+  margin-top: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #d4d4d4;
+  border-radius: 1rem;
+  background-color: #e5e5e5;
+  text-align: left;
+  display: block;
+  overflow: hidden;
+}
+.quoted-tweet-card:hover {
+  background-color: #d4d4d4;
+}
+.dark .quoted-tweet-card {
+  border-color: #525252;
+  background-color: #404040;
+}
+.dark .quoted-tweet-card:hover {
+  background-color: #525252;
+}
+.quoted-tweet-card-inner {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.quoted-tweet-card-image-wrap {
+  margin-top: 0.25rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid #d4d4d4;
+}
+.dark .quoted-tweet-card-image-wrap {
+  border-color: #525252;
+}
+/*  */
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
     @apply bg-background text-foreground;
-    }
+  }
 }

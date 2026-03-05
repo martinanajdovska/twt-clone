@@ -44,13 +44,16 @@ export class TweetsController {
   async save(
     @Body('content') content: string,
     @Body('parentId') parentId: string | undefined,
+    @Body('quoteId') quoteId: string | undefined,
     @UploadedFile() file: Express.Multer.File | undefined,
     @CurrentUsername() username: string,
   ) {
     const parent = parentId ? parseInt(parentId, 10) : null;
+    const quote = quoteId ? parseInt(quoteId, 10) : null;
     return this.tweetsService.save(
       username,
       isNaN(parent as number) ? null : parent,
+      isNaN(quote as number) ? null : quote,
       content || '',
       file,
     );

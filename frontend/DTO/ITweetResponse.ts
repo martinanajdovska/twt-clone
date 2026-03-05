@@ -5,6 +5,13 @@ export interface ITweetResponse {
     parentId: number;
     content: string;
     imageUrl: string;
+    quotedTweet: {
+        id: number;
+        username: string;
+        content: string;
+        imageUrl: string | null;
+        createdAt: string;
+    } | null;
     likesCount: number;
     repliesCount: number;
     retweetsCount: number;

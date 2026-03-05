@@ -4,7 +4,6 @@ import { ITweetResponse } from "@/DTO/ITweetResponse"
 import Image from "next/image"
 import React from "react"
 import Like from "./Like"
-import Retweet from "@/components/tweets/Retweet"
 import { useRouter } from "next/navigation"
 import { MoreHorizontal, Repeat2 } from "lucide-react"
 
@@ -14,6 +13,7 @@ import TweetContent from "@/components/tweets/TweetContent"
 import AddCommunityNote from "@/components/community-notes/AddCommunityNote"
 import AllCommunityNotesDialog from "@/components/community-notes/AllCommunityNotesDialog"
 import CommunityNoteDisplay from "@/components/community-notes/CommunityNoteDisplay"
+import RetweetMenu from "@/components/tweets/RetweetMenu"
 import { formatRelativeTime } from "@/lib/relativeTime"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -98,6 +98,43 @@ const Tweet = ({ tweet, username }: { tweet: ITweetResponse; username: string })
                         <TweetContent content={tweet.content ?? ''} />
                     </div>
 
+                    {tweet.quotedTweet && (
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/tweets/${tweet.quotedTweet!.id}`)
+                            }}
+                            className="quoted-tweet-card"
+                        >
+                            <div className="quoted-tweet-card-inner">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <span className="font-semibold text-foreground hover:underline truncate">
+                                        {tweet.quotedTweet.username}
+                                    </span>
+                                    <span className="text-muted-foreground text-sm truncate shrink-0">
+                                        @{tweet.quotedTweet.username.toLowerCase()}
+                                    </span>
+                                </div>
+                                <div className="text-[15px] text-foreground whitespace-pre-wrap break-words">
+                                    {tweet.quotedTweet.content || ''}
+                                </div>
+                                {tweet.quotedTweet.imageUrl && (
+                                    <div className="quoted-tweet-card-image-wrap">
+                                        <Image
+                                            src={tweet.quotedTweet.imageUrl}
+                                            alt="Quoted tweet"
+                                            width={0}
+                                            height={0}
+                                            sizes="100vw"
+                                            className="w-full max-h-[280px] object-cover"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </button>
+                    )}
+
                     {tweet.imageUrl && (
                         <div className="relative mt-3 rounded-2xl overflow-hidden border border-border">
                             <Image
@@ -122,11 +159,11 @@ const Tweet = ({ tweet, username }: { tweet: ITweetResponse; username: string })
                             username={username}
                             repliesCount={tweet.repliesCount}
                         />
-                        <Retweet
+                        <RetweetMenu
+                            tweet={tweet}
+                            username={username}
                             retweetsCount={tweet.retweetsCount}
                             retweeted={tweet.retweeted}
-                            id={tweet.id}
-                            username={username}
                         />
                         <Like
                             likesCount={tweet.likesCount}

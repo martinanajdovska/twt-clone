@@ -3,6 +3,13 @@ export interface TweetResponseDto {
   username: string;
   content: string;
   imageUrl: string | null;
+  quotedTweet: {
+    id: number;
+    username: string;
+    content: string;
+    imageUrl: string | null;
+    createdAt: string;
+  } | null;
   likesCount: number;
   repliesCount: number;
   retweetsCount: number;

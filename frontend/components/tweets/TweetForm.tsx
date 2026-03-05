@@ -12,7 +12,7 @@ import { fetchUsers } from '@/api-calls/users-api'
 import Image from 'next/image'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-const TweetForm = ({ username, parentId, onSuccess, profilePicture }: { username: string; parentId?: number; onSuccess?: () => void; profilePicture?: string }) => {
+const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: { username: string; parentId?: number; quoteId?: number; onSuccess?: () => void; profilePicture?: string }) => {
     const [content, setContent] = useState('')
     const [cursorPosition, setCursorPosition] = useState(0)
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -87,6 +87,7 @@ const TweetForm = ({ username, parentId, onSuccess, profilePicture }: { username
         const formData = new FormData()
         formData.append('content', content)
         if (parentId) formData.append('parentId', parentId.toString())
+        if (quoteId) formData.append('quoteId', quoteId.toString())
         if (selectedFile) formData.append('image', selectedFile)
 
         createTweet(formData, {
