@@ -6,8 +6,8 @@ export const prefetchProfile = async ({username, token}:{username:string, token:
 
     await Promise.all([
         queryClient.prefetchInfiniteQuery({
-            queryKey: ['profile', username],
-            queryFn: ({ pageParam }) => fetchProfileFeed({ pageParam, username }),
+            queryKey: ['profile', username, 'tweets'],
+            queryFn: ({ pageParam }) => fetchProfileFeed({ pageParam, username, tab: 'tweets' }),
             initialPageParam: 0,
             getNextPageParam: (lastPage, allPages, lastPageParam) => {
                 return lastPage.length < 5 ? undefined : lastPageParam + 1;

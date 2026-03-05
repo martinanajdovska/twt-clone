@@ -5,10 +5,10 @@ import React, { useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchProfileHeader } from '@/api-calls/users-api'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useEditProfilePicture } from '@/hooks/useEditProfilePicture'
+import { useEditProfilePicture } from '@/hooks/profile/useEditProfilePicture'
 import { Camera, Loader2, MapPin, Link2, Cake, Calendar, Pencil } from 'lucide-react'
 import type { IProfileHeader } from '@/DTO/IProfileHeader'
-import EditProfileDialog from '@/components/EditProfileDialog'
+import EditProfileDialog from '@/components/profile/EditProfileDialog'
 
 function formatJoined(iso: string): string {
   try {

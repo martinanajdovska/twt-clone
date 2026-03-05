@@ -17,14 +17,18 @@ export class ProfileController {
     @Param('username') username: string,
     @Query('page') page = '0',
     @Query('size') size = '5',
+    @Query('tab') tab: 'tweets' | 'replies' | 'likes' | 'media',
     @CurrentUsername() currentUsername: string,
   ) {
     const pageNum = Math.max(0, parseInt(page, 10));
     const sizeNum = Math.min(50, Math.max(1, parseInt(size, 10)));
+    const tabValue =
+      tab === 'replies' || tab === 'likes' || tab === 'media' ? tab : 'tweets';
     return this.feedService.generateProfileFeed(
       username,
       { page: pageNum, size: sizeNum },
       currentUsername,
+      tabValue,
     );
   }
 

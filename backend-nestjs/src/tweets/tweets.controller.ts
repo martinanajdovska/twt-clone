@@ -10,6 +10,8 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseIntPipe,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TweetsService } from './tweets.service';
@@ -60,6 +62,7 @@ export class TweetsController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
     @Param('id', ParseIntPipe) id: string,
     @CurrentUsername() username: string,

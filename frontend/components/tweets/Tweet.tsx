@@ -109,40 +109,53 @@ const Tweet = ({
                     </div>
 
                     {tweet.quotedTweet && (
-                        <button
-                            type="button"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                router.push(`/tweets/${tweet.quotedTweet!.id}`)
-                            }}
-                            className="quoted-tweet-card"
-                        >
-                            <div className="quoted-tweet-card-inner">
-                                <div className="flex items-center gap-2 min-w-0">
-                                    <span className="font-semibold text-foreground hover:underline truncate">
-                                        {tweet.quotedTweet.username}
-                                    </span>
-                                    <span className="text-muted-foreground text-sm truncate shrink-0">
-                                        @{tweet.quotedTweet.username.toLowerCase()}
-                                    </span>
-                                </div>
-                                <div className="text-[15px] text-foreground whitespace-pre-wrap break-words">
-                                    {tweet.quotedTweet.content || ''}
-                                </div>
-                                {tweet.quotedTweet.imageUrl && (
-                                    <div className="quoted-tweet-card-image-wrap">
-                                        <Image
-                                            src={tweet.quotedTweet.imageUrl}
-                                            alt="Quoted tweet"
-                                            width={0}
-                                            height={0}
-                                            sizes="100vw"
-                                            className="w-full max-h-[280px] object-cover"
-                                        />
+                        tweet.quotedTweet.isDeleted ? (
+                            <div
+                                className="quoted-tweet-card cursor-default"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="quoted-tweet-card-inner">
+                                    <div className="text-[15px] text-muted-foreground italic py-2">
+                                        This tweet was deleted
                                     </div>
-                                )}
+                                </div>
                             </div>
-                        </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    router.push(`/tweets/${tweet.quotedTweet!.id}`)
+                                }}
+                                className="quoted-tweet-card"
+                            >
+                                <div className="quoted-tweet-card-inner">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span className="font-semibold text-foreground hover:underline truncate">
+                                            {tweet.quotedTweet.username}
+                                        </span>
+                                        <span className="text-muted-foreground text-sm truncate shrink-0">
+                                            @{tweet.quotedTweet.username.toLowerCase()}
+                                        </span>
+                                    </div>
+                                    <div className="text-[15px] text-foreground whitespace-pre-wrap break-words">
+                                        {tweet.quotedTweet.content || ''}
+                                    </div>
+                                    {tweet.quotedTweet.imageUrl && (
+                                        <div className="quoted-tweet-card-image-wrap">
+                                            <Image
+                                                src={tweet.quotedTweet.imageUrl}
+                                                alt="Quoted tweet"
+                                                width={0}
+                                                height={0}
+                                                sizes="100vw"
+                                                className="w-full max-h-[280px] object-cover"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </button>
+                        )
                     )}
 
                     {tweet.imageUrl && (

@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, Not } from 'typeorm';
 import { Tweet } from '../entities/tweet.entity';
 import { Role } from '../entities/user.entity';
 import { UsersService } from '../users/users.service';
@@ -160,6 +160,28 @@ export class TweetsService {
     });
   }
 
+  async findRepliesByUsername(
+    username: string,
+    page: number,
+    size: number,
+  ): Promise<Tweet[]> {
+    return this.tweetRepo.find({
+      where: { user: { username }, parentTweet: Not(IsNull()) },
+      relations: [
+        'user',
+        'parentTweet',
+        'quotedTweet',
+        'quotedTweet.user',
+        'notes',
+        'notes.ratings',
+        'notes.ratings.user',
+      ],
+      order: { createdAt: 'DESC' },
+      skip: page * size,
+      take: size,
+    });
+  }
+
   async findAllParentTweetsByUsernames(usernames: string[]): Promise<Tweet[]> {
     if (usernames.length === 0) return [];
     return this.tweetRepo
@@ -254,6 +276,16 @@ export class TweetsService {
     if (tweet.user.username !== username) {
       throw new BadRequestException('Not allowed to delete this tweet');
     }
+
+    const quotingTweets = await this.tweetRepo
+      .createQueryBuilder('tweet')
+      .where('tweet.quoted_tweet_id = :id', { id })
+      .getMany();
+    for (const t of quotingTweets) {
+      t.deletedQuotedTweetId = id;
+      t.quotedTweet = null;
+      await this.tweetRepo.save(t);
+    }
     await this.tweetRepo.remove(tweet);
   }
 
@@ -263,19 +295,29 @@ export class TweetsService {
         ? tweet.createdAt.toISOString()
         : String(tweet.createdAt);
 
-    const quoted =
-      tweet.quotedTweet && tweet.quotedTweet.user
-        ? {
-            id: tweet.quotedTweet.id,
-            username: tweet.quotedTweet.user.username,
-            content: tweet.quotedTweet.content ?? '',
-            imageUrl: tweet.quotedTweet.imageUrl ?? null,
-            createdAt:
-              tweet.quotedTweet.createdAt instanceof Date
-                ? tweet.quotedTweet.createdAt.toISOString()
-                : String(tweet.quotedTweet.createdAt),
-          }
-        : null;
+    let quoted: TweetResponseDto['quotedTweet'] = null;
+    if (tweet.quotedTweet && tweet.quotedTweet.user) {
+      quoted = {
+        id: tweet.quotedTweet.id,
+        username: tweet.quotedTweet.user.username,
+        content: tweet.quotedTweet.content ?? '',
+        imageUrl: tweet.quotedTweet.imageUrl ?? null,
+        createdAt:
+          tweet.quotedTweet.createdAt instanceof Date
+            ? tweet.quotedTweet.createdAt.toISOString()
+            : String(tweet.quotedTweet.createdAt),
+        isDeleted: false,
+      };
+    } else if (tweet.deletedQuotedTweetId != null) {
+      quoted = {
+        id: tweet.deletedQuotedTweetId,
+        username: '',
+        content: 'This tweet was deleted',
+        imageUrl: null,
+        createdAt: '',
+        isDeleted: true,
+      };
+    }
 
     const sortedNotes = (tweet.notes ?? [])
         .filter(n => n.isVisible)

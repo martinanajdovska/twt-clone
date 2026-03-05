@@ -7,7 +7,7 @@ export class NoteRating {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => CommunityNote, note => note.ratings)
+  @ManyToOne(() => CommunityNote, (note) => note.ratings, { onDelete: 'CASCADE' })
   note: CommunityNote;
 
   @ManyToOne(() => User)

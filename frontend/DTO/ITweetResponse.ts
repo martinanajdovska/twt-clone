@@ -11,6 +11,7 @@ export interface ITweetResponse {
         content: string;
         imageUrl: string | null;
         createdAt: string;
+        isDeleted: boolean;
     } | null;
     likesCount: number;
     repliesCount: number;

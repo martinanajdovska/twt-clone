@@ -8,7 +8,7 @@ export class CommunityNote {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Tweet)
+  @ManyToOne(() => Tweet, { onDelete: 'CASCADE' })
   tweet: Tweet;
 
   @ManyToOne(() => User)

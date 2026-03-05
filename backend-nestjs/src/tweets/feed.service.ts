@@ -83,9 +83,69 @@ export class FeedService {
     username: string,
     pageable: { page: number; size: number },
     requesterUsername: string,
+    tab: 'tweets' | 'replies' | 'likes' | 'media' = 'tweets',
   ): Promise<UserResponseDto> {
     const user = await this.usersService.findByUsername(username);
     if (!user) throw new NotFoundException('User not found');
+
+    if (tab === 'replies') {
+      const replies = await this.tweetsService.findRepliesByUsername(
+        username,
+        pageable.page,
+        pageable.size,
+      );
+      const tweetDtos: TweetResponseDto[] = [];
+      for (const t of replies) {
+        tweetDtos.push(
+          await this.addTweetInfo(t, null, requesterUsername),
+        );
+      }
+      return { username, tweets: tweetDtos };
+    }
+
+    if (tab === 'likes') {
+      const likedTweets = await this.likesService.findLikedTweetsByUsername(
+        username,
+        pageable.page,
+        pageable.size,
+      );
+      const tweetDtos: TweetResponseDto[] = [];
+      for (const t of likedTweets) {
+        tweetDtos.push(
+          await this.addTweetInfo(t, null, requesterUsername),
+        );
+      }
+      return { username, tweets: tweetDtos };
+    }
+
+    if (tab === 'media') {
+      const tweets = await this.tweetsService.findAllParentTweetsByUsername(username);
+      const retweets = await this.retweetsService.findRetweetsByUsername(username);
+      const combined: Tweet[] = [];
+      for (const t of tweets) {
+        if (t.imageUrl) combined.push(t);
+      }
+      for (const r of retweets) {
+        const t = await this.tweetsService.findById(r.tweet.id);
+        if (t?.imageUrl) combined.push(t);
+      }
+      combined.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+      const pageItems = combined.slice(
+        pageable.page * pageable.size,
+        pageable.page * pageable.size + pageable.size,
+      );
+      const tweetDtos: TweetResponseDto[] = [];
+      for (const t of pageItems) {
+        tweetDtos.push(
+          await this.addTweetInfo(t, username, requesterUsername),
+        );
+      }
+      return { username, tweets: tweetDtos };
+    }
+
     const tweets = await this.tweetsService.findAllParentTweetsByUsername(username);
     const retweets = await this.retweetsService.findRetweetsByUsername(username);
     const combined: Tweet[] = [];

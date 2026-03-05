@@ -6,6 +6,7 @@ import { UsersService } from '../users/users.service';
 import { TweetsService } from '../tweets/tweets.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../entities/notification.entity';
+import { Tweet } from '../entities/tweet.entity';
 
 @Injectable()
 export class LikesService {
@@ -68,5 +69,29 @@ export class LikesService {
       relations: ['user'],
     });
     return likes.map((l) => l.user!.username);
+  }
+
+  async findLikedTweetsByUsername(
+    username: string,
+    page: number,
+    size: number,
+  ): Promise<Tweet[]> {
+    const likes = await this.likeRepo.find({
+      where: { user: { username } },
+      relations: [
+        'tweet',
+        'tweet.user',
+        'tweet.parentTweet',
+        'tweet.quotedTweet',
+        'tweet.quotedTweet.user',
+        'tweet.notes',
+        'tweet.notes.ratings',
+        'tweet.notes.ratings.user',
+      ],
+      order: { createdAt: 'DESC' },
+      skip: page * size,
+      take: size,
+    });
+    return likes.map((l) => l.tweet!).filter(Boolean);
   }
 }
