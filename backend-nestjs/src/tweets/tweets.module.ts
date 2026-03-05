@@ -12,6 +12,7 @@ import { RetweetsModule } from '../retweets/retweets.module';
 import { FollowsModule } from '../follows/follows.module';
 import { GrokModule } from 'src/grok/grok.module';
 import { CommunityNotesModule } from 'src/community-notes/community-notes.module';
+import { BookmarksModule } from 'src/bookmarks/bookmarks.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CommunityNotesModule } from 'src/community-notes/community-notes.module
     FollowsModule,
     GrokModule,
     forwardRef(() => CommunityNotesModule),
+    forwardRef(() => BookmarksModule),
   ],
   controllers: [TweetsController],
   providers: [TweetsService, FeedService],

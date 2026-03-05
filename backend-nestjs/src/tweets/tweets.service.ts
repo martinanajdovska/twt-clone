@@ -266,6 +266,7 @@ export class TweetsService {
       retweetsCount: 0,
       liked: false,
       retweeted: false,
+      bookmarked: false,
       parentId: tweet.parentTweet?.id ?? null,
       retweetedBy: null,
       createdAt: created,

@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { Tweet } from '../entities/tweet.entity';
 import { TweetsService } from './tweets.service';
 import { UsersService } from '../users/users.service';
 import { FollowsService } from '../follows/follows.service';
 import { LikesService } from '../likes/likes.service';
 import { RetweetsService } from '../retweets/retweets.service';
+import { BookmarksService } from '../bookmarks/bookmarks.service';
 import { TweetResponseDto } from './dto/tweet-response.dto';
 
 export interface UserResponseDto {
@@ -33,6 +34,8 @@ export class FeedService {
     private followsService: FollowsService,
     private likesService: LikesService,
     private retweetsService: RetweetsService,
+    @Inject(forwardRef(() => BookmarksService))
+    private bookmarksService: BookmarksService,
   ) {}
 
   async generateFeed(
@@ -145,7 +148,7 @@ export class FeedService {
     };
   }
 
-  private async addTweetInfo(
+  public async addTweetInfo(
     tweet: Tweet,
     username: string | null,
     requesterUsername: string,
@@ -161,6 +164,10 @@ export class FeedService {
       requesterUsername,
     );
     dto.retweeted = await this.retweetsService.existsByTweetIdAndUsername(
+      tweet.id,
+      requesterUsername,
+    );
+    dto.bookmarked = await this.bookmarksService.existsByTweetIdAndUsername(
       tweet.id,
       requesterUsername,
     );

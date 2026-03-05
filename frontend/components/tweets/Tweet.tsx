@@ -4,6 +4,7 @@ import { ITweetResponse } from "@/DTO/ITweetResponse"
 import Image from "next/image"
 import React from "react"
 import Like from "./Like"
+import Bookmark from "./Bookmark"
 import { useRouter } from "next/navigation"
 import { MoreHorizontal, Repeat2 } from "lucide-react"
 
@@ -169,6 +170,11 @@ const Tweet = ({ tweet, username }: { tweet: ITweetResponse; username: string })
                             likesCount={tweet.likesCount}
                             liked={tweet.liked}
                             id={tweet.id}
+                        />
+                        <Bookmark
+                            id={tweet.id}
+                            bookmarked={tweet.bookmarked ?? false}
+                            username={username}
                         />
                         <span title={tweet.createdAt}>{formatRelativeTime(tweet.createdAt)}</span>
                     </div>

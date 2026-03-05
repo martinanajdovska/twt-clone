@@ -15,6 +15,7 @@ export interface TweetResponseDto {
   retweetsCount: number;
   liked: boolean;
   retweeted: boolean;
+  bookmarked: boolean;
   parentId: number | null;
   retweetedBy: string | null;
   createdAt: string;

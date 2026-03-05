@@ -1,6 +1,6 @@
 import Logout from "@/components/auth/Logout";
 import Link from "next/link";
-import {Home, User as UserIcon} from "lucide-react";
+import {Home, User as UserIcon, Bookmark} from "lucide-react";
 import Search from "@/components/ui/Search";
 import {ModeToggle} from "@/components/ui/ModeToggle";
 import {fetchSelfUsernameAndProfilePicture} from "@/api-calls/users-api";
@@ -41,6 +41,7 @@ export default async function AuthenticatedLayout({children,}: { children: React
                                 <NotificationDropdown/>
                                 <span className="hidden lg:inline">Notifications</span>
                             </div>
+                            <NavLink href="/bookmarks" icon={<Bookmark size={26}/>} label="Bookmarks"/>
                         </nav>
                         <div className="mt-4">
                             <Logout/>

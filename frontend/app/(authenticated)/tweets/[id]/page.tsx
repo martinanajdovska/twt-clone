@@ -10,12 +10,14 @@ const TweetDetailsPage = async ({params}: { params: Promise<{ id: number }> }) =
     const {id} = await params;
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-
-    const queryClient = await prefetchTweetDetails(id);
-
+    
     if (!token) {
         redirect("/login");
     }
+
+    const queryClient = await prefetchTweetDetails(id);
+
+
 
     const self = await fetchSelfUsernameAndProfilePicture({token});
     const username = self.username;
