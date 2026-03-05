@@ -17,7 +17,7 @@ export interface ITweetResponse {
     retweetsCount: number;
     liked: boolean;
     retweeted: boolean;
-    bookmarked: boolean;
+    bookmarked?: boolean;
     retweetedBy: string;
     createdAt: string;
     communityNote: { id: number; content: string; helpfulCount: number; userRating: boolean | null } | null;

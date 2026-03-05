@@ -6,13 +6,17 @@ import {
 } from "@/components/ui/dialog"
 import { MessageCircle } from "lucide-react"
 import TweetForm from "@/components/tweets/TweetForm"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Tweet from "@/components/tweets/Tweet";
 import { ITweetResponse } from "@/DTO/ITweetResponse";
 
 const Reply = ({ tweet, username, repliesCount }: { tweet: ITweetResponse, username: string, repliesCount: number }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [repliesCountState, setRepliesCountState] = useState(repliesCount)
+    const [repliesCountState, setRepliesCountState] = useState(repliesCount);
+
+    useEffect(() => {
+        setRepliesCountState(repliesCount);
+    }, [repliesCount]);
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>

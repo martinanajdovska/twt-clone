@@ -177,6 +177,13 @@ export class TweetsService {
       .getMany();
   }
 
+  async countReplies(tweetId: number): Promise<number> {
+    return this.tweetRepo
+      .createQueryBuilder('tweet')
+      .where('tweet.parent_id = :tweetId', { tweetId })
+      .getCount();
+  }
+
   async findAllRepliesOfTweet(
     tweetId: number,
     page: number,
@@ -262,7 +269,7 @@ export class TweetsService {
       imageUrl: tweet.imageUrl ?? null,
       quotedTweet: quoted,
       likesCount: 0,
-      repliesCount: Array.isArray(tweet.replies) ? tweet.replies.length : 0,
+      repliesCount: 0,
       retweetsCount: 0,
       liked: false,
       retweeted: false,

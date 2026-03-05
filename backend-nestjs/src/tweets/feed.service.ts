@@ -155,7 +155,7 @@ export class FeedService {
   ): Promise<TweetResponseDto> {
     const dto = this.tweetsService.toResponseDto(tweet, requesterUsername);
     dto.likesCount = await this.likesService.countLikes(tweet.id);
-    dto.repliesCount = Array.isArray(tweet.replies) ? tweet.replies.length : 0;
+    dto.repliesCount = await this.tweetsService.countReplies(tweet.id);
     dto.retweetsCount = await this.retweetsService.countRetweets(tweet.id);
     dto.parentId = tweet.parentTweet?.id ?? null;
     dto.retweetedBy = tweet.user.username !== username ? username: null;
