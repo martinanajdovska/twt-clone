@@ -26,7 +26,7 @@ export class CommunityNotesController {
 
   @Get('tweet/:tweetId/all')
   @UseGuards(JwtAuthGuard)
-  getAllNotesForTweet(@Param('tweetId', ParseIntPipe) tweetId: string) {
-    return this.communityNotesService.getAllNotesForTweet(parseInt(tweetId, 10));
+  getAllNotesForTweet(@Param('tweetId', ParseIntPipe) tweetId: string, @CurrentUsername() username: string) {
+    return this.communityNotesService.getAllNotesForTweet(parseInt(tweetId, 10), username);
   }
 }

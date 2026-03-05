@@ -12,5 +12,5 @@ export interface TweetResponseDto {
   retweetedBy: string | null;
   createdAt: string;
   profilePictureUrl: string | null;
-  communityNote: { id: number; content: string; helpfulCount: number } | null;
+  communityNote: { id: number; content: string; helpfulCount: number; userRating: boolean | null } | null;
 }

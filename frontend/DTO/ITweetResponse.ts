@@ -12,5 +12,5 @@ export interface ITweetResponse {
     retweeted: boolean;
     retweetedBy: string;
     createdAt: string;
-    communityNote: { id: number; content: string; helpfulCount: number } | null;
+    communityNote: { id: number; content: string; helpfulCount: number; userRating: boolean | null } | null;
 }

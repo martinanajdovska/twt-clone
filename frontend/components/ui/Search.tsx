@@ -13,13 +13,18 @@ const Search = () => {
     const [inputValue, setInputValue] = useState(searchParams.get('search') || "");
     const [debouncedSearch] = useDebounce(inputValue, 700);
     const [isOpen, setIsOpen] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const {data, isLoading} = useQuery({
+    const {data = [], isLoading} = useQuery({
         queryKey: ['search', debouncedSearch],
         queryFn: () => fetchUsers(debouncedSearch),
         enabled: debouncedSearch.length > 0,
     });
+
+    useEffect(() => {
+        setHighlightedIndex(0);
+    }, [data.length]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -37,6 +42,22 @@ const Search = () => {
         router.push(`/users/${username}`);
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (!isOpen || data.length === 0) return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setHighlightedIndex((i) => Math.min(i + 1, data.length - 1));
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setHighlightedIndex((i) => Math.max(i - 1, 0));
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSelectUser(data[highlightedIndex]);
+        } else if (e.key === 'Escape') {
+            setIsOpen(false);
+        }
+    };
+
     return (
         <div className="relative w-full" ref={containerRef}>
             <div className="relative group bg-secondary rounded-lg">
@@ -50,6 +71,7 @@ const Search = () => {
                         setIsOpen(true);
                     }}
                     onFocus={() => setIsOpen(true)}
+                    onKeyDown={handleKeyDown}
                     type="text"
                     placeholder="Search users..."
                     className="w-full bg-muted/50 border-none rounded-full py-2.5 pl-11 pr-10 text-sm focus:bg-background focus:ring-2 focus:ring-primary transition-all placeholder:text-muted-foreground outline-none"
@@ -66,11 +88,12 @@ const Search = () => {
                 <div className="absolute mt-2 w-full bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                     {data && data.length > 0 ? (
                         <div className="flex flex-col">
-                            {data.map((username: string) => (
+                            {data.map((username: string, i: number) => (
                                 <button
                                     key={username}
+                                    type="button"
                                     onClick={() => handleSelectUser(username)}
-                                    className="px-4 py-3 hover:bg-muted flex items-center gap-3 transition-colors text-left"
+                                    className={`px-4 py-3 flex items-center gap-3 transition-colors text-left ${i === highlightedIndex ? '!bg-primary/15 ring-inset ring-2 ring-primary/40' : 'hover:bg-muted'}`}
                                 >
                                     <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
                                         <User size={18} className="text-muted-foreground" />

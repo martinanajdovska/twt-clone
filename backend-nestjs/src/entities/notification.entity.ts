@@ -9,6 +9,7 @@ export enum NotificationType {
   LIKE = 'LIKE',
   RETWEET = 'RETWEET',
   REPLY = 'REPLY',
+  MENTION = 'MENTION',
   FOLLOW = 'FOLLOW',
   COMMUNITY_NOTE = 'COMMUNITY_NOTE',
 }

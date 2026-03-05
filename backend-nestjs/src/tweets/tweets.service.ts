@@ -71,6 +71,27 @@ export class TweetsService {
         NotificationType.REPLY,
       );
     }
+    if (content) {
+      const mentionRegex = /@(\w+)/g;
+      const mentionedUsernames = new Set<string>();
+      let match: RegExpExecArray | null;
+      while ((match = mentionRegex.exec(content)) !== null) {
+        mentionedUsernames.add(match[1]);
+      }
+      mentionedUsernames.delete(username);
+      for (const mentioned of mentionedUsernames) {
+        const mentionedUser = await this.usersService.findByUsername(mentioned);
+        if (mentionedUser) {
+          await this.notificationsService.createNotification(
+            mentionedUser.username,
+            username,
+            'mentioned you in a tweet',
+            `/tweets/${saved.id}`,
+            NotificationType.MENTION,
+          );
+        }
+      }
+    }
     if (parentTweet && parentTweet.user.role === Role.GROK || tweet.content && tweet.content.startsWith('@grok ')) {
         const reply = await this.grokService.generateReply(tweet.content || '');
 
@@ -94,20 +115,20 @@ export class TweetsService {
           );
         }
       }
-    return this.toResponseDto(saved);
+    return this.toResponseDto(saved, username);
   }
 
   async findById(id: number): Promise<Tweet | null> {
     return this.tweetRepo.findOne({
       where: { id },
-      relations: ['user', 'parentTweet', 'replies', 'notes', 'notes.ratings'],
+      relations: ['user', 'parentTweet', 'replies', 'notes', 'notes.ratings', 'notes.ratings.user'],
     });
   }
 
   async findAllParentTweetsByUsername(username: string): Promise<Tweet[]> {
     return this.tweetRepo.find({
       where: { user: { username }, parentTweet: IsNull() },
-      relations: ['user', 'replies', 'notes', 'notes.ratings'],
+      relations: ['user', 'replies', 'notes', 'notes.ratings', 'notes.ratings.user'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -120,6 +141,7 @@ export class TweetsService {
       .leftJoinAndSelect('t.replies', 'replies')
       .leftJoinAndSelect('t.notes', 'notes')
       .leftJoinAndSelect('notes.ratings', 'ratings')
+      .leftJoinAndSelect('ratings.user', 'ratingUser')
       .where('t.parent_id IS NULL')
       .andWhere('user.username IN (:...usernames)', { usernames })
       .orderBy('t.created_at', 'DESC')
@@ -135,7 +157,7 @@ export class TweetsService {
     if (!tweet) throw new NotFoundException('Tweet not found');
     return this.tweetRepo.find({
       where: { parentTweet: { id: tweetId } },
-      relations: ['user', 'notes', 'notes.ratings'],
+      relations: ['user', 'notes', 'notes.ratings', 'notes.ratings.user'],
       order: { createdAt: 'DESC' },
       skip: page * size,
       take: size,
@@ -162,7 +184,7 @@ export class TweetsService {
     await this.tweetRepo.remove(tweet);
   }
 
-  toResponseDto(tweet: Tweet): TweetResponseDto {
+  toResponseDto(tweet: Tweet, currentUsername: string): TweetResponseDto {
     const created =
       tweet.createdAt instanceof Date
         ? tweet.createdAt.toISOString().slice(0, 10)
@@ -170,11 +192,15 @@ export class TweetsService {
 
     const sortedNotes = (tweet.notes ?? [])
         .filter(n => n.isVisible)
-        .map(n => ({
-          id: n.id,
-          content: n.content,
-          helpfulCount: (n.ratings ?? []).filter(r => r.helpful).length,
-        }))
+        .map(n => {
+          const userRating = (n.ratings ?? []).find((r) => r.user.username === currentUsername)?.helpful ?? null;
+          return {
+            id: n.id,
+            content: n.content,
+            helpfulCount: (n.ratings ?? []).filter(r => r.helpful).length,
+            userRating: userRating === null ? null : userRating,
+          };
+        })
         .sort((a, b) => b.helpfulCount - a.helpfulCount);
 
     const communityNote = sortedNotes.length > 0 ? sortedNotes[0] : null;

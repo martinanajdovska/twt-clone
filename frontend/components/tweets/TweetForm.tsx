@@ -168,7 +168,7 @@ const TweetForm = ({ username, parentId, onSuccess, profilePicture }: { username
                                             key={u}
                                             type="button"
                                             onClick={() => insertMention(u)}
-                                            className={`px-4 py-3 hover:bg-muted flex items-center gap-3 transition-colors text-left ${i === mentionHighlightIndex ? 'bg-muted' : ''}`}
+                                            className={`px-4 py-3 flex items-center gap-3 transition-colors text-left ${i === mentionHighlightIndex ? '!bg-primary/15 ring-inset ring-2 ring-primary/40' : 'hover:bg-muted'}`}
                                         >
                                             <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
                                                 <User size={18} className="text-muted-foreground" />

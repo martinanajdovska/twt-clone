@@ -23,7 +23,10 @@ export default function NotificationDropdown() {
 
   const filteredNotifications =
     activeTab === 'mentions'
-      ? notifications.filter((n: INotificationResponse) => n.type === 'REPLY')
+      ? notifications.filter(
+          (n: INotificationResponse) =>
+            n.type === 'REPLY' || n.type === 'MENTION',
+        )
       : notifications;
 
   const unreadCount = notifications.filter(

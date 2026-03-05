@@ -114,19 +114,23 @@ export class CommunityNotesService {
     });
   }
 
-  async getAllNotesForTweet(tweetId: number) {
+  async getAllNotesForTweet(tweetId: number, currentUsername: string) {
     const notes = await this.noteRepo.find({
       where: { tweet: { id: tweetId } },
-      relations: ['author', 'ratings'],
+      relations: ['author', 'ratings', 'ratings.user'],
       order: { createdAt: 'DESC' },
     });
-    return notes.map((n) => ({
-      id: n.id,
-      content: n.content,
-      isVisible: n.isVisible,
-      authorUsername: n.author!.username,
-      helpfulCount: (n.ratings ?? []).filter((r) => r.helpful).length,
-      notHelpfulCount: (n.ratings ?? []).filter((r) => !r.helpful).length,
-    }));
+    return notes.map((n) => {
+      const userRating = (n.ratings ?? []).find((r) => r.user?.username === currentUsername)?.helpful ?? null;
+      return {
+        id: n.id,
+        content: n.content,
+        isVisible: n.isVisible,
+        authorUsername: n.author!.username,
+        helpfulCount: (n.ratings ?? []).filter((r) => r.helpful).length,
+        notHelpfulCount: (n.ratings ?? []).filter((r) => !r.helpful).length,
+        userRating: userRating === null ? null : userRating,
+      };
+    });
   }
 }

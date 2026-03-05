@@ -1,6 +1,6 @@
 'use client'
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { useRateNote } from "@/hooks/community-notes/useRateNote"
 import type { AllNoteItem } from "@/hooks/community-notes/useFetchAllNotesForTweet"
 
@@ -11,8 +11,14 @@ type NoteCardProps = {
 
 const NoteCard = ({ note, onRated }: NoteCardProps) => {
     const { mutate: rateNote, isPending } = useRateNote()
+    const [selectedRating, setSelectedRating] = useState<boolean | null>(note.userRating ?? null)
+
+    useEffect(() => {
+        setSelectedRating(note.userRating ?? null)
+    }, [note.id, note.userRating])
 
     const handleRate = (helpful: boolean) => {
+        setSelectedRating(helpful)
         rateNote(
             { noteId: note.id, helpful },
             { onSuccess: onRated }
@@ -47,7 +53,8 @@ const NoteCard = ({ note, onRated }: NoteCardProps) => {
                     type="button"
                     onClick={() => handleRate(true)}
                     disabled={isPending}
-                    className="text-xs text-muted-foreground hover:underline disabled:opacity-50"
+                    className="text-xs hover:underline disabled:opacity-50 text-muted-foreground"
+                    style={selectedRating === true ? { color: '#2563eb', fontWeight: 600 } : undefined}
                 >
                     Helpful
                 </button>
@@ -55,7 +62,8 @@ const NoteCard = ({ note, onRated }: NoteCardProps) => {
                     type="button"
                     onClick={() => handleRate(false)}
                     disabled={isPending}
-                    className="text-xs text-muted-foreground hover:underline disabled:opacity-50"
+                    className="text-xs hover:underline disabled:opacity-50 text-muted-foreground"
+                    style={selectedRating === false ? { color: '#2563eb', fontWeight: 600 } : undefined}
                 >
                     Not helpful
                 </button>

@@ -1,7 +1,7 @@
 import React from 'react'
 import {formatDistanceToNow} from "date-fns";
 import {INotificationResponse} from "@/DTO/INotificationResponse";
-import {Bell, FileWarning, Heart, MessageSquare, Repeat, UserIcon} from "lucide-react";
+import { AtSign, Bell, FileWarning, Heart, MessageSquare, Repeat, UserIcon } from 'lucide-react';
 import {useReadNotification} from "@/hooks/notifications/useReadNotification";
 import {useRouter} from "next/navigation";
 
@@ -15,6 +15,8 @@ const Notification = ({notification}:{notification: INotificationResponse}) => {
                 return <Heart className="fill-red-500 text-red-500" size={16}/>;
             case 'REPLY':
                 return <MessageSquare className="text-blue-500" size={16}/>;
+            case 'MENTION':
+                return <AtSign className="text-blue-500" size={16}/>;
             case 'RETWEET':
                 return <Repeat className="text-green-500" size={16}/>;
             case 'FOLLOW':
