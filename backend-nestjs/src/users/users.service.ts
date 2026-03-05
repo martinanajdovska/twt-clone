@@ -116,6 +116,30 @@ export class UsersService {
     await this.userRepo.save(user);
   }
 
+  async updateProfile(
+    username: string,
+    updates: {
+      bio?: string | null;
+      location?: string | null;
+      website?: string | null;
+      birthday?: string | null;
+      displayName?: string | null;
+    },
+    bannerFile?: Express.Multer.File,
+  ): Promise<void> {
+    const user = await this.userRepo.findOne({ where: { username } });
+    if (!user) throw new NotFoundException('User not found');
+    if (updates.bio !== undefined) user.bio = updates.bio?.slice(0, 160) ?? null;
+    if (updates.location !== undefined) user.location = updates.location?.slice(0, 100) ?? null;
+    if (updates.website !== undefined) user.website = updates.website?.slice(0, 100) ?? null;
+    if (updates.birthday !== undefined) user.birthday = updates.birthday !== "" ? updates.birthday : null;
+    if (updates.displayName !== undefined) user.displayName = updates.displayName?.slice(0, 50) ?? null;
+    if (bannerFile) {
+      user.bannerUrl = await this.cloudinaryService.uploadFile(bannerFile, 'profile_banners');
+    }
+    await this.userRepo.save(user);
+  }
+
   async getUsernameAndProfilePicture(username: string): Promise<{
     username: string;
     profilePicture: string | null;

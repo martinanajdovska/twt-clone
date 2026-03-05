@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
+  CreateDateColumn,
 } from 'typeorm';
 import { Tweet } from './tweet.entity';
 import { Like } from './like.entity';
@@ -34,6 +35,27 @@ export class User {
 
   @Column({ type: 'varchar', nullable: true })
   imageUrl: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  bannerUrl: string | null;
+
+  @Column({ type: 'varchar', length: 160, nullable: true })
+  bio: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  location: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  website: string | null;
+
+  @Column({ type: 'date', nullable: true })
+  birthday: string | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  displayName: string | null;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt: Date;
 
   @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;

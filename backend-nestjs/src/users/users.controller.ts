@@ -3,6 +3,7 @@ import {
   Get,
   Patch,
   Query,
+  Body,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -39,5 +40,23 @@ export class UsersController {
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
     await this.usersService.updateProfileImage(username, file);
+  }
+
+  @Patch('users/me/profile')
+  @UseInterceptors(FileInterceptor('banner'))
+  async updateProfile(
+    @CurrentUsername() username: string,
+    @Body('bio') bio?: string,
+    @Body('location') location?: string,
+    @Body('website') website?: string,
+    @Body('birthday') birthday?: string,
+    @Body('displayName') displayName?: string,
+    @UploadedFile() banner?: Express.Multer.File,
+  ) {
+    await this.usersService.updateProfile(
+      username,
+      { bio, location, website, birthday, displayName },
+      banner,
+    );
   }
 }

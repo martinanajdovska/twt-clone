@@ -24,27 +24,22 @@ const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }
     const isSelf = self.username === username;
 
     return (
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                <section className="col-span-12 space-y-6">
-                    PROFILE
-                    <HydrationBoundary state={dehydrate(queryClient)}>
-                        <ProfileHeader
-                            token={token}
-                            username={username}
-                            isSelf={isSelf}
-                        />
+        <main className="min-h-screen max-w-[600px] mx-auto border-x border-border">
+            <HydrationBoundary state={dehydrate(queryClient)}>
+                <ProfileHeader
+                    token={token}
+                    username={username}
+                    isSelf={isSelf}
+                />
 
-                        {isSelf && (
-                            <div className="border-b border-border shadow-sm">
-                                <TweetForm username={self.username} profilePicture={self.profilePicture} />
-                            </div>
-                        )}
+                {isSelf && (
+                    <div className="border-b border-border">
+                        <TweetForm username={self.username} profilePicture={self.profilePicture} />
+                    </div>
+                )}
 
-                        <Feed username={username} isProfile={true}/>
-                    </HydrationBoundary>
-                </section>
-            </div>
+                <Feed username={username} isProfile={true} />
+            </HydrationBoundary>
         </main>
     )
 }

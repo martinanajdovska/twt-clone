@@ -54,6 +54,18 @@ export const fetchProfileHeader = async ({username}:{username:string}) => {
     return data;
 }
 
+export const updateProfile = async (formData: FormData) => {
+  const res = await fetch(`${BASE_URL}/api/users/me/profile`, {
+    method: 'PATCH',
+    body: formData,
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error);
+  }
+};
+
 // get users by username
 export const fetchUsers = async (searchTerm: string) => {
     if (!searchTerm) return [];
