@@ -1,16 +1,27 @@
 'use client'
 import React, { useEffect, useRef, useState } from 'react'
-import { ImageIcon, User, X } from 'lucide-react'
-
-const MAX_TWEET_LENGTH = 280
+import { ImageIcon, User, X, BarChart3 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
-
 import { useCreateTweet } from '@/hooks/tweets/useCreateTweet'
 import { getMentionTrigger } from '@/hooks/tweets/useMentionSuggestions'
 import { fetchUsers } from '@/api-calls/users-api'
 import Image from 'next/image'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+
+const MAX_TWEET_LENGTH = 280
+const MAX_POLL_OPTIONS = 4
+const MIN_POLL_OPTIONS = 2
+const POLL_OPTION_MAX_LENGTH = 25
+const POLL_DURATIONS = [
+    { label: '1 hour', hours: 1 },
+    { label: '3 hours', hours: 3 },
+    { label: '6 hours', hours: 6 },
+    { label: '12 hours', hours: 12 },
+    { label: '1 day', hours: 24 },
+    { label: '3 days', hours: 72 },
+    { label: '7 days', hours: 168 },
+]
 
 const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: { username: string; parentId?: number; quoteId?: number; onSuccess?: () => void; profilePicture?: string }) => {
     const [content, setContent] = useState('')
@@ -18,6 +29,9 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [mentionHighlightIndex, setMentionHighlightIndex] = useState(0)
+    const [showPoll, setShowPoll] = useState(false)
+    const [pollOptions, setPollOptions] = useState<string[]>(['', ''])
+    const [pollDurationHours, setPollDurationHours] = useState(24)
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -80,20 +94,56 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
+    const setPollOption = (index: number, value: string) => {
+        setPollOptions((prev) => {
+            const next = [...prev];
+            next[index] = value.slice(0, POLL_OPTION_MAX_LENGTH);
+            return next;
+        });
+    };
+
+    const addPollOption = () => {
+        if (pollOptions.length < MAX_POLL_OPTIONS) {
+            setPollOptions((prev) => [...prev, '']);
+        }
+    };
+
+    const removePollOption = (index: number) => {
+        if (pollOptions.length > MIN_POLL_OPTIONS) {
+            setPollOptions((prev) => prev.filter((_, i) => i !== index));
+        }
+    };
+
+    const canAddPoll = parentId == null && quoteId == null
+    const validPollOptions = showPoll
+        ? pollOptions.map((o) => o.trim()).filter(Boolean)
+        : []
+    const hasEnoughPollOptions = validPollOptions.length >= MIN_POLL_OPTIONS
+    const canSubmit =
+        (content.trim().length > 0 || selectedFile || (showPoll && hasEnoughPollOptions)) &&
+        content.length <= MAX_TWEET_LENGTH
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        if (!content.trim() && !selectedFile) return
+        if (!canSubmit) return
 
         const formData = new FormData()
         formData.append('content', content)
         if (parentId) formData.append('parentId', parentId.toString())
         if (quoteId) formData.append('quoteId', quoteId.toString())
         if (selectedFile) formData.append('image', selectedFile)
+        if (showPoll && hasEnoughPollOptions && canAddPoll) {
+            formData.append('pollOptions', JSON.stringify(validPollOptions))
+            formData.append('pollDurationHours', pollDurationHours.toString())
+        }
 
         createTweet(formData, {
             onSuccess: () => {
                 setContent('')
                 removeImage()
+                setShowPoll(false)
+                setPollOptions(['', ''])
+                setPollDurationHours(24)
                 if (onSuccess) onSuccess()
             },
         })
@@ -207,6 +257,59 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
                         </div>
                     )}
 
+                    {showPoll && canAddPoll && (
+                        <div className="mt-3 p-3 rounded-2xl border border-border space-y-3">
+                            {pollOptions.map((value, i) => (
+                                <div key={i} className="flex gap-2 items-center">
+                                    <input
+                                        type="text"
+                                        placeholder={`Choice ${i + 1}`}
+                                        value={value}
+                                        maxLength={POLL_OPTION_MAX_LENGTH}
+                                        onChange={(e) => setPollOption(i, e.target.value)}
+                                        className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                    {pollOptions.length > MIN_POLL_OPTIONS && (
+                                        <button
+                                            type="button"
+                                            onClick={() => removePollOption(i)}
+                                            className="p-2 text-muted-foreground hover:text-destructive hover:bg-muted rounded-full"
+                                            aria-label="Remove option"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                            {pollOptions.length < MAX_POLL_OPTIONS && (
+                                <button
+                                    type="button"
+                                    onClick={addPollOption}
+                                    className="text-sm text-primary hover:underline"
+                                >
+                                    Add option
+                                </button>
+                            )}
+                            <div className="flex items-center gap-2 pt-1">
+                                <label htmlFor="poll-duration" className="text-sm text-muted-foreground">
+                                    Duration:
+                                </label>
+                                <select
+                                    id="poll-duration"
+                                    value={pollDurationHours}
+                                    onChange={(e) => setPollDurationHours(parseInt(e.target.value, 10))}
+                                    className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                >
+                                    {POLL_DURATIONS.map((d) => (
+                                        <option key={d.hours} value={d.hours}>
+                                            {d.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between pt-3 border-t border-border">
                         <div className="flex items-center gap-1 text-primary">
                             <button
@@ -216,7 +319,16 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
                             >
                                 <ImageIcon size={20} />
                             </button>
-
+                            {canAddPoll && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPoll((p) => !p)}
+                                    className={`p-2 rounded-full transition-colors hover:cursor-pointer ${showPoll ? 'bg-primary/20 text-primary' : 'hover:bg-primary/10'}`}
+                                    title="Add poll"
+                                >
+                                    <BarChart3 size={20} />
+                                </button>
+                            )}
                             <input
                                 type="file"
                                 ref={fileInputRef}
@@ -230,20 +342,19 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
                         <div className="flex items-center gap-4">
                             {content.length > 0 && (
                                 <span
-                                    className={`text-sm tabular-nums ${
-                                        content.length > MAX_TWEET_LENGTH
+                                    className={`text-sm tabular-nums ${content.length > MAX_TWEET_LENGTH
                                             ? 'text-destructive font-bold'
                                             : content.length >= MAX_TWEET_LENGTH - 20
-                                              ? 'text-amber-500'
-                                              : 'text-muted-foreground'
-                                    }`}
+                                                ? 'text-amber-500'
+                                                : 'text-muted-foreground'
+                                        }`}
                                 >
                                     {content.length}/{MAX_TWEET_LENGTH}
                                 </span>
                             )}
                             <button
                                 type="submit"
-                                disabled={isPending || content.length > MAX_TWEET_LENGTH || (!content.trim() && !selectedFile)}
+                                disabled={isPending || !canSubmit}
                                 className="px-5 py-2 bg-primary text-primary-foreground rounded-full font-bold disabled:opacity-50"
                             >
                                 {isPending ? "Sending..." : "Tweet"}

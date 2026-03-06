@@ -11,11 +11,11 @@ type NoteCardProps = {
 
 const NoteCard = ({ note, onRated }: NoteCardProps) => {
     const { mutate: rateNote, isPending } = useRateNote()
-    const [selectedRating, setSelectedRating] = useState<boolean | null>(note.userRating ?? null)
+    const [selectedRating, setSelectedRating] = useState<boolean | null>(note.isHelpful ?? null)
 
     useEffect(() => {
-        setSelectedRating(note.userRating ?? null)
-    }, [note.id, note.userRating])
+        setSelectedRating(note.isHelpful ?? null)
+    }, [note.id, note.isHelpful])
 
     const handleRate = (helpful: boolean) => {
         setSelectedRating(helpful)

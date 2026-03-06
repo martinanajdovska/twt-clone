@@ -55,7 +55,7 @@ export default function Feed({
                             {group.map((tweet: ITweetResponse) => (
                                 // avoiding duplicate keys when multiply users retweet the same thing
                                 <div key={tweet.id + (tweet.retweetedBy ?? '')} className="transition-colors hover:bg-accent/50">
-                                    <Tweet tweet={tweet} username={username} />
+                                    <Tweet tweet={tweet} username={username} showPinnedLabel={isProfile} />
                                 </div>
                             ))}
                         </div>

@@ -13,11 +13,13 @@ import { FollowsModule } from '../follows/follows.module';
 import { GrokModule } from 'src/grok/grok.module';
 import { CommunityNotesModule } from 'src/community-notes/community-notes.module';
 import { BookmarksModule } from 'src/bookmarks/bookmarks.module';
+import { PollsModule } from '../polls/polls.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Tweet]),
     UsersModule,
+    PollsModule,
     CloudinaryModule,
     NotificationsModule,
     forwardRef(() => LikesModule),

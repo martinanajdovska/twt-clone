@@ -17,6 +17,7 @@ import CommunityNoteDisplay from "@/components/community-notes/CommunityNoteDisp
 import RetweetMenu from "@/components/tweets/RetweetMenu"
 import TweetDetailStats from "@/components/tweets/TweetDetailStats"
 import PinTweet from "@/components/tweets/PinTweet"
+import PollDisplay from "@/components/tweets/PollDisplay"
 import { formatRelativeTime } from "@/lib/relativeTime"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -30,10 +31,12 @@ const Tweet = ({
     tweet,
     username,
     detailView = false,
+    showPinnedLabel = false,
 }: {
     tweet: ITweetResponse;
     username: string;
     detailView?: boolean;
+    showPinnedLabel?: boolean;
 }) => {
     const router = useRouter()
     const isSelf = username === tweet.username
@@ -50,7 +53,7 @@ const Tweet = ({
 
     return (
         <article className="flex flex-col p-4 border-b border-border hover:bg-muted/30 transition-colors cursor-pointer group shadow-sm">
-            {tweet.isPinned && (
+            {showPinnedLabel && tweet.isPinned && (
                 <div className="flex items-center gap-2 ml-8 mb-1 text-muted-foreground">
                     <PinIcon size={14} className="font-bold" />
                     <span className="text-[13px] font-bold">Pinned</span>
@@ -182,6 +185,16 @@ const Tweet = ({
                                     maxHeight: "500px",
                                 }}
                                 className="object-contain"
+                            />
+                        </div>
+                    )}
+
+                    {tweet.poll && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                            <PollDisplay
+                                tweetId={tweet.id}
+                                poll={tweet.poll}
+                                username={username}
                             />
                         </div>
                     )}

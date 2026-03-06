@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  OneToOne,
   OneToMany,
   JoinColumn,
   CreateDateColumn,
@@ -11,6 +12,7 @@ import { User } from './user.entity';
 import { Like } from './like.entity';
 import { Retweet } from './retweet.entity';
 import { CommunityNote } from './community-note.entity';
+import { Poll } from './poll.entity';
 
 @Entity()
 export class Tweet {
@@ -55,4 +57,7 @@ export class Tweet {
 
   @OneToMany(() => CommunityNote, note => note.tweet, {nullable: true, onDelete: 'CASCADE'})
   notes: CommunityNote[];
+
+  @OneToOne(() => Poll, (p) => p.tweet)
+  poll: Poll | null;
 }

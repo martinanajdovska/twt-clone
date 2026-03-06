@@ -8,7 +8,7 @@ export type AllNoteItem = {
     authorUsername: string
     helpfulCount: number
     notHelpfulCount: number
-    userRating: boolean | null
+    isHelpful: boolean | null
 }
 
 export const useFetchAllNotesForTweet = (tweetId: number, enabled: boolean) => {

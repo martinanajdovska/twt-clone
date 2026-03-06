@@ -6,6 +6,7 @@ import { FollowsService } from '../follows/follows.service';
 import { LikesService } from '../likes/likes.service';
 import { RetweetsService } from '../retweets/retweets.service';
 import { BookmarksService } from '../bookmarks/bookmarks.service';
+import { PollsService } from '../polls/polls.service';
 import { TweetResponseDto } from './dto/tweet-response.dto';
 
 export interface UserResponseDto {
@@ -36,6 +37,7 @@ export class FeedService {
     private retweetsService: RetweetsService,
     @Inject(forwardRef(() => BookmarksService))
     private bookmarksService: BookmarksService,
+    private pollsService: PollsService,
   ) {}
 
   async generateFeed(
@@ -272,6 +274,9 @@ export class FeedService {
       tweet.id,
       requesterUsername,
     );
+    if (tweet.poll) {
+      dto.poll = await this.pollsService.getPollDto(tweet.poll.id, requesterUsername);
+    }
     return dto;
   }
 }

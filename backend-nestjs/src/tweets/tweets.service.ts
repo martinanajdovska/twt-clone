@@ -13,6 +13,7 @@ import { NotificationType } from '../entities/notification.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { TweetResponseDto } from './dto/tweet-response.dto';
 import { GrokService } from 'src/grok/grok.service';
+import { PollsService } from '../polls/polls.service';
 
 @Injectable()
 export class TweetsService {
@@ -23,25 +24,63 @@ export class TweetsService {
     private notificationsService: NotificationsService,
     private cloudinaryService: CloudinaryService,
     private grokService: GrokService,
+    private pollsService: PollsService,
   ) {}
 
   async save(
     username: string,
     parentId: number | null,
     quoteId: number | null,
-    content: string,
-    file: Express.Multer.File | undefined,
+    content?: string,
+    file?: Express.Multer.File,
+    pollOptions?: string[],
+    pollDurationHours?: number,
   ): Promise<TweetResponseDto> {
-    if (!content?.trim() && !file) {
+    if (!content?.trim() && !file && !pollOptions) {
       throw new BadRequestException("Can't post empty tweet");
     }
+
     if (content && content.length > 280) {
-      throw new BadRequestException("Tweet cannot exceed 280 characters");
+      throw new BadRequestException('Tweet cannot exceed 280 characters');
     }
+
+    let validOptions: string[] = [];
+    if (pollOptions) {
+      if (parentId != null)
+        throw new BadRequestException('Polls are not allowed in replies');
+
+      if (pollOptions.length < 2 || pollOptions.length > 4) {
+        throw new BadRequestException('Poll must have 2 to 4 options');
+      }
+
+      validOptions = pollOptions.map((o) => (o || '').trim()).filter(Boolean);
+
+      if (validOptions.length < 2) {
+        throw new BadRequestException(
+          'Poll must have at least 2 non-empty options',
+        );
+      }
+
+      if (validOptions.some((o) => o.length > 25)) {
+        throw new BadRequestException(
+          'Each poll option must be 25 characters or less',
+        );
+      }
+
+      const duration = pollDurationHours ?? 24;
+      if (duration < 1 || duration > 168) {
+        throw new BadRequestException(
+          'Poll duration must be between 1 and 168 hours (7 days)',
+        );
+      }
+    }
+
     const user = await this.usersService.findByUsername(username);
     if (!user) throw new NotFoundException('User not found');
+
     let parentTweet: Tweet | null = null;
     let quotedTweet: Tweet | null = null;
+
     if (parentId != null) {
       parentTweet = await this.tweetRepo.findOne({
         where: { id: parentId },
@@ -49,6 +88,7 @@ export class TweetsService {
       });
       if (!parentTweet) throw new NotFoundException('Parent tweet not found');
     }
+
     if (quoteId != null) {
       quotedTweet = await this.tweetRepo.findOne({
         where: { id: quoteId },
@@ -56,10 +96,12 @@ export class TweetsService {
       });
       if (!quotedTweet) throw new NotFoundException('Quoted tweet not found');
     }
+
     let imageUrl: string | null = null;
     if (file) {
       imageUrl = await this.cloudinaryService.uploadFile(file, 'tweet_images');
     }
+
     const tweet = this.tweetRepo.create({
       user,
       parentTweet,
@@ -68,6 +110,17 @@ export class TweetsService {
       imageUrl,
     });
     const saved = await this.tweetRepo.save(tweet);
+
+    let createdPoll: { id: number } | null = null;
+
+    if (pollOptions) {
+      createdPoll = await this.pollsService.createPoll(
+        saved.id,
+        validOptions,
+        pollDurationHours ?? 24,
+      );
+    }
+
     if (
       parentId != null &&
       parentTweet &&
@@ -81,16 +134,21 @@ export class TweetsService {
         NotificationType.REPLY,
       );
     }
+
     if (content) {
       const mentionRegex = /@(\w+)/g;
       const mentionedUsernames = new Set<string>();
       let match: RegExpExecArray | null;
+
       while ((match = mentionRegex.exec(content)) !== null) {
         mentionedUsernames.add(match[1]);
       }
+
       mentionedUsernames.delete(username);
+
       for (const mentioned of mentionedUsernames) {
         const mentionedUser = await this.usersService.findByUsername(mentioned);
+
         if (mentionedUser) {
           await this.notificationsService.createNotification(
             mentionedUser.username,
@@ -102,30 +160,39 @@ export class TweetsService {
         }
       }
     }
-    if (parentTweet && parentTweet.user.role === Role.GROK || tweet.content && tweet.content.startsWith('@grok ')) {
-        const reply = await this.grokService.generateReply(tweet.content || '');
+    if (
+      (parentTweet && parentTweet.user.role === Role.GROK) ||
+      (tweet.content && tweet.content.startsWith('@grok '))
+    ) {
+      const reply = await this.grokService.generateReply(tweet.content || '');
 
-        if (reply && reply.trim() !== '') {
-          const grok = await this.usersService.findByUsername('grok');
-          if (!grok) throw new NotFoundException('Grok not found');
+      if (reply && reply.trim() !== '') {
+        const grok = await this.usersService.findByUsername('grok');
+        if (!grok) throw new NotFoundException('Grok not found');
 
-          const replyTweet = this.tweetRepo.create({
-            user: grok,
-            parentTweet: saved,
-            content: reply,
-          });
+        const grokReply = this.tweetRepo.create({
+          user: grok,
+          parentTweet: saved,
+          content: reply,
+        });
 
-          await this.tweetRepo.save(replyTweet);
-          await this.notificationsService.createNotification(
-            saved.user.username,
-            'grok',
-            'replied to your tweet',
-            `/tweets/${replyTweet.id}`,
-            NotificationType.REPLY,
-          );
-        }
+        await this.tweetRepo.save(grokReply);
+        await this.notificationsService.createNotification(
+          saved.user.username,
+          'grok',
+          'replied to your tweet',
+          `/tweets/${grokReply.id}`,
+          NotificationType.REPLY,
+        );
       }
-    return this.toResponseDto(saved, username);
+    }
+
+    const dto = this.toResponseDto(saved, username);
+    if (createdPoll) {
+      dto.poll = await this.pollsService.getPollDto(createdPoll.id, username);
+    }
+
+    return dto;
   }
 
   async findById(id: number): Promise<Tweet | null> {
@@ -140,6 +207,8 @@ export class TweetsService {
         'notes',
         'notes.ratings',
         'notes.ratings.user',
+        'poll',
+        'poll.options',
       ],
     });
   }
@@ -155,6 +224,8 @@ export class TweetsService {
         'notes',
         'notes.ratings',
         'notes.ratings.user',
+        'poll',
+        'poll.options',
       ],
       order: { createdAt: 'DESC' },
     });
@@ -175,6 +246,8 @@ export class TweetsService {
         'notes',
         'notes.ratings',
         'notes.ratings.user',
+        'poll',
+        'poll.options',
       ],
       order: { createdAt: 'DESC' },
       skip: page * size,
@@ -193,6 +266,8 @@ export class TweetsService {
       .leftJoinAndSelect('t.notes', 'notes')
       .leftJoinAndSelect('notes.ratings', 'ratings')
       .leftJoinAndSelect('ratings.user', 'ratingUser')
+      .leftJoinAndSelect('t.poll', 'poll')
+      .leftJoinAndSelect('poll.options', 'pollOptions')
       .where('t.parent_id IS NULL')
       .andWhere('user.username IN (:...usernames)', { usernames })
       .orderBy('t.created_at', 'DESC')
@@ -220,6 +295,7 @@ export class TweetsService {
   ): Promise<Tweet[]> {
     const tweet = await this.tweetRepo.findOne({ where: { id: tweetId } });
     if (!tweet) throw new NotFoundException('Tweet not found');
+
     return this.tweetRepo.find({
       where: { quotedTweet: { id: tweetId } },
       relations: [
@@ -229,6 +305,8 @@ export class TweetsService {
         'notes',
         'notes.ratings',
         'notes.ratings.user',
+        'poll',
+        'poll.options',
       ],
       order: { createdAt: 'DESC' },
       skip: page * size,
@@ -243,6 +321,7 @@ export class TweetsService {
   ): Promise<Tweet[]> {
     const tweet = await this.tweetRepo.findOne({ where: { id: tweetId } });
     if (!tweet) throw new NotFoundException('Tweet not found');
+
     return this.tweetRepo.find({
       where: { parentTweet: { id: tweetId } },
       relations: [
@@ -252,6 +331,8 @@ export class TweetsService {
         'notes',
         'notes.ratings',
         'notes.ratings.user',
+        'poll',
+        'poll.options',
       ],
       order: { createdAt: 'DESC' },
       skip: page * size,
@@ -273,6 +354,7 @@ export class TweetsService {
       relations: ['user'],
     });
     if (!tweet) throw new NotFoundException('Tweet not found');
+
     if (tweet.user.username !== username) {
       throw new BadRequestException('Not allowed to delete this tweet');
     }
@@ -281,11 +363,13 @@ export class TweetsService {
       .createQueryBuilder('tweet')
       .where('tweet.quoted_tweet_id = :id', { id })
       .getMany();
+
     for (const t of quotingTweets) {
       t.deletedQuotedTweetId = id;
       t.quotedTweet = null;
       await this.tweetRepo.save(t);
     }
+
     await this.tweetRepo.remove(tweet);
   }
 
@@ -296,6 +380,7 @@ export class TweetsService {
         : String(tweet.createdAt);
 
     let quoted: TweetResponseDto['quotedTweet'] = null;
+
     if (tweet.quotedTweet && tweet.quotedTweet.user) {
       quoted = {
         id: tweet.quotedTweet.id,
@@ -320,17 +405,19 @@ export class TweetsService {
     }
 
     const sortedNotes = (tweet.notes ?? [])
-        .filter(n => n.isVisible)
-        .map(n => {
-          const userRating = (n.ratings ?? []).find((r) => r.user.username === currentUsername)?.helpful ?? null;
-          return {
-            id: n.id,
-            content: n.content,
-            helpfulCount: (n.ratings ?? []).filter(r => r.helpful).length,
-            userRating: userRating === null ? null : userRating,
-          };
-        })
-        .sort((a, b) => b.helpfulCount - a.helpfulCount);
+      .filter((n) => n.isVisible)
+      .map((n) => {
+        const userIsHelpfulVote =
+          (n.ratings ?? []).find((r) => r.user.username === currentUsername)
+            ?.helpful ?? null;
+        return {
+          id: n.id,
+          content: n.content,
+          helpfulCount: (n.ratings ?? []).filter((r) => r.helpful).length,
+          isHelpful: userIsHelpfulVote === null ? null : userIsHelpfulVote,
+        };
+      })
+      .sort((a, b) => b.helpfulCount - a.helpfulCount);
 
     const communityNote = sortedNotes.length > 0 ? sortedNotes[0] : null;
 
@@ -341,6 +428,7 @@ export class TweetsService {
       imageUrl: tweet.imageUrl ?? null,
       isPinned: tweet.pinnedAt != null,
       quotedTweet: quoted,
+      poll: null,
       likesCount: 0,
       repliesCount: 0,
       retweetsCount: 0,
@@ -373,6 +461,8 @@ export class TweetsService {
         'notes',
         'notes.ratings',
         'notes.ratings.user',
+        'poll',
+        'poll.options',
       ],
     });
   }
@@ -390,12 +480,17 @@ export class TweetsService {
           'notes',
           'notes.ratings',
           'notes.ratings.user',
+          'poll',
+          'poll.options',
         ],
       });
+
       if (!tweet) throw new NotFoundException('Tweet not found');
+
       if (tweet.user.username !== username) {
         throw new BadRequestException('Not allowed to pin this tweet');
       }
+
       if (tweet.parentTweet != null) {
         throw new BadRequestException('Only original tweets can be pinned');
       }
@@ -415,28 +510,42 @@ export class TweetsService {
     });
   }
 
-  async unpinTweetById(id: number, username: string): Promise<TweetResponseDto> {
+  async unpinTweetById(
+    id: number,
+    username: string,
+  ): Promise<TweetResponseDto> {
     const tweet = await this.tweetRepo.findOne({
       where: { id },
       relations: ['user', 'parentTweet', 'quotedTweet', 'quotedTweet.user'],
     });
+
     if (!tweet) throw new NotFoundException('Tweet not found');
+
     if (tweet.user.username !== username) {
       throw new BadRequestException('Not allowed to unpin this tweet');
     }
+
     tweet.pinnedAt = null;
     const saved = await this.tweetRepo.save(tweet);
     return this.toResponseDto(saved, username);
   }
 
+  async votePoll(
+    tweetId: number,
+    optionId: number,
+    username: string,
+  ): Promise<TweetResponseDto['poll']> {
+    return this.pollsService.vote(tweetId, optionId, username);
+  }
+
   async searchByContent(q: string, username: string) {
     const tweets = await this.tweetRepo
-        .createQueryBuilder('tweet')
-        .leftJoinAndSelect('tweet.user', 'user')
-        .where('tweet.content ILIKE :q', { q: `%${q}%` })
-        .orderBy('tweet.createdAt', 'DESC')
-        .take(10)
-        .getMany();
-    return tweets.map(t => this.toResponseDto(t, username));
-}
+      .createQueryBuilder('tweet')
+      .leftJoinAndSelect('tweet.user', 'user')
+      .where('tweet.content ILIKE :q', { q: `%${q}%` })
+      .orderBy('tweet.createdAt', 'DESC')
+      .take(10)
+      .getMany();
+    return tweets.map((t) => this.toResponseDto(t, username));
+  }
 }

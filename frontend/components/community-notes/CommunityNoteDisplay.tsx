@@ -3,15 +3,15 @@
 import React, { useEffect, useState } from "react"
 import { useRateNote } from "@/hooks/community-notes/useRateNote"
 
-type Note = { id: number; content: string; userRating?: boolean | null }
+type Note = { id: number; content: string; isHelpful?: boolean | null }
 
 const CommunityNoteDisplay = ({ note }: { note: Note | null }) => {
     const { mutate: rateNote } = useRateNote()
     const [selectedRating, setSelectedRating] = useState<boolean | null>(null)
 
     useEffect(() => {
-        setSelectedRating(note?.userRating ?? null)
-    }, [note?.id, note?.userRating])
+        setSelectedRating(note?.isHelpful ?? null)
+    }, [note?.id, note?.isHelpful])
 
     if (!note) return null
 

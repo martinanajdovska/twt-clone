@@ -47,18 +47,48 @@ export class TweetsController {
     @Body('content') content: string,
     @Body('parentId') parentId: string | undefined,
     @Body('quoteId') quoteId: string | undefined,
+    @Body('pollOptions') pollOptionsRaw: string | undefined,
+    @Body('pollDurationHours') pollDurationHoursStr: string | undefined,
     @UploadedFile() file: Express.Multer.File | undefined,
     @CurrentUsername() username: string,
   ) {
     const parent = parentId ? parseInt(parentId, 10) : null;
     const quote = quoteId ? parseInt(quoteId, 10) : null;
+    let pollOptions: string[] | undefined;
+
+    if (pollOptionsRaw) {
+      try {
+        const parsed = JSON.parse(pollOptionsRaw) as unknown;
+        pollOptions = Array.isArray(parsed)
+          ? parsed.filter((x): x is string => typeof x === 'string')
+          : undefined;
+      } catch {
+        pollOptions = undefined;
+      }
+    }
+
+    const pollDurationHours = pollDurationHoursStr
+      ? parseInt(pollDurationHoursStr, 10)
+      : undefined;
+
     return this.tweetsService.save(
       username,
       isNaN(parent as number) ? null : parent,
       isNaN(quote as number) ? null : quote,
       content || '',
       file,
+      pollOptions,
+      pollDurationHours,
     );
+  }
+
+  @Post(':id/poll/vote')
+  async votePoll(
+    @Param('id', ParseIntPipe) id: string,
+    @Body('optionId') optionId: number,
+    @CurrentUsername() username: string,
+  ) {
+    return this.tweetsService.votePoll(parseInt(id, 10), optionId, username);
   }
 
   @Get('search')

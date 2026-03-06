@@ -121,7 +121,7 @@ export class CommunityNotesService {
       order: { createdAt: 'DESC' },
     });
     return notes.map((n) => {
-      const userRating = (n.ratings ?? []).find((r) => r.user?.username === currentUsername)?.helpful ?? null;
+      const userIsHelpful = (n.ratings ?? []).find((r) => r.user?.username === currentUsername)?.helpful ?? null;
       return {
         id: n.id,
         content: n.content,
@@ -129,7 +129,7 @@ export class CommunityNotesService {
         authorUsername: n.author!.username,
         helpfulCount: (n.ratings ?? []).filter((r) => r.helpful).length,
         notHelpfulCount: (n.ratings ?? []).filter((r) => !r.helpful).length,
-        userRating: userRating === null ? null : userRating,
+        isHelpful: userIsHelpful === null ? null : userIsHelpful,
       };
     });
   }

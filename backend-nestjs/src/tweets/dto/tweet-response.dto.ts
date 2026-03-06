@@ -12,6 +12,12 @@ export interface TweetResponseDto {
     createdAt: string;
     isDeleted: boolean;
   } | null;
+  poll: {
+    id: number;
+    endsAt: string;
+    options: { id: number; label: string; votes: number }[];
+    selectedOptionId: number | null;
+  } | null;
   likesCount: number;
   repliesCount: number;
   retweetsCount: number;
@@ -24,5 +30,10 @@ export interface TweetResponseDto {
   retweetedBy: string | null;
   createdAt: string;
   profilePictureUrl: string | null;
-  communityNote: { id: number; content: string; helpfulCount: number; userRating: boolean | null } | null;
+  communityNote: {
+    id: number;
+    content: string;
+    helpfulCount: number;
+    isHelpful: boolean | null;
+  } | null;
 }

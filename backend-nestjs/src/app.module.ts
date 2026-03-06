@@ -24,6 +24,9 @@ import { Notification } from './entities/notification.entity';
 import { CommunityNote } from './entities/community-note.entity';
 import { NoteRating } from './entities/note-rating.entity';
 import { Bookmark } from './entities/bookmark.entity';
+import { Poll } from './entities/poll.entity';
+import { PollOption } from './entities/poll-option.entity';
+import { PollVote } from './entities/poll-vote.entity';
 import { GrokModule } from './grok/grok.module';
 import { CommunityNotesModule } from './community-notes/community-notes.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
@@ -38,7 +41,7 @@ import { BookmarksModule } from './bookmarks/bookmarks.module';
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      entities: [User, Tweet, Like, Retweet, Follow, Notification, CommunityNote, NoteRating, Bookmark],
+      entities: [User, Tweet, Like, Retweet, Follow, Notification, CommunityNote, NoteRating, Bookmark, Poll, PollOption, PollVote],
       synchronize: true,
       logging: process.env.NODE_ENV !== 'production',
     }),
