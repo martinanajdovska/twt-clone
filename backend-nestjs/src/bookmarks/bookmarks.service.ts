@@ -1,28 +1,38 @@
-import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Bookmark } from '../entities/bookmark.entity';
 import { UsersService } from '../users/users.service';
 import { TweetsService } from '../tweets/tweets.service';
 import { TweetResponseDto } from '../tweets/dto/tweet-response.dto';
-import { FeedService } from '../tweets/feed.service';
+import { FeedService } from '../feed/feed.service';
 
 @Injectable()
 export class BookmarksService {
   constructor(
     @InjectRepository(Bookmark)
-    private bookmarkRepo: Repository<Bookmark>,
-    private usersService: UsersService,
-    private tweetsService: TweetsService,
+    private readonly bookmarkRepo: Repository<Bookmark>,
+    private readonly usersService: UsersService,
+    private readonly tweetsService: TweetsService,
     @Inject(forwardRef(() => FeedService))
-    private feedService: FeedService,
+    private readonly feedService: FeedService,
   ) {}
 
-  async save(username: string, tweetId: number): Promise<{ id: number; tweetId: number; createdAt: Date }> {
+  async save(
+    username: string,
+    tweetId: number,
+  ): Promise<{ id: number; tweetId: number; createdAt: Date }> {
     const user = await this.usersService.findByUsername(username);
-    const tweet = await this.tweetsService.findById(tweetId);
     if (!user) throw new NotFoundException('User not found');
+
+    const tweet = await this.tweetsService.findById(tweetId);
     if (!tweet) throw new NotFoundException('Tweet not found');
+
     const bookmark = this.bookmarkRepo.create({ user, tweet });
     const saved = await this.bookmarkRepo.save(bookmark);
     return {
@@ -37,6 +47,7 @@ export class BookmarksService {
       where: { tweet: { id: tweetId }, user: { username } },
       relations: ['user', 'tweet'],
     });
+
     if (!bookmark) throw new NotFoundException('Bookmark not found');
     await this.bookmarkRepo.remove(bookmark);
   }
@@ -47,7 +58,10 @@ export class BookmarksService {
     });
   }
 
-  async existsByTweetIdAndUsername(tweetId: number, username: string): Promise<boolean> {
+  async existsByTweetIdAndUsername(
+    tweetId: number,
+    username: string,
+  ): Promise<boolean> {
     return (
       (await this.bookmarkRepo.count({
         where: { tweet: { id: tweetId }, user: { username } },
@@ -58,22 +72,39 @@ export class BookmarksService {
   async findByUsername(
     username: string,
     pageable: { page: number; size: number },
-  ): Promise<{ content: TweetResponseDto[]; totalElements: number; size: number; number: number }> {
+  ): Promise<{
+    content: TweetResponseDto[];
+    totalElements: number;
+    size: number;
+    number: number;
+  }> {
     const user = await this.usersService.findByUsername(username);
     if (!user) throw new NotFoundException('User not found');
+
     const [bookmarks, total] = await this.bookmarkRepo.findAndCount({
       where: { user: { username } },
-      relations: ['tweet', 'tweet.user', 'tweet.parentTweet', 'tweet.quotedTweet', 'tweet.quotedTweet.user', 'tweet.replies', 'tweet.notes', 'tweet.notes.ratings', 'tweet.notes.ratings.user'],
+      relations: [
+        'tweet',
+        'tweet.user',
+        'tweet.parentTweet',
+        'tweet.quotedTweet',
+        'tweet.quotedTweet.user',
+      ],
       order: { createdAt: 'DESC' },
       skip: pageable.page * pageable.size,
       take: pageable.size,
     });
+
     const content: TweetResponseDto[] = [];
+
     for (const b of bookmarks) {
       if (b.tweet) {
-        content.push(await this.feedService.addTweetInfo(b.tweet, null, username));
+        content.push(
+          await this.feedService.addTweetInfo(b.tweet, null, username),
+        );
       }
     }
+
     return {
       content,
       totalElements: total,

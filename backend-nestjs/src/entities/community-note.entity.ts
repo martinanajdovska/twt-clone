@@ -1,7 +1,12 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Tweet } from "./tweet.entity";
-import { User } from "./user.entity";
-import { NoteRating } from "./note-rating.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Tweet } from './tweet.entity';
+import { User } from './user.entity';
 
 @Entity()
 export class CommunityNote {
@@ -19,9 +24,6 @@ export class CommunityNote {
 
   @Column({ default: false })
   isVisible: boolean;
-
-  @OneToMany(() => NoteRating, rating => rating.note)
-  ratings: NoteRating[];
 
   @CreateDateColumn()
   createdAt: Date;

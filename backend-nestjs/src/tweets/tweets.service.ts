@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, Not } from 'typeorm';
@@ -14,17 +16,21 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { TweetResponseDto } from './dto/tweet-response.dto';
 import { GrokService } from 'src/grok/grok.service';
 import { PollsService } from '../polls/polls.service';
+import { CommunityNotesService } from '../community-notes/community-notes.service';
+import { TweetWithNotes } from './type/tweet-with-notes.type';
 
 @Injectable()
 export class TweetsService {
   constructor(
     @InjectRepository(Tweet)
-    private tweetRepo: Repository<Tweet>,
-    private usersService: UsersService,
-    private notificationsService: NotificationsService,
-    private cloudinaryService: CloudinaryService,
-    private grokService: GrokService,
-    private pollsService: PollsService,
+    private readonly tweetRepo: Repository<Tweet>,
+    @Inject(forwardRef(() => CommunityNotesService))
+    private readonly communityNotesService: CommunityNotesService,
+    private readonly usersService: UsersService,
+    private readonly notificationsService: NotificationsService,
+    private readonly cloudinaryService: CloudinaryService,
+    private readonly grokService: GrokService,
+    private readonly pollsService: PollsService,
   ) {}
 
   async save(
@@ -195,83 +201,81 @@ export class TweetsService {
     return dto;
   }
 
-  async findById(id: number): Promise<Tweet | null> {
-    return this.tweetRepo.findOne({
+  async findById(id: number): Promise<TweetWithNotes | null> {
+    const tweet = await this.tweetRepo.findOne({
       where: { id },
       relations: [
         'user',
         'parentTweet',
-        'replies',
         'quotedTweet',
         'quotedTweet.user',
-        'notes',
-        'notes.ratings',
-        'notes.ratings.user',
         'poll',
-        'poll.options',
       ],
     });
+    if (!tweet) throw new NotFoundException('Tweet not found');
+
+    await this.addNotesWithRatings(tweet);
+    return tweet;
   }
 
-  async findAllParentTweetsByUsername(username: string): Promise<Tweet[]> {
-    return this.tweetRepo.find({
+  async findAllParentTweetsByUsername(
+    username: string,
+  ): Promise<TweetWithNotes[]> {
+    const user = await this.usersService.findByUsername(username);
+    if (!user) throw new NotFoundException('User not found');
+
+    const tweets = await this.tweetRepo.find({
       where: { user: { username }, parentTweet: IsNull() },
-      relations: [
-        'user',
-        'replies',
-        'quotedTweet',
-        'quotedTweet.user',
-        'notes',
-        'notes.ratings',
-        'notes.ratings.user',
-        'poll',
-        'poll.options',
-      ],
+      relations: ['user', 'quotedTweet', 'quotedTweet.user', 'poll'],
       order: { createdAt: 'DESC' },
     });
+
+    await this.addNotesWithRatings(tweets);
+    return tweets;
   }
 
   async findRepliesByUsername(
     username: string,
     page: number,
     size: number,
-  ): Promise<Tweet[]> {
-    return this.tweetRepo.find({
+  ): Promise<TweetWithNotes[]> {
+    const user = await this.usersService.findByUsername(username);
+    if (!user) throw new NotFoundException('User not found');
+
+    const tweets = await this.tweetRepo.find({
       where: { user: { username }, parentTweet: Not(IsNull()) },
       relations: [
         'user',
         'parentTweet',
         'quotedTweet',
         'quotedTweet.user',
-        'notes',
-        'notes.ratings',
-        'notes.ratings.user',
         'poll',
-        'poll.options',
       ],
       order: { createdAt: 'DESC' },
       skip: page * size,
       take: size,
     });
+
+    await this.addNotesWithRatings(tweets);
+    return tweets;
   }
 
-  async findAllParentTweetsByUsernames(usernames: string[]): Promise<Tweet[]> {
+  async findAllParentTweetsByUsernames(
+    usernames: string[],
+  ): Promise<TweetWithNotes[]> {
     if (usernames.length === 0) return [];
-    return this.tweetRepo
+    const tweets = await this.tweetRepo
       .createQueryBuilder('t')
       .leftJoinAndSelect('t.user', 'user')
-      .leftJoinAndSelect('t.replies', 'replies')
       .leftJoinAndSelect('t.quotedTweet', 'quotedTweet')
       .leftJoinAndSelect('quotedTweet.user', 'quotedUser')
-      .leftJoinAndSelect('t.notes', 'notes')
-      .leftJoinAndSelect('notes.ratings', 'ratings')
-      .leftJoinAndSelect('ratings.user', 'ratingUser')
       .leftJoinAndSelect('t.poll', 'poll')
-      .leftJoinAndSelect('poll.options', 'pollOptions')
       .where('t.parent_id IS NULL')
       .andWhere('user.username IN (:...usernames)', { usernames })
       .orderBy('t.created_at', 'DESC')
       .getMany();
+    await this.addNotesWithRatings(tweets);
+    return tweets;
   }
 
   async countReplies(tweetId: number): Promise<number> {
@@ -292,52 +296,38 @@ export class TweetsService {
     tweetId: number,
     page: number,
     size: number,
-  ): Promise<Tweet[]> {
+  ): Promise<TweetWithNotes[]> {
     const tweet = await this.tweetRepo.findOne({ where: { id: tweetId } });
     if (!tweet) throw new NotFoundException('Tweet not found');
 
-    return this.tweetRepo.find({
+    const tweets = await this.tweetRepo.find({
       where: { quotedTweet: { id: tweetId } },
-      relations: [
-        'user',
-        'quotedTweet',
-        'quotedTweet.user',
-        'notes',
-        'notes.ratings',
-        'notes.ratings.user',
-        'poll',
-        'poll.options',
-      ],
+      relations: ['user', 'quotedTweet', 'quotedTweet.user', 'poll'],
       order: { createdAt: 'DESC' },
       skip: page * size,
       take: size,
     });
+    await this.addNotesWithRatings(tweets);
+    return tweets;
   }
 
   async findAllRepliesOfTweet(
     tweetId: number,
     page: number,
     size: number,
-  ): Promise<Tweet[]> {
+  ): Promise<TweetWithNotes[]> {
     const tweet = await this.tweetRepo.findOne({ where: { id: tweetId } });
     if (!tweet) throw new NotFoundException('Tweet not found');
 
-    return this.tweetRepo.find({
+    const tweets = await this.tweetRepo.find({
       where: { parentTweet: { id: tweetId } },
-      relations: [
-        'user',
-        'quotedTweet',
-        'quotedTweet.user',
-        'notes',
-        'notes.ratings',
-        'notes.ratings.user',
-        'poll',
-        'poll.options',
-      ],
+      relations: ['user', 'quotedTweet', 'quotedTweet.user', 'poll'],
       order: { createdAt: 'DESC' },
       skip: page * size,
       take: size,
     });
+    await this.addNotesWithRatings(tweets);
+    return tweets;
   }
 
   async findReplyAuthorUsernamesByTweetId(tweetId: number): Promise<string[]> {
@@ -346,6 +336,32 @@ export class TweetsService {
       relations: ['user'],
     });
     return replies.map((t) => t.user!.username);
+  }
+
+  async addNotesWithRatings(tweet: TweetWithNotes): Promise<void>;
+  async addNotesWithRatings(tweets: TweetWithNotes[]): Promise<void>;
+  async addNotesWithRatings(
+    tweetOrTweets: TweetWithNotes | TweetWithNotes[],
+  ): Promise<void> {
+    if (Array.isArray(tweetOrTweets)) {
+      if (tweetOrTweets.length === 0) return;
+
+      const mostHelpfulByTweetId =
+        await this.communityNotesService.getMostHelpfulNoteWithRating(
+          tweetOrTweets.map((t) => t.id),
+        );
+
+      for (const t of tweetOrTweets) {
+        const note = mostHelpfulByTweetId.get(t.id) ?? null;
+        t.notes = note ? [note] : [];
+      }
+    } else {
+      const note =
+        await this.communityNotesService.getMostHelpfulNoteWithRating(
+          tweetOrTweets.id,
+        );
+      tweetOrTweets.notes = note ? [note] : [];
+    }
   }
 
   async deleteById(id: number, username: string): Promise<void> {
@@ -373,7 +389,10 @@ export class TweetsService {
     await this.tweetRepo.remove(tweet);
   }
 
-  toResponseDto(tweet: Tweet, currentUsername: string): TweetResponseDto {
+  public toResponseDto(
+    tweet: TweetWithNotes,
+    currentUsername: string,
+  ): TweetResponseDto {
     const created =
       tweet.createdAt instanceof Date
         ? tweet.createdAt.toISOString()
@@ -404,16 +423,20 @@ export class TweetsService {
       };
     }
 
-    const sortedNotes = (tweet.notes ?? [])
-      .filter((n) => n.isVisible)
+    const tweetWithNotes = tweet as TweetWithNotes;
+
+    const visibleNotes = (tweetWithNotes.notes ?? []).filter(
+      (n) => n.isVisible,
+    );
+    const sortedNotes = visibleNotes
       .map((n) => {
         const userIsHelpfulVote =
-          (n.ratings ?? []).find((r) => r.user.username === currentUsername)
-            ?.helpful ?? null;
+          (n.ratings ?? []).find((r) => r.user?.username === currentUsername)
+            ?.isHelpful ?? null;
         return {
           id: n.id,
           content: n.content,
-          helpfulCount: (n.ratings ?? []).filter((r) => r.helpful).length,
+          helpfulCount: (n.ratings ?? []).filter((r) => r.isHelpful).length,
           isHelpful: userIsHelpfulVote === null ? null : userIsHelpfulVote,
         };
       })
@@ -421,7 +444,7 @@ export class TweetsService {
 
     const communityNote = sortedNotes.length > 0 ? sortedNotes[0] : null;
 
-    return {
+    const tweetResponseDto: TweetResponseDto = {
       id: tweet.id,
       username: tweet.user!.username,
       content: tweet.content ?? '',
@@ -443,10 +466,14 @@ export class TweetsService {
       profilePictureUrl: tweet.user!.imageUrl ?? null,
       communityNote,
     };
+
+    return tweetResponseDto;
   }
 
-  async findPinnedTweetByUsername(username: string): Promise<Tweet | null> {
-    return this.tweetRepo.findOne({
+  async findPinnedTweetByUsername(
+    username: string,
+  ): Promise<TweetWithNotes | null> {
+    const tweet = await this.tweetRepo.findOne({
       where: {
         user: { username },
         pinnedAt: Not(IsNull()),
@@ -455,37 +482,34 @@ export class TweetsService {
       relations: [
         'user',
         'parentTweet',
-        'replies',
         'quotedTweet',
         'quotedTweet.user',
-        'notes',
-        'notes.ratings',
-        'notes.ratings.user',
         'poll',
-        'poll.options',
       ],
     });
+    if (!tweet) return null;
+    await this.addNotesWithRatings(tweet);
+    return tweet;
   }
 
   async pinTweetById(id: number, username: string): Promise<TweetResponseDto> {
+    const user = await this.usersService.findByUsername(username);
+    if (!user) throw new NotFoundException('User not found');
+
     return this.tweetRepo.manager.transaction(async (manager) => {
       const tweet = await manager.findOne(Tweet, {
         where: { id },
         relations: [
           'user',
           'parentTweet',
-          'replies',
           'quotedTweet',
           'quotedTweet.user',
-          'notes',
-          'notes.ratings',
-          'notes.ratings.user',
           'poll',
-          'poll.options',
         ],
       });
 
       if (!tweet) throw new NotFoundException('Tweet not found');
+      await this.addNotesWithRatings(tweet as TweetWithNotes);
 
       if (tweet.user.username !== username) {
         throw new BadRequestException('Not allowed to pin this tweet');
@@ -514,6 +538,9 @@ export class TweetsService {
     id: number,
     username: string,
   ): Promise<TweetResponseDto> {
+    const user = await this.usersService.findByUsername(username);
+    if (!user) throw new NotFoundException('User not found');
+
     const tweet = await this.tweetRepo.findOne({
       where: { id },
       relations: ['user', 'parentTweet', 'quotedTweet', 'quotedTweet.user'],
@@ -539,6 +566,9 @@ export class TweetsService {
   }
 
   async searchByContent(q: string, username: string) {
+    const user = await this.usersService.findByUsername(username);
+    if (!user) throw new NotFoundException('User not found');
+
     const tweets = await this.tweetRepo
       .createQueryBuilder('tweet')
       .leftJoinAndSelect('tweet.user', 'user')
@@ -546,6 +576,7 @@ export class TweetsService {
       .orderBy('tweet.createdAt', 'DESC')
       .take(10)
       .getMany();
-    return tweets.map((t) => this.toResponseDto(t, username));
+    await this.addNotesWithRatings(tweets as TweetWithNotes[]);
+    return tweets.map((t) => this.toResponseDto(t as TweetWithNotes, username));
   }
 }

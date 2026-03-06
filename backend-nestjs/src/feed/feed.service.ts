@@ -1,24 +1,21 @@
-import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { Tweet } from '../entities/tweet.entity';
-import { TweetsService } from './tweets.service';
+import { TweetsService } from '../tweets/tweets.service';
 import { UsersService } from '../users/users.service';
 import { FollowsService } from '../follows/follows.service';
 import { LikesService } from '../likes/likes.service';
 import { RetweetsService } from '../retweets/retweets.service';
 import { BookmarksService } from '../bookmarks/bookmarks.service';
 import { PollsService } from '../polls/polls.service';
-import { TweetResponseDto } from './dto/tweet-response.dto';
-
-export interface UserResponseDto {
-  username: string;
-  tweets: TweetResponseDto[];
-}
-
-export interface TweetDetailsDto {
-  tweet: TweetResponseDto;
-  parentTweet: TweetResponseDto | null;
-  replies: TweetResponseDto[];
-}
+import { TweetResponseDto } from '../tweets/dto/tweet-response.dto';
+import { TweetWithNotes } from '../tweets/type/tweet-with-notes.type';
+import { TweetDetailsDto } from './dto/tweet-details.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 
 export interface Page<T> {
   content: T[];
@@ -30,14 +27,14 @@ export interface Page<T> {
 @Injectable()
 export class FeedService {
   constructor(
-    private tweetsService: TweetsService,
-    private usersService: UsersService,
-    private followsService: FollowsService,
-    private likesService: LikesService,
-    private retweetsService: RetweetsService,
+    private readonly tweetsService: TweetsService,
+    private readonly usersService: UsersService,
+    private readonly followsService: FollowsService,
+    private readonly likesService: LikesService,
+    private readonly retweetsService: RetweetsService,
     @Inject(forwardRef(() => BookmarksService))
-    private bookmarksService: BookmarksService,
-    private pollsService: PollsService,
+    private readonly bookmarksService: BookmarksService,
+    private readonly pollsService: PollsService,
   ) {}
 
   async generateFeed(
@@ -46,33 +43,38 @@ export class FeedService {
   ): Promise<Page<TweetResponseDto>> {
     const user = await this.usersService.findByUsername(username);
     if (!user) throw new NotFoundException('User not found');
-    const followedUsernames = await this.followsService.getFollowingUsernames(username);
-    const tweetsFromFollowed = await this.tweetsService.findAllParentTweetsByUsernames(
-      followedUsernames,
-    );
-    const retweetsFromFollowed = await this.retweetsService.findRetweetsByUsernames(
-      followedUsernames,
-    );
+
+    const followedUsernames =
+      await this.followsService.getFollowingUsernames(username);
+    const tweetsFromFollowed =
+      await this.tweetsService.findAllParentTweetsByUsernames(
+        followedUsernames,
+      );
+    const retweetsFromFollowed =
+      await this.retweetsService.findRetweetsByUsernames(followedUsernames);
+
     const feedItems: TweetResponseDto[] = [];
+
     for (const t of tweetsFromFollowed) {
       feedItems.push(await this.addTweetInfo(t, null, username));
     }
+
     for (const r of retweetsFromFollowed) {
       const t = await this.tweetsService.findById(r.tweet.id);
       if (t) {
-        feedItems.push(
-          await this.addTweetInfo(t, r.user.username, username),
-        );
+        feedItems.push(await this.addTweetInfo(t, r.user.username, username));
       }
     }
+
     feedItems.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
+
     const start = pageable.page * pageable.size;
     const end = Math.min(start + pageable.size, feedItems.length);
-    const content =
-      start < feedItems.length ? feedItems.slice(start, end) : [];
+    const content = start < feedItems.length ? feedItems.slice(start, end) : [];
+
     return {
       content,
       totalElements: feedItems.length,
@@ -85,7 +87,7 @@ export class FeedService {
     username: string,
     pageable: { page: number; size: number },
     requesterUsername: string,
-    tab: 'tweets' | 'replies' | 'likes' | 'media' = 'tweets',
+    tab: 'tweets' | 'replies' | 'likes' | 'media',
   ): Promise<UserResponseDto> {
     const user = await this.usersService.findByUsername(username);
     if (!user) throw new NotFoundException('User not found');
@@ -97,11 +99,11 @@ export class FeedService {
         pageable.size,
       );
       const tweetDtos: TweetResponseDto[] = [];
+
       for (const t of replies) {
-        tweetDtos.push(
-          await this.addTweetInfo(t, null, requesterUsername),
-        );
+        tweetDtos.push(await this.addTweetInfo(t, null, requesterUsername));
       }
+
       return { username, tweets: tweetDtos };
     }
 
@@ -112,89 +114,109 @@ export class FeedService {
         pageable.size,
       );
       const tweetDtos: TweetResponseDto[] = [];
+
       for (const t of likedTweets) {
-        tweetDtos.push(
-          await this.addTweetInfo(t, null, requesterUsername),
-        );
+        tweetDtos.push(await this.addTweetInfo(t, null, requesterUsername));
       }
+
       return { username, tweets: tweetDtos };
     }
 
     if (tab === 'media') {
-      const tweets = await this.tweetsService.findAllParentTweetsByUsername(username);
-      const retweets = await this.retweetsService.findRetweetsByUsername(username);
+      const tweets =
+        await this.tweetsService.findAllParentTweetsByUsername(username);
+      const retweets =
+        await this.retweetsService.findRetweetsByUsername(username);
       const combined: Tweet[] = [];
+
       for (const t of tweets) {
         if (t.imageUrl) combined.push(t);
       }
+
       for (const r of retweets) {
         const t = await this.tweetsService.findById(r.tweet.id);
         if (t?.imageUrl) combined.push(t);
       }
+
       combined.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
+
       const pageItems = combined.slice(
         pageable.page * pageable.size,
         pageable.page * pageable.size + pageable.size,
       );
       const tweetDtos: TweetResponseDto[] = [];
+
       for (const t of pageItems) {
-        tweetDtos.push(
-          await this.addTweetInfo(t, username, requesterUsername),
-        );
+        tweetDtos.push(await this.addTweetInfo(t, username, requesterUsername));
       }
+
       return { username, tweets: tweetDtos };
     }
 
     const pinnedTweet =
-      tab === 'tweets' ? await this.tweetsService.findPinnedTweetByUsername(username) : null;
+      await this.tweetsService.findPinnedTweetByUsername(username);
     const pinnedId = pinnedTweet?.id ?? null;
 
-    const tweets = await this.tweetsService.findAllParentTweetsByUsername(username);
-    const retweets = await this.retweetsService.findRetweetsByUsername(username);
+    const tweets =
+      await this.tweetsService.findAllParentTweetsByUsername(username);
+    const retweets =
+      await this.retweetsService.findRetweetsByUsername(username);
     const combined: Tweet[] = [];
+
     for (const t of tweets) {
       if (pinnedId == null || t.id !== pinnedId) combined.push(t);
     }
+
     for (const r of retweets) {
       const t = await this.tweetsService.findById(r.tweet.id);
       if (t && (pinnedId == null || t.id !== pinnedId)) combined.push(t);
     }
+
     combined.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
     const tweetDtos: TweetResponseDto[] = [];
-    if (tab === 'tweets' && pageable.page === 0 && pinnedTweet) {
-      tweetDtos.push(await this.addTweetInfo(pinnedTweet, username, requesterUsername));
+    if (pageable.page === 0 && pinnedTweet) {
+      tweetDtos.push(
+        await this.addTweetInfo(pinnedTweet, username, requesterUsername),
+      );
+
       const remaining = Math.max(0, pageable.size - 1);
       const pageItems = combined.slice(0, remaining);
+
       for (const t of pageItems) {
         tweetDtos.push(await this.addTweetInfo(t, username, requesterUsername));
       }
+
       return { username, tweets: tweetDtos };
     }
 
-    const offset =
-      tab === 'tweets' && pinnedTweet
-        ? Math.max(0, pageable.page * pageable.size - 1)
-        : pageable.page * pageable.size;
+    const offset = pinnedTweet
+      ? Math.max(0, pageable.page * pageable.size - 1)
+      : pageable.page * pageable.size;
     const pageItems = combined.slice(offset, offset + pageable.size);
+
     for (const t of pageItems) {
       tweetDtos.push(await this.addTweetInfo(t, username, requesterUsername));
     }
-    return {
+
+    const userResponseDto: UserResponseDto = {
       username,
       tweets: tweetDtos,
     };
+
+    return userResponseDto;
   }
 
   async getTweetById(id: number, username: string): Promise<TweetResponseDto> {
     const tweet = await this.tweetsService.findById(id);
     if (!tweet) throw new NotFoundException('Tweet not found');
+
     return this.addTweetInfo(tweet, null, username);
   }
 
@@ -203,6 +225,9 @@ export class FeedService {
     username: string,
     pageable: { page: number; size: number },
   ): Promise<Page<TweetResponseDto>> {
+    const tweet = await this.tweetsService.findById(tweetId);
+    if (!tweet) throw new NotFoundException('Tweet not found');
+
     const quotes = await this.tweetsService.findAllQuotesOfTweet(
       tweetId,
       pageable.page,
@@ -210,9 +235,11 @@ export class FeedService {
     );
     const totalElements = await this.tweetsService.countQuotes(tweetId);
     const content: TweetResponseDto[] = [];
+
     for (const t of quotes) {
       content.push(await this.addTweetInfo(t, null, username));
     }
+
     return {
       content,
       totalElements,
@@ -226,27 +253,34 @@ export class FeedService {
     username: string,
     pageable: { page: number; size: number },
   ): Promise<TweetDetailsDto> {
+    const tweet = await this.tweetsService.findById(id);
+    if (!tweet) throw new NotFoundException('Tweet not found');
+
     const tweetDto = await this.getTweetById(id, username);
     let parentTweetDto: TweetResponseDto | null = null;
+
     if (tweetDto.parentId != null) {
       parentTweetDto = await this.getTweetById(tweetDto.parentId, username);
     }
-    const tweet = await this.tweetsService.findById(id);
-    if (!tweet) throw new NotFoundException('Tweet not found');
+
     const replies = await this.tweetsService.findAllRepliesOfTweet(
       id,
       pageable.page,
       pageable.size,
     );
     const repliesDto: TweetResponseDto[] = [];
+
     for (const r of replies) {
       repliesDto.push(await this.addTweetInfo(r, null, username));
     }
-    return {
+
+    const tweetDetailsDto: TweetDetailsDto = {
       tweet: tweetDto,
       parentTweet: parentTweetDto,
       replies: repliesDto,
     };
+
+    return tweetDetailsDto;
   }
 
   public async addTweetInfo(
@@ -254,14 +288,20 @@ export class FeedService {
     username: string | null,
     requesterUsername: string,
   ): Promise<TweetResponseDto> {
-    const dto = this.tweetsService.toResponseDto(tweet, requesterUsername);
+    await this.tweetsService.addNotesWithRatings(tweet as TweetWithNotes);
+
+    const dto = this.tweetsService.toResponseDto(
+      tweet as TweetWithNotes,
+      requesterUsername,
+    );
+
     dto.likesCount = await this.likesService.countLikes(tweet.id);
     dto.repliesCount = await this.tweetsService.countReplies(tweet.id);
     dto.retweetsCount = await this.retweetsService.countRetweets(tweet.id);
     dto.quotesCount = await this.tweetsService.countQuotes(tweet.id);
     dto.bookmarksCount = await this.bookmarksService.countBookmarks(tweet.id);
     dto.parentId = tweet.parentTweet?.id ?? null;
-    dto.retweetedBy = tweet.user.username !== username ? username: null;
+    dto.retweetedBy = tweet.user.username !== username ? username : null;
     dto.isLiked = await this.likesService.existsByTweetIdAndUsername(
       tweet.id,
       requesterUsername,
@@ -275,7 +315,10 @@ export class FeedService {
       requesterUsername,
     );
     if (tweet.poll) {
-      dto.poll = await this.pollsService.getPollDto(tweet.poll.id, requesterUsername);
+      dto.poll = await this.pollsService.getPollDto(
+        tweet.poll.id,
+        requesterUsername,
+      );
     }
     return dto;
   }

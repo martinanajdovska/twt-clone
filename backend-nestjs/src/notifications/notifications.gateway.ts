@@ -1,4 +1,9 @@
-import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets';
 import { JwtService } from '@nestjs/jwt';
 import { Server } from 'socket.io';
 import type { Socket } from 'socket.io';
@@ -17,11 +22,13 @@ function getTokenFromCookie(cookieHeader: string | undefined): string | null {
   },
   path: '/ws',
 })
-export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class NotificationsGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
-  constructor(private jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService) {}
 
   handleConnection(socket: Socket) {
     const token = getTokenFromCookie(socket.handshake.headers.cookie);

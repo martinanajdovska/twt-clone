@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 
 @Injectable()
 export class CloudinaryService {
-  constructor(private configService: ConfigService) {
+  constructor() {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
@@ -22,6 +21,7 @@ export class CloudinaryService {
         (err, result) => {
           if (err) return reject(err);
           if (!result?.secure_url) return reject(new Error('No URL returned'));
+
           resolve(result.secure_url);
         },
       );

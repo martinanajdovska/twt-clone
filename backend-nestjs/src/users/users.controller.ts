@@ -17,7 +17,7 @@ import { CurrentUsername } from '../common/decorators/current-user.decorator';
 @Controller('api')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Get('users')
   async getSearchResults(

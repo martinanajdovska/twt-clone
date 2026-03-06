@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Retweet } from '../entities/retweet.entity';
@@ -12,19 +17,31 @@ import { NotificationType } from '../entities/notification.entity';
 export class RetweetsService {
   constructor(
     @InjectRepository(Retweet)
-    private retweetRepo: Repository<Retweet>,
-    private usersService: UsersService,
-    private tweetsService: TweetsService,
-    private notificationsService: NotificationsService,
+    private readonly retweetRepo: Repository<Retweet>,
+    private readonly usersService: UsersService,
+    @Inject(forwardRef(() => TweetsService))
+    private readonly tweetsService: TweetsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
-  async save(tweetId: number, username: string): Promise<{ id: number; username: string; tweetId: number; createdAt: Date }> {
+  async save(
+    tweetId: number,
+    username: string,
+  ): Promise<{
+    id: number;
+    username: string;
+    tweetId: number;
+    createdAt: Date;
+  }> {
     const user = await this.usersService.findByUsername(username);
-    const tweet = await this.tweetsService.findById(tweetId);
     if (!user) throw new NotFoundException('User not found');
+
+    const tweet = await this.tweetsService.findById(tweetId);
     if (!tweet) throw new NotFoundException('Tweet not found');
+
     const retweet = this.retweetRepo.create({ user, tweet });
     const saved = await this.retweetRepo.save(retweet);
+
     if (tweet.user!.username !== username) {
       await this.notificationsService.createNotification(
         tweet.user!.username,
@@ -34,6 +51,7 @@ export class RetweetsService {
         NotificationType.RETWEET,
       );
     }
+
     return {
       id: saved.id,
       username: user.username,
@@ -52,10 +70,14 @@ export class RetweetsService {
       relations: ['user', 'tweet'],
     });
     if (!retweet) throw new NotFoundException('Retweet not found');
+
     await this.retweetRepo.remove(retweet);
   }
 
-  async existsByTweetIdAndUsername(tweetId: number, username: string): Promise<boolean> {
+  async existsByTweetIdAndUsername(
+    tweetId: number,
+    username: string,
+  ): Promise<boolean> {
     return (
       (await this.retweetRepo.count({
         where: { tweet: { id: tweetId }, user: { username } },
@@ -71,8 +93,11 @@ export class RetweetsService {
     return list.map((r) => ({ tweet: r.tweet }));
   }
 
-  async findRetweetsByUsernames(usernames: string[]): Promise<{ user: { username: string }; tweet: Tweet }[]> {
+  async findRetweetsByUsernames(
+    usernames: string[],
+  ): Promise<{ user: { username: string }; tweet: Tweet }[]> {
     if (usernames.length === 0) return [];
+
     const list = await this.retweetRepo
       .createQueryBuilder('r')
       .leftJoinAndSelect('r.user', 'u')

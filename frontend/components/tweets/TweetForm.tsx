@@ -343,10 +343,10 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
                             {content.length > 0 && (
                                 <span
                                     className={`text-sm tabular-nums ${content.length > MAX_TWEET_LENGTH
-                                            ? 'text-destructive font-bold'
-                                            : content.length >= MAX_TWEET_LENGTH - 20
-                                                ? 'text-amber-500'
-                                                : 'text-muted-foreground'
+                                        ? 'text-destructive font-bold'
+                                        : content.length >= MAX_TWEET_LENGTH - 20
+                                            ? 'text-amber-500'
+                                            : 'text-muted-foreground'
                                         }`}
                                 >
                                     {content.length}/{MAX_TWEET_LENGTH}

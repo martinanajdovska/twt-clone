@@ -14,7 +14,7 @@ import { CurrentUsername } from '../common/decorators/current-user.decorator';
 @Controller('api/tweets')
 @UseGuards(JwtAuthGuard)
 export class LikesController {
-  constructor(private likesService: LikesService) {}
+  constructor(private readonly likesService: LikesService) {}
 
   @Post(':tweetId/likes')
   async save(

@@ -3,11 +3,9 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToOne,
-  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { Tweet } from './tweet.entity';
-import { PollOption } from './poll-option.entity';
 
 @Entity('poll')
 export class Poll {
@@ -20,7 +18,4 @@ export class Poll {
 
   @Column({ name: 'ends_at', type: 'timestamptz' })
   endsAt: Date;
-
-  @OneToMany(() => PollOption, (opt) => opt.poll, { cascade: true })
-  options: PollOption[];
 }

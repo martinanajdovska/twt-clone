@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query, UseGuards, ParseIntPipe } from '@nestjs/common';
-import { FeedService } from '../tweets/feed.service';
+import { FeedService } from '../feed/feed.service';
 import { ProfileService } from './profile.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUsername } from '../common/decorators/current-user.decorator';

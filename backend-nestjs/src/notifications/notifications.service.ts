@@ -1,15 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Notification, NotificationType } from '../entities/notification.entity';
+import {
+  Notification,
+  NotificationType,
+} from '../entities/notification.entity';
 import { NotificationsGateway } from './notifications.gateway';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
-    private notificationRepo: Repository<Notification>,
-    private notificationsGateway: NotificationsGateway,
+    private readonly notificationRepo: Repository<Notification>,
+    private readonly usersService: UsersService,
+    private readonly notificationsGateway: NotificationsGateway,
   ) {}
 
   async createNotification(
@@ -37,11 +42,16 @@ export class NotificationsService {
     });
   }
 
-  async markAsRead(id: number): Promise<void> {
+  async markAsRead(id: number, username: string): Promise<void> {
+    const user = await this.usersService.findByUsername(username);
+    if (!user) throw new NotFoundException('User not found');
+
     const notification = await this.notificationRepo.findOne({
       where: { id },
     });
+
     if (!notification) throw new NotFoundException('Notification not found');
+
     notification.isRead = true;
     await this.notificationRepo.save(notification);
   }

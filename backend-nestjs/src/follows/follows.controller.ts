@@ -5,7 +5,6 @@ import {
   Delete,
   Param,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { FollowsService } from './follows.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -14,7 +13,7 @@ import { CurrentUsername } from '../common/decorators/current-user.decorator';
 @Controller('api/users')
 @UseGuards(JwtAuthGuard)
 export class FollowsController {
-  constructor(private followsService: FollowsService) {}
+  constructor(private readonly followsService: FollowsService) {}
 
   @Get('follows/:username')
   async getFollowing(@Param('username') username: string) {

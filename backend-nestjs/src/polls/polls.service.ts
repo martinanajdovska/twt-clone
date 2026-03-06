@@ -53,17 +53,19 @@ export class PollsService {
   async getPollDto(pollId: number, currentUsername: string): Promise<PollDto> {
     const poll = await this.pollRepo.findOne({
       where: { id: pollId },
-      relations: ['options', 'options.votes'],
     });
     if (!poll) throw new NotFoundException('Poll not found');
+
+    const options = await this.pollOptionRepo.find({
+      where: { poll: { id: pollId } },
+      order: { orderIndex: 'ASC' },
+    });
+    const optionIds = options.map((o) => o.id);
 
     const user = await this.usersService.findByUsername(currentUsername);
     if (!user) throw new NotFoundException('User not found');
 
     let selectedOptionId: number | null = null;
-    const optionIds = poll.options
-      .sort((a, b) => a.orderIndex - b.orderIndex)
-      .map((o) => o.id);
 
     const voteCounts = await this.pollVoteRepo
       .createQueryBuilder('v')
@@ -84,18 +86,16 @@ export class PollsService {
     });
     if (userVote) selectedOptionId = userVote.pollOption.id;
 
-    const options: PollOptionDto[] = poll.options
-      .sort((a, b) => a.orderIndex - b.orderIndex)
-      .map((o) => ({
-        id: o.id,
-        label: o.label,
-        votes: countMap.get(o.id) ?? 0,
-      }));
+    const optionsDto: PollOptionDto[] = options.map((o) => ({
+      id: o.id,
+      label: o.label,
+      votes: countMap.get(o.id) ?? 0,
+    }));
 
     return {
       id: poll.id,
       endsAt: poll.endsAt.toISOString(),
-      options,
+      options: optionsDto,
       selectedOptionId,
     };
   }
@@ -110,14 +110,16 @@ export class PollsService {
 
     const poll = await this.pollRepo.findOne({
       where: { tweet: { id: tweetId } },
-      relations: ['options'],
     });
     if (!poll) throw new NotFoundException('Poll not found');
     if (new Date() >= poll.endsAt) {
       throw new BadRequestException('Poll has ended');
     }
 
-    const option = poll.options.find((o) => o.id === optionId);
+    const options = await this.pollOptionRepo.find({
+      where: { poll: { id: poll.id } },
+    });
+    const option = options.find((o) => o.id === optionId);
     if (!option) throw new BadRequestException('Invalid poll option');
 
     const existing = await this.pollVoteRepo.findOne({

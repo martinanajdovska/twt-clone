@@ -5,21 +5,15 @@ import { Follow } from '../entities/follow.entity';
 import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../entities/notification.entity';
-
-export interface FollowResponseDto {
-  id: number;
-  followerUsername: string;
-  followedUsername: string;
-  createdAt: Date;
-}
+import { FollowResponseDto } from './dto/follow-response.dto';
 
 @Injectable()
 export class FollowsService {
   constructor(
     @InjectRepository(Follow)
-    private followRepo: Repository<Follow>,
-    private usersService: UsersService,
-    private notificationsService: NotificationsService,
+    private readonly followRepo: Repository<Follow>,
+    private readonly usersService: UsersService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async save(
@@ -29,8 +23,10 @@ export class FollowsService {
     const follower = await this.usersService.findByUsername(followerUsername);
     const followed = await this.usersService.findByUsername(followedUsername);
     if (!follower || !followed) throw new NotFoundException('User not found');
+
     const follow = this.followRepo.create({ follower, followed });
     const saved = await this.followRepo.save(follow);
+
     await this.notificationsService.createNotification(
       followedUsername,
       followerUsername,
@@ -38,12 +34,15 @@ export class FollowsService {
       `/users/${followerUsername}`,
       NotificationType.FOLLOW,
     );
-    return {
+
+    const followResponseDto: FollowResponseDto = {
       id: saved.id,
       followerUsername: follower.username,
       followedUsername: followed.username,
       createdAt: saved.createdAt,
     };
+
+    return followResponseDto;
   }
 
   async delete(
@@ -58,6 +57,7 @@ export class FollowsService {
       relations: ['follower', 'followed'],
     });
     if (!follow) throw new NotFoundException('Follow relation not found');
+
     await this.followRepo.remove(follow);
   }
 

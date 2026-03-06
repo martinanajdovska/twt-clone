@@ -14,8 +14,8 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private userRepo: Repository<User>,
-    private cloudinaryService: CloudinaryService,
+    private readonly userRepo: Repository<User>,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async register(
@@ -27,12 +27,15 @@ export class UsersService {
     if (!username?.trim() || !password?.trim()) {
       throw new BadRequestException('Must fill both username and password');
     }
+
     if (await this.existsByUsername(username)) {
       throw new ConflictException(`Username ${username} already exists`);
     }
+
     if (await this.existsByEmail(email)) {
       throw new ConflictException(`Email ${email} already exists`);
     }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = this.userRepo.create({
       username,
@@ -41,6 +44,7 @@ export class UsersService {
       firebaseUid: null,
       role,
     });
+
     return this.userRepo.save(user);
   }
 
@@ -63,20 +67,29 @@ export class UsersService {
   ): Promise<User> {
     let user = await this.findByFirebaseUid(firebaseUid);
     if (user) return user;
+
     user = await this.userRepo.findOne({ where: { email } });
     if (user) {
       user.firebaseUid = firebaseUid;
       return this.userRepo.save(user);
     }
+
     let username = preferredUsername?.trim();
     if (!username) {
-      username = email.replace(/@.*$/, '').replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase() || 'user';
+      username =
+        email
+          .replace(/@.*$/, '')
+          .replace(/[^a-zA-Z0-9_]/g, '_')
+          .toLowerCase() || 'user';
     }
+
     let base = username;
     let suffix = 0;
+
     while (await this.existsByUsername(username)) {
       username = `${base}${++suffix}`;
     }
+
     const newUser = this.userRepo.create({
       username,
       email,
@@ -106,9 +119,13 @@ export class UsersService {
     return users.map((u) => u.username);
   }
 
-  async updateProfileImage(username: string, file: Express.Multer.File): Promise<void> {
+  async updateProfileImage(
+    username: string,
+    file: Express.Multer.File,
+  ): Promise<void> {
     const user = await this.userRepo.findOne({ where: { username } });
     if (!user) throw new NotFoundException('User not found');
+
     const imageUrl = file
       ? await this.cloudinaryService.uploadFile(file, 'profile_pictures')
       : null;
@@ -129,13 +146,22 @@ export class UsersService {
   ): Promise<void> {
     const user = await this.userRepo.findOne({ where: { username } });
     if (!user) throw new NotFoundException('User not found');
-    if (updates.bio !== undefined) user.bio = updates.bio?.slice(0, 160) ?? null;
-    if (updates.location !== undefined) user.location = updates.location?.slice(0, 100) ?? null;
-    if (updates.website !== undefined) user.website = updates.website?.slice(0, 100) ?? null;
-    if (updates.birthday !== undefined) user.birthday = updates.birthday !== "" ? updates.birthday : null;
-    if (updates.displayName !== undefined) user.displayName = updates.displayName?.slice(0, 50) ?? null;
+
+    if (updates.bio !== undefined)
+      user.bio = updates.bio?.slice(0, 160) ?? null;
+    if (updates.location !== undefined)
+      user.location = updates.location?.slice(0, 100) ?? null;
+    if (updates.website !== undefined)
+      user.website = updates.website?.slice(0, 100) ?? null;
+    if (updates.birthday !== undefined)
+      user.birthday = updates.birthday !== '' ? updates.birthday : null;
+    if (updates.displayName !== undefined)
+      user.displayName = updates.displayName?.slice(0, 50) ?? null;
     if (bannerFile) {
-      user.bannerUrl = await this.cloudinaryService.uploadFile(bannerFile, 'profile_banners');
+      user.bannerUrl = await this.cloudinaryService.uploadFile(
+        bannerFile,
+        'profile_banners',
+      );
     }
     await this.userRepo.save(user);
   }
@@ -146,6 +172,7 @@ export class UsersService {
   }> {
     const user = await this.userRepo.findOne({ where: { username } });
     if (!user) throw new NotFoundException('User not found');
+
     return {
       username: user.username,
       profilePicture: user.imageUrl ?? null,

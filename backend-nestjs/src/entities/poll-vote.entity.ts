@@ -23,7 +23,7 @@ export class PollVote {
   @JoinColumn({ name: 'poll_id' })
   poll: Poll;
 
-  @ManyToOne(() => PollOption, (o) => o.votes, { onDelete: 'CASCADE' })
+  @ManyToOne(() => PollOption, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'poll_option_id' })
   pollOption: PollOption;
 }

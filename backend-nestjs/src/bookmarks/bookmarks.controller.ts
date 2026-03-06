@@ -7,6 +7,8 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { BookmarksService } from './bookmarks.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -15,7 +17,7 @@ import { CurrentUsername } from '../common/decorators/current-user.decorator';
 @Controller('api/bookmarks')
 @UseGuards(JwtAuthGuard)
 export class BookmarksController {
-  constructor(private bookmarksService: BookmarksService) {}
+  constructor(private readonly bookmarksService: BookmarksService) {}
 
   @Get()
   async findAll(
@@ -40,6 +42,7 @@ export class BookmarksController {
   }
 
   @Delete(':tweetId')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
     @Param('tweetId', ParseIntPipe) tweetId: string,
     @CurrentUsername() username: string,

@@ -8,6 +8,7 @@ import { FirebaseModule } from './firebase/firebase.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TweetsModule } from './tweets/tweets.module';
+import { FeedModule } from './feed/feed.module';
 import { LikesModule } from './likes/likes.module';
 import { RetweetsModule } from './retweets/retweets.module';
 import { FollowsModule } from './follows/follows.module';
@@ -53,6 +54,7 @@ import { BookmarksModule } from './bookmarks/bookmarks.module';
     AuthModule,
     UsersModule,
     TweetsModule,
+    FeedModule,
     LikesModule,
     RetweetsModule,
     FollowsModule,
