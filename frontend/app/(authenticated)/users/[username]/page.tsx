@@ -37,7 +37,7 @@ const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }
                     </div>
                 )}
 
-                <ProfileFeed username={username} />
+                <ProfileFeed profileUsername={username} currentUsername={self.username} />
             </HydrationBoundary>
         </main>
     )

@@ -3,6 +3,7 @@ export interface TweetResponseDto {
   username: string;
   content: string;
   imageUrl: string | null;
+  isPinned: boolean;
   quotedTweet: {
     id: number;
     username: string;
@@ -16,9 +17,9 @@ export interface TweetResponseDto {
   retweetsCount: number;
   quotesCount: number;
   bookmarksCount: number;
-  liked: boolean;
-  retweeted: boolean;
-  bookmarked: boolean;
+  isLiked: boolean;
+  isRetweeted: boolean;
+  isBookmarked: boolean;
   parentId: number | null;
   retweetedBy: string | null;
   createdAt: string;

@@ -339,21 +339,94 @@ export class TweetsService {
       username: tweet.user!.username,
       content: tweet.content ?? '',
       imageUrl: tweet.imageUrl ?? null,
+      isPinned: tweet.pinnedAt != null,
       quotedTweet: quoted,
       likesCount: 0,
       repliesCount: 0,
       retweetsCount: 0,
       quotesCount: 0,
       bookmarksCount: 0,
-      liked: false,
-      retweeted: false,
-      bookmarked: false,
+      isLiked: false,
+      isRetweeted: false,
+      isBookmarked: false,
       parentId: tweet.parentTweet?.id ?? null,
       retweetedBy: null,
       createdAt: created,
       profilePictureUrl: tweet.user!.imageUrl ?? null,
       communityNote,
     };
+  }
+
+  async findPinnedTweetByUsername(username: string): Promise<Tweet | null> {
+    return this.tweetRepo.findOne({
+      where: {
+        user: { username },
+        pinnedAt: Not(IsNull()),
+        parentTweet: IsNull(),
+      },
+      relations: [
+        'user',
+        'parentTweet',
+        'replies',
+        'quotedTweet',
+        'quotedTweet.user',
+        'notes',
+        'notes.ratings',
+        'notes.ratings.user',
+      ],
+    });
+  }
+
+  async pinTweetById(id: number, username: string): Promise<TweetResponseDto> {
+    return this.tweetRepo.manager.transaction(async (manager) => {
+      const tweet = await manager.findOne(Tweet, {
+        where: { id },
+        relations: [
+          'user',
+          'parentTweet',
+          'replies',
+          'quotedTweet',
+          'quotedTweet.user',
+          'notes',
+          'notes.ratings',
+          'notes.ratings.user',
+        ],
+      });
+      if (!tweet) throw new NotFoundException('Tweet not found');
+      if (tweet.user.username !== username) {
+        throw new BadRequestException('Not allowed to pin this tweet');
+      }
+      if (tweet.parentTweet != null) {
+        throw new BadRequestException('Only original tweets can be pinned');
+      }
+
+      await manager
+        .createQueryBuilder()
+        .update(Tweet)
+        .set({ pinnedAt: null })
+        .where('user_id = :userId', { userId: tweet.user.id })
+        .andWhere('pinned_at IS NOT NULL')
+        .andWhere('id != :id', { id })
+        .execute();
+
+      tweet.pinnedAt = new Date();
+      const saved = await manager.save(Tweet, tweet);
+      return this.toResponseDto(saved, username);
+    });
+  }
+
+  async unpinTweetById(id: number, username: string): Promise<TweetResponseDto> {
+    const tweet = await this.tweetRepo.findOne({
+      where: { id },
+      relations: ['user', 'parentTweet', 'quotedTweet', 'quotedTweet.user'],
+    });
+    if (!tweet) throw new NotFoundException('Tweet not found');
+    if (tweet.user.username !== username) {
+      throw new BadRequestException('Not allowed to unpin this tweet');
+    }
+    tweet.pinnedAt = null;
+    const saved = await this.tweetRepo.save(tweet);
+    return this.toResponseDto(saved, username);
   }
 
   async searchByContent(q: string, username: string) {

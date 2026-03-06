@@ -6,7 +6,7 @@ import React from "react"
 import Like from "./Like"
 import Bookmark from "./Bookmark"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal, Repeat2 } from "lucide-react"
+import { MoreHorizontal, Repeat2, Pin as PinIcon } from "lucide-react"
 
 import Delete from "@/components/tweets/Delete"
 import Reply from "@/components/tweets/Reply"
@@ -16,6 +16,7 @@ import AllCommunityNotesDialog from "@/components/community-notes/AllCommunityNo
 import CommunityNoteDisplay from "@/components/community-notes/CommunityNoteDisplay"
 import RetweetMenu from "@/components/tweets/RetweetMenu"
 import TweetDetailStats from "@/components/tweets/TweetDetailStats"
+import PinTweet from "@/components/tweets/PinTweet"
 import { formatRelativeTime } from "@/lib/relativeTime"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -49,11 +50,17 @@ const Tweet = ({
 
     return (
         <article className="flex flex-col p-4 border-b border-border hover:bg-muted/30 transition-colors cursor-pointer group shadow-sm">
-            {(tweet.retweeted || tweet.retweetedBy) && (
+            {tweet.isPinned && (
+                <div className="flex items-center gap-2 ml-8 mb-1 text-muted-foreground">
+                    <PinIcon size={14} className="font-bold" />
+                    <span className="text-[13px] font-bold">Pinned</span>
+                </div>
+            )}
+            {(tweet.isRetweeted || tweet.retweetedBy) && (
                 <div className="flex items-center gap-2 ml-8 mb-1 text-muted-foreground">
                     <Repeat2 size={14} className="font-bold" />
                     <span className="text-[13px] font-bold hover:underline">
-                        {tweet.retweeted ? "You" : tweet.retweetedBy} retweeted
+                        {tweet.isRetweeted ? "You" : tweet.retweetedBy} retweeted
                     </span>
                 </div>
             )}
@@ -61,7 +68,7 @@ const Tweet = ({
             <div className="flex gap-3">
                 <div className="flex-shrink-0 w-10 h-10" onClick={handleUserClick}>
                     <Avatar className="h-full w-full">
-                        <AvatarImage src={tweet.profilePictureUrl} className="object-cover" />
+                        <AvatarImage src={tweet.profilePictureUrl ?? undefined} className="object-cover" />
                         <AvatarFallback className="bg-accent flex items-center justify-center font-bold text-sm">
                             {tweet.username.charAt(0).toUpperCase()}
                         </AvatarFallback>
@@ -88,13 +95,16 @@ const Tweet = ({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                {isSelf && tweet.parentId == null && (
+                                    <PinTweet username={username} id={tweet.id} isPinned={tweet.isPinned} />
+                                )}
                                 <AddCommunityNote tweetId={tweet.id} />
                                 <AllCommunityNotesDialog tweetId={tweet.id} />
                                 {isSelf && (
                                     <Delete
                                         username={username}
                                         id={tweet.id}
-                                        parentId={tweet.parentId}
+                                        parentId={tweet.parentId ?? undefined}
                                     />
                                 )}
                             </DropdownMenuContent>
@@ -198,18 +208,18 @@ const Tweet = ({
                             tweet={tweet}
                             username={username}
                             retweetsCount={tweet.retweetsCount}
-                            retweeted={tweet.retweeted}
+                            isRetweeted={tweet.isRetweeted}
                             hideCount={detailView}
                         />
                         <Like
                             likesCount={tweet.likesCount}
-                            liked={tweet.liked}
+                            isLiked={tweet.isLiked}
                             id={tweet.id}
                             hideCount={detailView}
                         />
                         <Bookmark
                             id={tweet.id}
-                            bookmarked={tweet.bookmarked ?? false}
+                            isBookmarked={tweet.isBookmarked}
                             username={username}
                         />
                         <span title={tweet.createdAt}>{formatRelativeTime(tweet.createdAt)}</span>

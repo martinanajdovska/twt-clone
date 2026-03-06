@@ -78,6 +78,22 @@ export class TweetsController {
     await this.tweetsService.deleteById(parseInt(id, 10), username);
   }
 
+  @Post(':id/pin')
+  async pinTweet(
+    @Param('id', ParseIntPipe) id: string,
+    @CurrentUsername() username: string,
+  ) {
+    return this.tweetsService.pinTweetById(parseInt(id, 10), username);
+  }
+
+  @Delete(':id/pin')
+  async unpinTweet(
+    @Param('id', ParseIntPipe) id: string,
+    @CurrentUsername() username: string,
+  ) {
+    return this.tweetsService.unpinTweetById(parseInt(id, 10), username);
+  }
+
   @Get(':id')
   async getTweet(
     @Param('id', ParseIntPipe) id: string,

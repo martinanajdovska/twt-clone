@@ -1,18 +1,18 @@
 'use client'
-import {useState} from "react";
-import {useFollow} from "@/hooks/useFollow";
+import { useState } from "react";
+import { useFollow } from "@/hooks/useFollow";
 
-const Follow = ({username, isFollowed, token}: {username:string, isFollowed:boolean, token:string}) => {
+const Follow = ({ username, isFollowed, isFollowingYou, token }: { username: string, isFollowed: boolean, isFollowingYou: boolean, token: string }) => {
     const [isFollowedState, setIsFollowedState] = useState(isFollowed)
 
-    const { mutate: handleFollow, isPending } = useFollow({username, token});
+    const { mutate: handleFollow, isPending } = useFollow({ username, token });
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
 
         setIsFollowedState(!isFollowedState);
 
-        handleFollow({username, isFollowed:isFollowedState}, {
+        handleFollow({ username, isFollowed: isFollowedState }, {
             onError: () => {
                 // rollback if it fails on server
                 setIsFollowedState(!isFollowedState);
@@ -28,8 +28,8 @@ const Follow = ({username, isFollowed, token}: {username:string, isFollowed:bool
                 className={`
                     px-4 py-1.5 rounded-full font-bold text-sm transition-all
                     ${isFollowedState
-                    ? "bg-transparent border border-border text-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
-                    : "bg-primary text-primary-foreground hover:opacity-90"}
+                        ? "bg-transparent border border-border text-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+                        : "bg-primary text-primary-foreground hover:opacity-90"}
                     ${isPending ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                 `}
             >

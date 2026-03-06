@@ -9,10 +9,12 @@ export default function Feed({
     username,
     isProfile,
     profileTab = 'tweets',
+    profileUsername,
 }: {
     username: string
     isProfile: boolean
     profileTab: string
+    profileUsername: string
 }) {
     const { ref, inView } = useInView()
 
@@ -24,7 +26,7 @@ export default function Feed({
         isFetching,
         isFetchingNextPage,
         status,
-    } = useFetchFeed({ username, isProfile, profileTab })
+    } = useFetchFeed({ username, isProfile, profileTab, profileUsername })
 
     useEffect(() => {
         if (inView && hasNextPage && !isFetchingNextPage) {

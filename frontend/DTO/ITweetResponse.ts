@@ -1,10 +1,11 @@
 export interface ITweetResponse {
     id: number;
     username: string;
-    profilePictureUrl: string;
-    parentId: number;
+    profilePictureUrl: string | null;
+    parentId: number | null;
     content: string;
-    imageUrl: string;
+    imageUrl: string | null;
+    isPinned: boolean;
     quotedTweet: {
         id: number;
         username: string;
@@ -18,9 +19,9 @@ export interface ITweetResponse {
     retweetsCount: number;
     quotesCount: number;
     bookmarksCount: number;
-    liked: boolean;
-    retweeted: boolean;
-    bookmarked: boolean;
+    isLiked: boolean;
+    isRetweeted: boolean;
+    isBookmarked: boolean;
     retweetedBy: string | null;
     createdAt: string;
     communityNote: { id: number; content: string; helpfulCount: number; userRating: boolean | null } | null;

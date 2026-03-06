@@ -6,12 +6,12 @@ import { useBookmarkTweet } from '@/hooks/tweets/useBookmarkTweet'
 
 type Props = {
   id: number
-  bookmarked: boolean
+  isBookmarked: boolean
   username: string
 }
 
-const Bookmark = ({ id, bookmarked, username }: Props) => {
-  const [isBookmarkedState, setIsBookmarkedState] = useState(bookmarked)
+const Bookmark = ({ id, isBookmarked, username }: Props) => {
+  const [isBookmarkedState, setIsBookmarkedState] = useState(isBookmarked)
   const { mutate: toggleBookmark, isPending } = useBookmarkTweet(username)
 
   const handleClick = (e: React.MouseEvent) => {

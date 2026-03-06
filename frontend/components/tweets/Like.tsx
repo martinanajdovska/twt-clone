@@ -3,8 +3,8 @@ import React, { useState } from 'react'
 import { Heart } from "lucide-react";
 import { useLikeTweet } from "@/hooks/tweets/useLikeTweet";
 
-const Like = ({ likesCount, liked, id, hideCount = false }: { likesCount: number, liked: boolean, id: number, hideCount: boolean }) => {
-    const [isLikedState, setIsLikedState] = useState(liked)
+const Like = ({ likesCount, isLiked, id, hideCount = false }: { likesCount: number, isLiked: boolean, id: number, hideCount: boolean }) => {
+    const [isLikedState, setIsLikedState] = useState(isLiked)
     const [likesCountState, setLikesCountState] = useState(likesCount)
 
     const { mutate: handleLike, isPending } = useLikeTweet();

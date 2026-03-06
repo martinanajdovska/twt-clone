@@ -64,3 +64,23 @@ export const fetchTweetsBySearchTerm = async (searchTerm: string) => {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
 };
+
+export const pinTweet = async (id: number) => {
+    const res = await fetch(`${BASE_URL}/api/tweets/${id}/pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+};
+
+export const unpinTweet = async (id: number) => {
+    const res = await fetch(`${BASE_URL}/api/tweets/${id}/pin`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+};

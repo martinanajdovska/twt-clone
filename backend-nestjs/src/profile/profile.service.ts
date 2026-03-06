@@ -7,8 +7,8 @@ export interface UserInfoDto {
   displayName: string | null;
   followers: number;
   following: number;
-  followed: boolean;
-  followsYou: boolean;
+  isFollowed: boolean;
+  isFollowingYou: boolean;
   imageUrl: string | null;
   bannerUrl: string | null;
   bio: string | null;
@@ -37,8 +37,11 @@ export class ProfileService {
       displayName: user.displayName ?? null,
       followers: await this.followsService.getFollowerCount(username),
       following: await this.followsService.getFollowingCount(username),
-      followed: await this.followsService.existsFollowed(requester, username),
-      followsYou: await this.followsService.existsFollowingYou(username, requester),
+      isFollowed: await this.followsService.existsFollowed(requester, username),
+      isFollowingYou: await this.followsService.existsFollowingYou(
+        username,
+        requester,
+      ),
       imageUrl: user.imageUrl ?? null,
       bannerUrl: user.bannerUrl ?? null,
       bio: user.bio ?? null,

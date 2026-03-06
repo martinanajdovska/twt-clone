@@ -141,7 +141,7 @@ const ProfileHeader = ({
             </button>
           ) : (
             <div className="shrink-0">
-              <Follow username={username} isFollowed={data.followed} token={token} />
+              <Follow username={username} isFollowed={data.isFollowed} isFollowingYou={data.isFollowingYou} token={token} />
             </div>
           )}
         </div>
@@ -152,7 +152,7 @@ const ProfileHeader = ({
             {displayName}
           </h1>
           <p className="text-muted-foreground text-[15px]">@{username}</p>
-          {data.followsYou && !isSelf && (
+          {data.isFollowingYou && !isSelf && (
             <p className="inline-block bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded font-medium">
               Follows you
             </p>

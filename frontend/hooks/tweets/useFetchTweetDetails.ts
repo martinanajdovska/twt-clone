@@ -6,7 +6,7 @@ export const useFetchTweetDetails = (id: number) => {
         queryKey: ['tweet', String(id)],
         queryFn: ({ pageParam }) => fetchTweetDetails({ pageParam , id}),
         initialPageParam: 0,
-        getNextPageParam: (lastPage, allPages, lastPageParam) => {
+        getNextPageParam: (lastPage: any, allPages: any, lastPageParam: any) => {
             return lastPage.replies.length < 5 ? undefined : lastPageParam + 1;
         },
     })

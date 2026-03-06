@@ -22,7 +22,10 @@ export class FollowsService {
     private notificationsService: NotificationsService,
   ) {}
 
-  async save(followerUsername: string, followedUsername: string): Promise<FollowResponseDto> {
+  async save(
+    followerUsername: string,
+    followedUsername: string,
+  ): Promise<FollowResponseDto> {
     const follower = await this.usersService.findByUsername(followerUsername);
     const followed = await this.usersService.findByUsername(followedUsername);
     if (!follower || !followed) throw new NotFoundException('User not found');
@@ -43,7 +46,10 @@ export class FollowsService {
     };
   }
 
-  async delete(followerUsername: string, followedUsername: string): Promise<void> {
+  async delete(
+    followerUsername: string,
+    followedUsername: string,
+  ): Promise<void> {
     const follow = await this.followRepo.findOne({
       where: {
         follower: { username: followerUsername },
@@ -90,12 +96,15 @@ export class FollowsService {
     );
   }
 
-  async existsFollowingYou(followed: string, follower: string): Promise<boolean> {
+  async existsFollowingYou(
+    profileUser: string,
+    requester: string,
+  ): Promise<boolean> {
     return (
       (await this.followRepo.count({
         where: {
-          follower: { username: follower },
-          followed: { username: followed },
+          follower: { username: profileUser },
+          followed: { username: requester },
         },
       })) > 0
     );

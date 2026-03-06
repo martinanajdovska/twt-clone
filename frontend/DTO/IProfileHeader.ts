@@ -3,8 +3,8 @@ export interface IProfileHeader {
   displayName: string | null;
   followers: number;
   following: number;
-  followed: boolean;
-  followsYou: boolean;
+  isFollowed: boolean;
+  isFollowingYou: boolean;
   imageUrl: string | null;
   bannerUrl: string | null;
   bio: string | null;

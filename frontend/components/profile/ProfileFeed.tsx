@@ -11,7 +11,13 @@ const TABS: { id: string; label: string; icon?: React.ReactNode }[] = [
     { id: 'media', label: 'Media', icon: <ImageIcon size={18} /> },
 ]
 
-export default function ProfileFeed({ username }: { username: string }) {
+export default function ProfileFeed({
+    profileUsername,
+    currentUsername,
+}: {
+    profileUsername: string
+    currentUsername: string
+}) {
     const [activeTab, setActiveTab] = useState<string>('tweets')
 
     return (
@@ -43,7 +49,12 @@ export default function ProfileFeed({ username }: { username: string }) {
                 })}
             </div>
             <div className="min-h-[200px]">
-                <Feed username={username} isProfile profileTab={activeTab} />
+                <Feed
+                    username={currentUsername}
+                    isProfile
+                    profileTab={activeTab}
+                    profileUsername={profileUsername}
+                />
             </div>
         </div>
     )

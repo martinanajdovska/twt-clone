@@ -146,27 +146,43 @@ export class FeedService {
       return { username, tweets: tweetDtos };
     }
 
+    const pinnedTweet =
+      tab === 'tweets' ? await this.tweetsService.findPinnedTweetByUsername(username) : null;
+    const pinnedId = pinnedTweet?.id ?? null;
+
     const tweets = await this.tweetsService.findAllParentTweetsByUsername(username);
     const retweets = await this.retweetsService.findRetweetsByUsername(username);
     const combined: Tweet[] = [];
-    for (const t of tweets) combined.push(t);
+    for (const t of tweets) {
+      if (pinnedId == null || t.id !== pinnedId) combined.push(t);
+    }
     for (const r of retweets) {
       const t = await this.tweetsService.findById(r.tweet.id);
-      if (t) combined.push(t);
+      if (t && (pinnedId == null || t.id !== pinnedId)) combined.push(t);
     }
     combined.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-    const pageItems = combined.slice(
-      pageable.page * pageable.size,
-      pageable.page * pageable.size + pageable.size,
-    );
+
     const tweetDtos: TweetResponseDto[] = [];
+    if (tab === 'tweets' && pageable.page === 0 && pinnedTweet) {
+      tweetDtos.push(await this.addTweetInfo(pinnedTweet, username, requesterUsername));
+      const remaining = Math.max(0, pageable.size - 1);
+      const pageItems = combined.slice(0, remaining);
+      for (const t of pageItems) {
+        tweetDtos.push(await this.addTweetInfo(t, username, requesterUsername));
+      }
+      return { username, tweets: tweetDtos };
+    }
+
+    const offset =
+      tab === 'tweets' && pinnedTweet
+        ? Math.max(0, pageable.page * pageable.size - 1)
+        : pageable.page * pageable.size;
+    const pageItems = combined.slice(offset, offset + pageable.size);
     for (const t of pageItems) {
-      tweetDtos.push(
-        await this.addTweetInfo(t, username, requesterUsername),
-      );
+      tweetDtos.push(await this.addTweetInfo(t, username, requesterUsername));
     }
     return {
       username,
@@ -244,15 +260,15 @@ export class FeedService {
     dto.bookmarksCount = await this.bookmarksService.countBookmarks(tweet.id);
     dto.parentId = tweet.parentTweet?.id ?? null;
     dto.retweetedBy = tweet.user.username !== username ? username: null;
-    dto.liked = await this.likesService.existsByTweetIdAndUsername(
+    dto.isLiked = await this.likesService.existsByTweetIdAndUsername(
       tweet.id,
       requesterUsername,
     );
-    dto.retweeted = await this.retweetsService.existsByTweetIdAndUsername(
+    dto.isRetweeted = await this.retweetsService.existsByTweetIdAndUsername(
       tweet.id,
       requesterUsername,
     );
-    dto.bookmarked = await this.bookmarksService.existsByTweetIdAndUsername(
+    dto.isBookmarked = await this.bookmarksService.existsByTweetIdAndUsername(
       tweet.id,
       requesterUsername,
     );

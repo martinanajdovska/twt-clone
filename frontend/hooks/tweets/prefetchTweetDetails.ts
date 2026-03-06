@@ -8,8 +8,8 @@ export const prefetchTweetDetails = async (id:number) => {
         queryKey: ['tweet', String(id)],
         queryFn: ({pageParam}) => fetchTweetDetails({pageParam, id}),
         initialPageParam: 0,
-        getNextPageParam: (lastPage, allPages, lastPageParam) => {
-            if (lastPage.length < 5) {
+        getNextPageParam: (lastPage: any, allPages: any, lastPageParam: any) => {
+            if (lastPage.replies.length < 5) {
                 return undefined;
             }
             return lastPageParam + 1

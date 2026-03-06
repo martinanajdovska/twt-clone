@@ -8,7 +8,7 @@ export const prefetchFeed = async () => {
         queryKey: ['feed'],
         queryFn: ({ pageParam }) => fetchTweets({ pageParam }),
         initialPageParam: 0,
-        getNextPageParam: (lastPage, allPages, lastPageParam) => {
+        getNextPageParam: (lastPage: any, allPages: any, lastPageParam: any) => {
             if (lastPage.length < 5) {
                 return undefined;
             }

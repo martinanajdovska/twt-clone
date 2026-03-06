@@ -41,6 +41,9 @@ export class Tweet {
   @Column({ type: 'varchar', nullable: true })
   imageUrl: string | null;
 
+  @Column({ name: 'pinned_at', type: 'timestamptz', nullable: true })
+  pinnedAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

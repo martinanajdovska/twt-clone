@@ -17,13 +17,13 @@ type Props = {
   tweet: ITweetResponse
   username: string
   retweetsCount: number
-  retweeted: boolean
+  isRetweeted: boolean
   hideCount: boolean
 }
 
-const RetweetMenu = ({ tweet, username, retweetsCount, retweeted, hideCount = false }: Props) => {
+const RetweetMenu = ({ tweet, username, retweetsCount, isRetweeted, hideCount = false }: Props) => {
   const [retweetsCountState, setRetweetsCountState] = useState(retweetsCount)
-  const [isRetweetedState, setIsRetweetedState] = useState(retweeted)
+  const [isRetweetedState, setIsRetweetedState] = useState(isRetweeted)
   const [quoteOpen, setQuoteOpen] = useState(false)
 
   const { mutate: doRetweet, isPending } = useRetweet(username)
@@ -51,7 +51,7 @@ const RetweetMenu = ({ tweet, username, retweetsCount, retweeted, hideCount = fa
           <div>
             <Retweet
               retweetsCount={retweetsCountState}
-              retweeted={isRetweetedState}
+              isRetweeted={isRetweetedState}
               isPending={isPending}
               hideCount={hideCount}
             />
