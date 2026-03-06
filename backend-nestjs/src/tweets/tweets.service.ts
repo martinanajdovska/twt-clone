@@ -355,4 +355,15 @@ export class TweetsService {
       communityNote,
     };
   }
+
+  async searchByContent(q: string, username: string) {
+    const tweets = await this.tweetRepo
+        .createQueryBuilder('tweet')
+        .leftJoinAndSelect('tweet.user', 'user')
+        .where('tweet.content ILIKE :q', { q: `%${q}%` })
+        .orderBy('tweet.createdAt', 'DESC')
+        .take(10)
+        .getMany();
+    return tweets.map(t => this.toResponseDto(t, username));
+}
 }

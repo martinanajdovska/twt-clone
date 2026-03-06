@@ -54,3 +54,13 @@ export const fetchTweetQuotes = async ({
     }
     return res.json();
 };
+
+export const fetchTweetsBySearchTerm = async (searchTerm: string) => {
+    const res = await fetch(`${BASE_URL}/api/tweets/search?q=${searchTerm}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+};

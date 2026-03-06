@@ -61,6 +61,14 @@ export class TweetsController {
     );
   }
 
+  @Get('search')
+  async searchTweets(
+    @Query('q') q: string,
+    @CurrentUsername() username: string,
+  ) {
+    return this.tweetsService.searchByContent(q, username);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
