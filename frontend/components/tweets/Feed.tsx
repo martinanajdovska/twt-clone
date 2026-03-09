@@ -52,9 +52,11 @@ export default function Feed({
                 {data.pages.map((group, i) => (
                     <React.Fragment key={i}>
                         <div className="divide-y border-x border-b border-border">
-                            {group.map((tweet: ITweetResponse) => (
-                                // avoiding duplicate keys when multiply users retweet the same thing
-                                <div key={tweet.id + (tweet.retweetedBy ?? '')} className="transition-colors hover:bg-accent/50">
+                            {group.map((tweet: ITweetResponse, j) => (
+                                <div
+                                    key={`${i}-${j}-${tweet.id}`}
+                                    className="transition-colors hover:bg-accent/50"
+                                >
                                     <Tweet tweet={tweet} username={username} showPinnedLabel={isProfile} />
                                 </div>
                             ))}

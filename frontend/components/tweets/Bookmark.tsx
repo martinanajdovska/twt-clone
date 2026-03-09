@@ -4,19 +4,19 @@ import React, { useState } from 'react'
 import { Bookmark as BookmarkIcon } from 'lucide-react'
 import { useBookmarkTweet } from '@/hooks/tweets/useBookmarkTweet'
 
-type Props = {
+
+const Bookmark = ({ id, isBookmarked, username }: {
   id: number
   isBookmarked: boolean
   username: string
-}
-
-const Bookmark = ({ id, isBookmarked, username }: Props) => {
+}) => {
   const [isBookmarkedState, setIsBookmarkedState] = useState(isBookmarked)
   const { mutate: toggleBookmark, isPending } = useBookmarkTweet(username)
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
     const newState = !isBookmarkedState
     setIsBookmarkedState(newState)
     toggleBookmark(

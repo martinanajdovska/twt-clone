@@ -12,6 +12,7 @@ import {
 import Retweet from '@/components/tweets/Retweet'
 import Quote from '@/components/tweets/Quote'
 import { ITweetResponse } from '@/DTO/ITweetResponse'
+import { useTweetDropdown } from '@/components/tweets/TweetDropdownContext'
 
 type Props = {
   tweet: ITweetResponse
@@ -25,6 +26,7 @@ const RetweetMenu = ({ tweet, username, retweetsCount, isRetweeted, hideCount = 
   const [retweetsCountState, setRetweetsCountState] = useState(retweetsCount)
   const [isRetweetedState, setIsRetweetedState] = useState(isRetweeted)
   const [quoteOpen, setQuoteOpen] = useState(false)
+  const tweetDropdown = useTweetDropdown()
 
   const { mutate: doRetweet, isPending } = useRetweet(username)
 
@@ -46,7 +48,7 @@ const RetweetMenu = ({ tweet, username, retweetsCount, isRetweeted, hideCount = 
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu onOpenChange={(open) => tweetDropdown?.onOpenChange(open)}>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
           <div>
             <Retweet

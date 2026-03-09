@@ -21,7 +21,11 @@ const Reply = ({ tweet, username, repliesCount, hideCount = false }: { tweet: IT
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <button className="flex items-center gap-1 group/reply hover:text-blue-500 transition-colors">
+                <button
+                    type="button"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1 group/reply hover:text-blue-500 transition-colors"
+                >
                     <div className="p-2 rounded-full group-hover/reply:bg-blue-500/10">
                         <MessageCircle size={18} />
                     </div>
@@ -34,7 +38,7 @@ const Reply = ({ tweet, username, repliesCount, hideCount = false }: { tweet: IT
                     <div className="relative">
                         <div className="absolute left-[20px] top-[40px] bottom-0 w-[2px] bg-border shadow-sm" />
 
-                        <Tweet tweet={tweet} username={username} />
+                        <Tweet tweet={tweet} username={username} expandOnClick={false} />
                     </div>
                     <div className="mt-2">
                         <TweetForm username={username} parentId={tweet.id} onSuccess={() => {

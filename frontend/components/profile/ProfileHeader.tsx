@@ -176,7 +176,7 @@ const ProfileHeader = ({
           )}
           {data.website != null && data.website !== '' && (
             <a
-              href={data.website.startsWith('http') ? data.website : `https://${data.website}`}
+              href={data.website.startsWith('https') ? data.website : `https://${data.website}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-primary hover:underline"

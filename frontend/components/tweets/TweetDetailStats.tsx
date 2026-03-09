@@ -93,7 +93,10 @@ export default function TweetDetailStats({
       </div>
 
       <Dialog open={quotesOpen} onOpenChange={setQuotesOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[85vh] p-0 gap-0 border-gray-800 flex flex-col">
+        <DialogContent
+          className="sm:max-w-[600px] max-h-[85vh] p-0 gap-0 border-gray-800 flex flex-col"
+          data-allow-tweet-nav
+        >
           <DialogTitle className="sr-only">Quotes</DialogTitle>
           <div className="p-3 border-b border-border font-semibold text-foreground">
             Quotes

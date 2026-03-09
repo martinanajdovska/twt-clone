@@ -11,6 +11,7 @@ const Like = ({ likesCount, isLiked, id, hideCount = false }: { likesCount: numb
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
+        e.stopPropagation();
 
         const newLikedState = !isLikedState;
         setIsLikedState(newLikedState);

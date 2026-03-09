@@ -1,43 +1,44 @@
 import React from 'react'
-import {formatDistanceToNow} from "date-fns";
-import {INotificationResponse} from "@/DTO/INotificationResponse";
+import { formatDistanceToNow } from "date-fns";
+import { INotificationResponse } from "@/DTO/INotificationResponse";
 import { AtSign, Bell, FileWarning, Heart, MessageSquare, Repeat, UserIcon } from 'lucide-react';
-import {useReadNotification} from "@/hooks/notifications/useReadNotification";
-import {useRouter} from "next/navigation";
+import { useReadNotification } from "@/hooks/notifications/useReadNotification";
+import { useRouter } from "next/navigation";
 
-const Notification = ({notification}:{notification: INotificationResponse}) => {
+const Notification = ({ notification }: { notification: INotificationResponse }) => {
     const { mutate: readNotification } = useReadNotification();
     const router = useRouter();
 
     const getIcon = (type: string) => {
         switch (type) {
             case 'LIKE':
-                return <Heart className="fill-red-500 text-red-500" size={16}/>;
+                return <Heart className="fill-red-500 text-red-500" size={16} />;
             case 'REPLY':
-                return <MessageSquare className="text-blue-500" size={16}/>;
+                return <MessageSquare className="text-blue-500" size={16} />;
             case 'MENTION':
-                return <AtSign className="text-blue-500" size={16}/>;
+                return <AtSign className="text-blue-500" size={16} />;
             case 'RETWEET':
-                return <Repeat className="text-green-500" size={16}/>;
+                return <Repeat className="text-green-500" size={16} />;
             case 'FOLLOW':
-                return <UserIcon className="text-gray-600" size={16}/>;
+                return <UserIcon className="text-gray-600" size={16} />;
             case 'COMMUNITY_NOTE':
-                return <FileWarning className="text-amber-500" size={16}/>;
+                return <FileWarning className="text-amber-500" size={16} />;
             default:
-                return <Bell size={16}/>;
+                return <Bell size={16} />;
         }
     };
 
-    async function openNotification({link, id, isRead}:{link: string, id: number, isRead: boolean}) {
+    async function openNotification({ link, id, isRead }: { link: string, id: number, isRead: boolean }) {
         if (!isRead) {
-            await readNotification({id});
+            await readNotification({ id });
         }
         router.push(link);
     }
 
     return (
         <div
-            onClick={() => {openNotification({link:notification.link, id:notification.id, isRead: notification.isRead});
+            onClick={() => {
+                openNotification({ link: notification.link, id: notification.id, isRead: notification.isRead });
             }}
             key={notification.id}
             className={`flex gap-3 p-4 border-b hover:bg-accent/50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-primary/5' : ''}`}
@@ -48,7 +49,7 @@ const Notification = ({notification}:{notification: INotificationResponse}) => {
                     <span className="font-bold">@{notification.actor}</span> {notification.message}
                 </p>
                 <span className="text-xs text-muted-foreground">
-                                        {formatDistanceToNow(new Date(notification.createdAt))} ago
+                    {formatDistanceToNow(new Date(notification.createdAt))} ago
                 </span>
             </div>
         </div>

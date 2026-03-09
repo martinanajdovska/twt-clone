@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import Feed from '@/components/Feed'
+import Feed from '@/components/tweets/Feed'
 import { MessageCircle, Heart, ImageIcon } from 'lucide-react'
 
 const TABS: { id: string; label: string; icon?: React.ReactNode }[] = [
@@ -51,7 +51,7 @@ export default function ProfileFeed({
             <div className="min-h-[200px]">
                 <Feed
                     username={currentUsername}
-                    isProfile
+                    isProfile={true}
                     profileTab={activeTab}
                     profileUsername={profileUsername}
                 />

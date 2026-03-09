@@ -1,9 +1,9 @@
-import {useQuery} from "@tanstack/react-query";
-import {getNotifications} from "@/api-calls/notifications-api";
+import { useQuery } from "@tanstack/react-query";
+import { fetchNotifications } from "@/api-calls/notifications-api";
 
 export const useGetNotifications = () => {
-    return useQuery({
-        queryKey: ['notifications'],
-        queryFn: getNotifications
-    });
-}
+  return useQuery({
+    queryKey: ["notifications"],
+    queryFn: fetchNotifications,
+  });
+};

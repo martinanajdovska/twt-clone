@@ -16,6 +16,7 @@ import { TweetResponseDto } from '../tweets/dto/tweet-response.dto';
 import { TweetWithNotes } from '../tweets/type/tweet-with-notes.type';
 import { TweetDetailsDto } from './dto/tweet-details.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { RetweetDto } from 'src/retweets/dto/retweet.dto';
 
 export interface Page<T> {
   content: T[];
@@ -46,38 +47,22 @@ export class FeedService {
 
     const followedUsernames =
       await this.followsService.getFollowingUsernames(username);
-    const tweetsFromFollowed =
-      await this.tweetsService.findAllParentTweetsByUsernames(
-        followedUsernames,
-      );
-    const retweetsFromFollowed =
-      await this.retweetsService.findRetweetsByUsernames(followedUsernames);
+    const usernamesForFeed = [...new Set([...followedUsernames])];
+    const tweets =
+      await this.tweetsService.findAllParentTweetsByUsernames(usernamesForFeed);
+    const retweets =
+      await this.retweetsService.findRetweetsByUsernames(usernamesForFeed);
 
-    const feedItems: TweetResponseDto[] = [];
-
-    for (const t of tweetsFromFollowed) {
-      feedItems.push(await this.addTweetInfo(t, null, username));
-    }
-
-    for (const r of retweetsFromFollowed) {
-      const t = await this.tweetsService.findById(r.tweet.id);
-      if (t) {
-        feedItems.push(await this.addTweetInfo(t, r.user.username, username));
-      }
-    }
-
-    feedItems.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    const sorted = await this.toSortedDtos(tweets, retweets, username);
+    const content = this.paginateItems(
+      sorted.map((x) => x.dto),
+      pageable.page,
+      pageable.size,
     );
-
-    const start = pageable.page * pageable.size;
-    const end = Math.min(start + pageable.size, feedItems.length);
-    const content = start < feedItems.length ? feedItems.slice(start, end) : [];
 
     return {
       content,
-      totalElements: feedItems.length,
+      totalElements: sorted.length,
       size: pageable.size,
       number: pageable.page,
     };
@@ -127,33 +112,19 @@ export class FeedService {
         await this.tweetsService.findAllParentTweetsByUsername(username);
       const retweets =
         await this.retweetsService.findRetweetsByUsername(username);
-      const combined: Tweet[] = [];
 
-      for (const t of tweets) {
-        if (t.imageUrl) combined.push(t);
-      }
-
-      for (const r of retweets) {
-        const t = await this.tweetsService.findById(r.tweet.id);
-        if (t?.imageUrl) combined.push(t);
-      }
-
-      combined.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      const sorted = await this.toSortedDtos(
+        tweets,
+        retweets,
+        requesterUsername,
+        (t) => !!t.imageUrl,
       );
-
-      const pageItems = combined.slice(
-        pageable.page * pageable.size,
-        pageable.page * pageable.size + pageable.size,
-      );
-      const tweetDtos: TweetResponseDto[] = [];
-
-      for (const t of pageItems) {
-        tweetDtos.push(await this.addTweetInfo(t, username, requesterUsername));
-      }
-
-      return { username, tweets: tweetDtos };
+      const pageItems = this.paginateItems(
+        sorted,
+        pageable.page,
+        pageable.size,
+      ).map((x) => x.dto);
+      return { username, tweets: pageItems };
     }
 
     const pinnedTweet =
@@ -164,53 +135,33 @@ export class FeedService {
       await this.tweetsService.findAllParentTweetsByUsername(username);
     const retweets =
       await this.retweetsService.findRetweetsByUsername(username);
-    const combined: Tweet[] = [];
 
-    for (const t of tweets) {
-      if (pinnedId == null || t.id !== pinnedId) combined.push(t);
-    }
-
-    for (const r of retweets) {
-      const t = await this.tweetsService.findById(r.tweet.id);
-      if (t && (pinnedId == null || t.id !== pinnedId)) combined.push(t);
-    }
-
-    combined.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    const sorted = await this.toSortedDtos(
+      tweets,
+      retweets,
+      requesterUsername,
+      (t) => pinnedId == null || t.id !== pinnedId,
     );
 
     const tweetDtos: TweetResponseDto[] = [];
+
     if (pageable.page === 0 && pinnedTweet) {
       tweetDtos.push(
         await this.addTweetInfo(pinnedTweet, username, requesterUsername),
       );
-
-      const remaining = Math.max(0, pageable.size - 1);
-      const pageItems = combined.slice(0, remaining);
-
-      for (const t of pageItems) {
-        tweetDtos.push(await this.addTweetInfo(t, username, requesterUsername));
-      }
-
-      return { username, tweets: tweetDtos };
+      tweetDtos.push(
+        ...this.paginateItems(sorted, 0, pageable.size - 1).map((x) => x.dto),
+      );
+    } else {
+      const offset = pinnedTweet
+        ? Math.max(0, pageable.page * pageable.size - 1)
+        : pageable.page * pageable.size;
+      tweetDtos.push(
+        ...sorted.slice(offset, offset + pageable.size).map((x) => x.dto),
+      );
     }
 
-    const offset = pinnedTweet
-      ? Math.max(0, pageable.page * pageable.size - 1)
-      : pageable.page * pageable.size;
-    const pageItems = combined.slice(offset, offset + pageable.size);
-
-    for (const t of pageItems) {
-      tweetDtos.push(await this.addTweetInfo(t, username, requesterUsername));
-    }
-
-    const userResponseDto: UserResponseDto = {
-      username,
-      tweets: tweetDtos,
-    };
-
-    return userResponseDto;
+    return { username, tweets: tweetDtos };
   }
 
   async getTweetById(id: number, username: string): Promise<TweetResponseDto> {
@@ -321,5 +272,39 @@ export class FeedService {
       );
     }
     return dto;
+  }
+
+  private async toSortedDtos(
+    tweets: TweetWithNotes[],
+    retweets: RetweetDto[],
+    requesterUsername: string,
+    filter?: (t: Tweet) => boolean,
+  ): Promise<{ dto: TweetResponseDto; sortDate: Date }[]> {
+    const items: { dto: TweetResponseDto; sortDate: Date }[] = [];
+
+    for (const t of tweets) {
+      if (filter && !filter(t)) continue;
+      const dto = await this.addTweetInfo(t, null, requesterUsername);
+      items.push({ dto, sortDate: new Date(t.createdAt) });
+    }
+
+    for (const r of retweets) {
+      const t = await this.tweetsService.findById(r.tweetId);
+      if (!t) continue;
+      if (filter && !filter(t)) continue;
+      const dto = await this.addTweetInfo(
+        t,
+        r.retweetedByUsername,
+        requesterUsername,
+      );
+      items.push({ dto, sortDate: new Date(r.createdAt) });
+    }
+
+    return items.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
+  }
+
+  private paginateItems<T>(items: T[], page: number, size: number): T[] {
+    const start = page * size;
+    return items.slice(start, start + size);
   }
 }

@@ -62,7 +62,7 @@ const AddCommunityNote = ({ tweetId }: { tweetId: number }) => {
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={isPending || !content.trim()}>
-                                {isPending ? "Submitting..." : "Submit note"}
+                                {isPending ? "Submitting..." : "Submit"}
                             </Button>
                         </div>
                     </form>

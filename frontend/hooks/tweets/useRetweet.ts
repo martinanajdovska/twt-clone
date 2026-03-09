@@ -22,6 +22,7 @@ export const useRetweet = (username:string) => {
             return res;
         },
         onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['feed'] });
             queryClient.invalidateQueries({ queryKey: ['profile', username] });
             queryClient.invalidateQueries({ queryKey: ['tweet', variables.id.toString()] });
         },

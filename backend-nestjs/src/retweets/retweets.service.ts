@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Retweet } from '../entities/retweet.entity';
-import { Tweet } from '../entities/tweet.entity';
+import { RetweetDto } from './dto/retweet.dto';
 import { UsersService } from '../users/users.service';
 import { TweetsService } from '../tweets/tweets.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -85,17 +85,11 @@ export class RetweetsService {
     );
   }
 
-  async findRetweetsByUsername(username: string): Promise<{ tweet: Tweet }[]> {
-    const list = await this.retweetRepo.find({
-      where: { user: { username } },
-      relations: ['tweet', 'tweet.user'],
-    });
-    return list.map((r) => ({ tweet: r.tweet }));
+  async findRetweetsByUsername(username: string): Promise<RetweetDto[]> {
+    return this.findRetweetsByUsernames([username]);
   }
 
-  async findRetweetsByUsernames(
-    usernames: string[],
-  ): Promise<{ user: { username: string }; tweet: Tweet }[]> {
+  async findRetweetsByUsernames(usernames: string[]): Promise<RetweetDto[]> {
     if (usernames.length === 0) return [];
 
     const list = await this.retweetRepo
@@ -106,7 +100,12 @@ export class RetweetsService {
       .where('u.username IN (:...usernames)', { usernames })
       .orderBy('r.created_at', 'DESC')
       .getMany();
-    return list;
+
+    return list.map((r) => ({
+      tweetId: r.tweet.id,
+      retweetedByUsername: r.user!.username,
+      createdAt: r.createdAt,
+    }));
   }
 
   async findRetweeterUsernamesByTweetId(tweetId: number): Promise<string[]> {

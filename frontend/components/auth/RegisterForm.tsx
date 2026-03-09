@@ -1,10 +1,10 @@
 'use client'
-import React, {ChangeEvent, useState} from 'react'
+import React, { ChangeEvent, useState } from 'react'
 import Link from "next/link";
-import {useRegister} from "@/hooks/auth/useRegister";
+import { useRegister } from "@/hooks/auth/useRegister";
 
 
-const SignInForm = () => {
+const RegisterForm = () => {
 
     const [state, setState] = useState({
         username: "",
@@ -15,7 +15,7 @@ const SignInForm = () => {
     const { mutate: handleRegister, isPending } = useRegister();
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
-        const {name, value} = e.target;
+        const { name, value } = e.target;
         setState(prevState => ({
             ...prevState,
             [name]: value
@@ -24,7 +24,7 @@ const SignInForm = () => {
 
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
-        handleRegister({...state});
+        handleRegister({ ...state });
     }
 
     return (
@@ -105,4 +105,4 @@ const SignInForm = () => {
     )
 }
 
-export default SignInForm
+export default RegisterForm
