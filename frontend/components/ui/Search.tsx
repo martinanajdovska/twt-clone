@@ -9,7 +9,7 @@ import { fetchUsers } from "@/api-calls/users-api";
 import { fetchTweetsBySearchTerm } from '@/api-calls/tweets-api';
 import { ITweetResponse } from '@/DTO/ITweetResponse';
 
-const Search = () => {
+const Search = ({ onNavigate }: { onNavigate?: () => void } = {}) => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [inputValue, setInputValue] = useState(searchParams.get('search') || "");
@@ -51,12 +51,14 @@ const Search = () => {
     const handleSelectUser = (username: string) => {
         setIsOpen(false);
         setInputValue("");
+        onNavigate?.();
         router.push(`/users/${username}`);
     };
 
     const handleSelectTweet = (id: number) => {
         setIsOpen(false);
         setInputValue("");
+        onNavigate?.();
         router.push(`/tweets/${id}`);
     };
 
@@ -78,9 +80,9 @@ const Search = () => {
     };
 
     return (
-        <div className="relative w-full" ref={containerRef}>
-            <div className="relative group bg-secondary rounded-lg">
-                <div className="absolute inset-y-0 -left-5 pl-4 flex items-center pointer-events-none">
+        <div className={`relative w-full ${isOpen && inputValue.length > 0 ? 'z-[100]' : ''}`} ref={containerRef}>
+            <div className="relative group bg-[#e7e7e8] dark:bg-[#202327] rounded-full">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                     <SearchIcon size={18} className="text-muted-foreground group-focus-within:text-primary transition-colors" />
                 </div>
                 <input
@@ -89,8 +91,8 @@ const Search = () => {
                     onFocus={() => setIsOpen(true)}
                     onKeyDown={handleKeyDown}
                     type="text"
-                    placeholder="Search..."
-                    className="w-full bg-muted/50 border-none rounded-full py-2.5 pl-11 pr-10 text-sm focus:bg-background focus:ring-2 focus:ring-primary transition-all placeholder:text-muted-foreground outline-none"
+                    placeholder="Search"
+                    className="w-full bg-transparent border-none rounded-full py-2.5 pl-11 pr-10 text-[15px] focus:ring-0 transition-all placeholder:text-muted-foreground outline-none"
                 />
                 {isLoading && (
                     <div className="absolute right-3 top-2.5">
@@ -100,7 +102,7 @@ const Search = () => {
             </div>
 
             {isOpen && inputValue.length > 0 && (
-                <div className="absolute mt-2 w-full bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute mt-2 w-full bg-card border border-border rounded-xl shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="flex border-b border-border">
                         <button
                             onClick={() => { setTab('users'); setHighlightedIndex(0); }}

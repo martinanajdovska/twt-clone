@@ -178,7 +178,7 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
     }
 
     return (
-        <div ref={formContainerRef} className="p-4 bg-card border-b border-border shadow-sm">
+        <div ref={formContainerRef} className="p-4 bg-background">
             <div className="flex gap-3">
                 <div className="flex-shrink-0 w-10 h-10">
                     <Avatar className="h-full w-full">

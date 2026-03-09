@@ -48,19 +48,17 @@ export default function Feed({
 
     return (
         <div className="w-full">
-            <div className="flex flex-col">
+            <div className="flex flex-col divide-y divide-border">
                 {data.pages.map((group, i) => (
                     <React.Fragment key={i}>
-                        <div className="divide-y border-x border-b border-border">
-                            {group.map((tweet: ITweetResponse, j) => (
-                                <div
-                                    key={`${i}-${j}-${tweet.id}`}
-                                    className="transition-colors hover:bg-accent/50"
-                                >
-                                    <Tweet tweet={tweet} username={username} showPinnedLabel={isProfile} />
-                                </div>
-                            ))}
-                        </div>
+                        {group.map((tweet: ITweetResponse, j) => (
+                            <div
+                                key={`${i}-${j}-${tweet.id}`}
+                                className="transition-colors hover:bg-white/50 dark:hover:bg-white/[0.03]"
+                            >
+                                <Tweet tweet={tweet} username={username} showPinnedLabel={isProfile} />
+                            </div>
+                        ))}
                     </React.Fragment>
                 ))}
             </div>
@@ -68,7 +66,7 @@ export default function Feed({
             <div ref={ref} className="py-8 flex justify-center items-center text-muted-foreground text-sm">
                 {isFetchingNextPage ? (
                     <div className="flex flex-col items-center gap-2">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent" />
                         <span>Loading more tweets...</span>
                     </div>
                 ) : hasNextPage ? (

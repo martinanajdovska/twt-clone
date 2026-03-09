@@ -2,11 +2,12 @@
 
 import Follow from '@/components/Follow'
 import React, { useRef, useState } from 'react'
+import Link from 'next/link'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchProfileHeader } from '@/api-calls/users-api'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useEditProfilePicture } from '@/hooks/profile/useEditProfilePicture'
-import { Camera, Loader2, MapPin, Link2, Cake, Calendar, Pencil } from 'lucide-react'
+import { Camera, Loader2, MapPin, Link2, Cake, Calendar, Pencil, ArrowLeft } from 'lucide-react'
 import type { IProfileHeader } from '@/DTO/IProfileHeader'
 import EditProfileDialog from '@/components/profile/EditProfileDialog'
 
@@ -53,7 +54,7 @@ const ProfileHeader = ({
 
   if (isLoading) {
     return (
-      <div className="bg-card border-x border-b border-border min-h-[280px] flex items-center justify-center">
+      <div className="bg-background border-b border-border min-h-[280px] flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
       </div>
     )
@@ -85,16 +86,24 @@ const ProfileHeader = ({
   const birthdayStr = formatBirthday(data.birthday)
 
   return (
-    <div className="bg-card border-x border-b border-border shadow-sm overflow-hidden">
-      {/* Banner */}
-      <div
-        className="h-[200px] w-full bg-muted/50 relative"
-        style={
-          data.bannerUrl
-            ? { backgroundImage: `url(${data.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-            : undefined
-        }
-      />
+    <div className="bg-background border-b border-border overflow-hidden">
+      <div className="relative h-[200px] w-full">
+        <div
+          className="absolute inset-0 bg-muted/50 dark:bg-[#16181c]"
+          style={
+            data.bannerUrl
+              ? { backgroundImage: `url(${data.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+              : undefined
+          }
+        />
+        <Link
+          href="/"
+          className="absolute top-3 left-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white transition-colors md:hidden"
+          aria-label="Back to home"
+        >
+          <ArrowLeft size={22} strokeWidth={2} />
+        </Link>
+      </div>
 
       <div className="px-4 pb-4">
         {/* Avatar overlapping banner */}
@@ -134,7 +143,7 @@ const ProfileHeader = ({
             <button
               type="button"
               onClick={() => setEditOpen(true)}
-              className="rounded-full border border-border px-4 py-2 font-bold text-sm hover:bg-muted/50 transition-colors flex items-center gap-2"
+              className="rounded-full border-2 border-foreground bg-transparent px-4 py-2 font-bold text-[15px] text-foreground hover:bg-white/10 dark:hover:bg-white/10 transition-colors flex items-center gap-2"
             >
               <Pencil size={16} />
               Edit profile

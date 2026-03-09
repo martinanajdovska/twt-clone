@@ -22,19 +22,16 @@ export default async function Home() {
 
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 mt-10">
-            <section className="flex flex-col gap-6">
-                <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-                    <TweetForm username={username} profilePicture={self.profilePicture} />
-                </div>
-
-                <div className="flex flex-col">
-                    <HydrationBoundary state={dehydrate(queryClient)}>
-                        <Feed username={username} isProfile={false} />
-                    </HydrationBoundary>
-                </div>
-
-            </section>
+        <div className="flex flex-col">
+            <header className="sticky top-0 z-10 hidden md:flex items-center px-4 py-3 bg-background/80 backdrop-blur-md border-b border-border">
+                <h1 className="text-xl font-bold text-foreground">Home</h1>
+            </header>
+            <div className="border-b border-border">
+                <TweetForm username={username} profilePicture={self.profilePicture} />
+            </div>
+            <HydrationBoundary state={dehydrate(queryClient)}>
+                <Feed username={username} isProfile={false} />
+            </HydrationBoundary>
         </div>
     )
 

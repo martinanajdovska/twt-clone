@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { fetchSelfUsernameAndProfilePicture } from "@/api-calls/users-api";
 import ProfileHeader from "@/components/profile/ProfileHeader";
+import ProfilePageWrapper from "@/components/profile/ProfilePageWrapper";
 import TweetForm from "@/components/tweets/TweetForm";
 import ProfileFeed from "@/components/profile/ProfileFeed";
 import { redirect } from "next/navigation";
@@ -23,23 +24,25 @@ const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }
     const isSelf = self.username === username;
 
     return (
-        <main className="min-h-screen max-w-[600px] mx-auto border-x border-border">
+        <div className="min-h-screen -mt-14 md:mt-0">
             <HydrationBoundary state={dehydrate(queryClient)}>
-                <ProfileHeader
-                    token={token}
-                    username={username}
-                    isSelf={isSelf}
-                />
+                <ProfilePageWrapper username={username}>
+                    <ProfileHeader
+                        token={token}
+                        username={username}
+                        isSelf={isSelf}
+                    />
 
-                {isSelf && (
-                    <div className="border-b border-border">
-                        <TweetForm username={self.username} profilePicture={self.profilePicture} />
-                    </div>
-                )}
+                    {isSelf && (
+                        <div className="border-b border-border">
+                            <TweetForm username={self.username} profilePicture={self.profilePicture} />
+                        </div>
+                    )}
 
-                <ProfileFeed profileUsername={username} currentUsername={self.username} />
+                    <ProfileFeed profileUsername={username} currentUsername={self.username} />
+                </ProfilePageWrapper>
             </HydrationBoundary>
-        </main>
+        </div>
     )
 }
 export default ProfilePage

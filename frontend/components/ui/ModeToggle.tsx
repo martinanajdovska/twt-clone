@@ -11,18 +11,42 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
-export function ModeToggle() {
+export function ModeToggle({ label, className }: { label?: string; className?: string } = {}) {
     const { setTheme } = useTheme()
+
+    const icon = (
+        <>
+            <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+            <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+            <span className="sr-only">Toggle theme</span>
+        </>
+    )
+
+    const trigger = label ? (
+        <button
+            type="button"
+            className={cn(
+                "flex items-center gap-3 py-3 px-3 text-[19px] font-normal rounded-full hover:bg-accent transition-colors w-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground",
+                className
+            )}
+        >
+            <span className="relative flex h-6 w-6 shrink-0 items-center justify-center [&_svg]:size-[26px] [&_svg]:shrink-0">
+                {icon}
+            </span>
+            <span>{label}</span>
+        </button>
+    ) : (
+        <Button variant="outline" size="icon">
+            {icon}
+        </Button>
+    )
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                    <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-                    <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-                    <span className="sr-only">Toggle theme</span>
-                </Button>
+                {trigger}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setTheme("light")}>

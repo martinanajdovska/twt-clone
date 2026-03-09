@@ -3,6 +3,8 @@
 import React, { useState } from 'react'
 import Feed from '@/components/tweets/Feed'
 import { MessageCircle, Heart, ImageIcon } from 'lucide-react'
+import { useProfileScroll } from '@/components/profile/ProfilePageWrapper'
+import { STICKY_HEADER_HEIGHT } from '@/components/profile/ProfilePageWrapper'
 
 const TABS: { id: string; label: string; icon?: React.ReactNode }[] = [
     { id: 'tweets', label: 'Tweets' },
@@ -19,10 +21,15 @@ export default function ProfileFeed({
     currentUsername: string
 }) {
     const [activeTab, setActiveTab] = useState<string>('tweets')
+    const { scrolledPastBanner, isMobile } = useProfileScroll()
+    const stickyTabsTop = isMobile && scrolledPastBanner ? STICKY_HEADER_HEIGHT : 0
 
     return (
         <div className="w-full">
-            <div className="flex border-b border-border">
+            <div
+                className="flex border-b border-border bg-background sticky z-20 md:top-0"
+                style={{ top: stickyTabsTop }}
+            >
                 {TABS.map((tab) => {
                     const isActive = activeTab === tab.id
                     return (

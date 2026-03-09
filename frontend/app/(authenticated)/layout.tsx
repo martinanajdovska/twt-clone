@@ -1,17 +1,19 @@
 import Logout from "@/components/auth/Logout";
 import Link from "next/link";
-import {Home, User as UserIcon, Bookmark} from "lucide-react";
+import { Home, User as UserIcon, Bookmark } from "lucide-react";
 import Search from "@/components/ui/Search";
-import {ModeToggle} from "@/components/ui/ModeToggle";
-import {fetchSelfUsernameAndProfilePicture} from "@/api-calls/users-api";
-import {cookies} from "next/headers";
-import {redirect} from "next/navigation";
+import { ModeToggle } from "@/components/ui/ModeToggle";
+import { fetchSelfUsernameAndProfilePicture } from "@/api-calls/users-api";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import React from "react";
-import {BASE_URL} from "@/lib/constants";
+import { BASE_URL } from "@/lib/constants";
 import NotificationListener from "@/listeners/NotificationListener";
-import NotificationDropdown from "@/components/notifications/NotificationDropdown";
+import NotificationLink from "@/components/notifications/NotificationLink";
+import MobileTopBar from "@/components/layout/MobileTopBar";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
-export default async function AuthenticatedLayout({children,}: { children: React.ReactNode; }) {
+export default async function AuthenticatedLayout({ children, }: { children: React.ReactNode; }) {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
 
@@ -21,65 +23,60 @@ export default async function AuthenticatedLayout({children,}: { children: React
 
     let self;
     try {
-        self = await fetchSelfUsernameAndProfilePicture({token});
+        self = await fetchSelfUsernameAndProfilePicture({ token });
     } catch {
         redirect(`${BASE_URL}/api/auth/clear-session`);
     }
 
     return (
-        <div className="min-h-screen bg-background py-10">
+        <div className="min-h-screen bg-background flex justify-between">
             <NotificationListener />
 
-            <div className="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-10">
-                    <aside className="md:col-span-1 lg:col-span-3 sticky top-10 left-10 flex flex-col h-fit">
-                        <nav className="flex flex-col gap-1">
-                            <NavLink href="/" icon={<Home size={26}/>} label="Home"/>
-                            <NavLink href={`/users/${self.username}`} icon={<UserIcon size={26}/>} label="Profile"/>
-                            <div
-                                className="flex items-center gap-4 p-3 text-xl font-medium rounded-full hover:bg-accent transition-all w-fit pr-8 lg:pr-6">
-                                <NotificationDropdown/>
-                                <span className="hidden lg:inline">Notifications</span>
-                            </div>
-                            <NavLink href="/bookmarks" icon={<Bookmark size={26}/>} label="Bookmarks"/>
-                        </nav>
-                        <div className="mt-4">
-                            <Logout/>
-                        </div>
-                    </aside>
-
-                    <main
-                        className="md:col-span-12 lg:col-span-6 mt-10 bg-card border border-border overflow-hidden shadow-sm">
-                        <div className="flex flex-col pt-12 px-6 pb-6 gap-6">
-                            {children}
-                        </div>
-                    </main>
-
-                    <aside className="hidden lg:block lg:col-span-3 sticky top-10 -right-15 h-fit">
-                        <div className="flex flex-col gap-6">
-                            <Search/>
-                            <div className="p-4 bg-card border border-border rounded-3xl">
-                                <div className="flex items-center">
-                                    <span className="text-sm font-bold">Theme</span>
-                                    <ModeToggle/>
-                                </div>
-                            </div>
-                        </div>
-                    </aside>
-                </div>
+            <div className="md:hidden">
+                <MobileTopBar username={self.username} profilePicture={self.profilePicture} />
             </div>
+
+            <MobileBottomNav />
+
+            {/* Left sidebar */}
+            <aside className="hidden md:flex flex-col w-[80px] xl:w-[230px] shrink-0 px-2 py-2 sticky top-0 h-screen border-r border-border items-center xl:items-stretch">
+                <nav className="flex flex-col gap-1 mt-1 w-full items-center xl:items-stretch">
+                    <NavLink href="/" icon={<Home size={26} strokeWidth={1.5} />} label="Home" />
+                    <NavLink href={`/users/${self.username}`} icon={<UserIcon size={26} strokeWidth={1.5} />} label="Profile" />
+                    <NotificationLink />
+                    <NavLink href="/bookmarks" icon={<Bookmark size={26} strokeWidth={1.5} />} label="Bookmarks" />
+                </nav>
+                <div className="mt-auto mb-4">
+                    <Logout />
+                </div>
+            </aside>
+
+            {/* Center column */}
+            <main className="w-full min-w-0 border-x border-border bg-background min-h-screen pt-14 pb-16 md:pt-0 md:pb-0">
+                {children}
+            </main>
+
+            {/* Right sidebar */}
+            <aside className="hidden lg:flex flex-col w-[400px] xl:w-[440px] px-3 py-3 sticky top-0 h-fit gap-4">
+                <div className="sticky top-3 z-20">
+                    <Search />
+                </div>
+                <div className="relative z-0 p-4 bg-muted/50 dark:bg-[#16181c] rounded-2xl border border-border">
+                    <ModeToggle label="Theme" />
+                </div>
+            </aside>
         </div>
     );
 }
 
-function NavLink({href, icon, label}: { href: string; icon: React.ReactNode; label: string }) {
+function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
     return (
         <Link
             href={href}
-            className="flex items-center gap-4 p-3 text-xl font-medium rounded-full hover:bg-accent transition-all w-fit pr-8 lg:pr-6"
+            className="flex items-center gap-3 py-3 px-3 xl:px-3 text-[19px] font-normal rounded-full hover:bg-accent transition-colors w-fit xl:w-fit justify-center xl:justify-start min-w-[48px]"
         >
             {icon}
-            <span className="hidden lg:inline">{label}</span>
+            <span className="hidden xl:inline">{label}</span>
         </Link>
     );
 }

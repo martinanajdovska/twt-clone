@@ -3,9 +3,9 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { fetchSelfUsernameAndProfilePicture } from '@/api-calls/users-api'
 import { BASE_URL } from '@/lib/constants'
-import BookmarksFeed from '@/components/tweets/BookmarksFeed'
+import NotificationsPage from '@/components/notifications/NotificationsPage'
 
-export default async function BookmarksPage() {
+export default async function NotificationsRoute() {
   const cookieStore = await cookies()
   const token = cookieStore.get('token')?.value
 
@@ -13,16 +13,11 @@ export default async function BookmarksPage() {
     redirect('/login')
   }
 
-  let self
   try {
-    self = await fetchSelfUsernameAndProfilePicture({ token })
+    await fetchSelfUsernameAndProfilePicture({ token })
   } catch {
     redirect(`${BASE_URL}/api/auth/clear-session`)
   }
 
-  return (
-    <div className="flex flex-col">
-      <BookmarksFeed username={self.username} />
-    </div>
-  )
+  return <NotificationsPage />
 }

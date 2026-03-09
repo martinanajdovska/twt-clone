@@ -25,24 +25,24 @@ const CommunityNoteDisplay = ({ note }: { note: Note | null }) => {
     }
 
     return (
-        <div className="border-l-4 border-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 dark:border-yellow-500 p-3 mt-2 text-sm rounded-r">
-            <span className="font-bold">Community Note</span>
-            <p className="mt-1">{note.content}</p>
-            <div className="flex gap-4 mt-2 text-gray-500 dark:text-gray-400">
-                <button
-                    onClick={handleRate(true)}
-                    style={isHelpful ? { color: 'var(--color-blue-600, #2563eb)', fontWeight: 600 } : undefined}
-                    className="hover:underline"
-                >
-                    Helpful
-                </button>
-                <button
-                    onClick={handleRate(false)}
-                    style={isNotHelpful ? { color: 'var(--color-blue-600, #2563eb)', fontWeight: 600 } : undefined}
-                    className="hover:underline"
-                >
-                    Not helpful
-                </button>
+        <div className="mt-3 pt-3 border-t border-border">
+            <div className="rounded-2xl border-2 border-primary bg-primary/5 dark:bg-primary/10 p-4">
+                <span className="font-bold text-[15px] text-foreground">Community Note</span>
+                <p className="mt-1.5 text-[15px] text-foreground leading-snug">{note.content}</p>
+                <div className="flex gap-4 mt-3 text-muted-foreground text-[14px]">
+                    <button
+                        onClick={handleRate(true)}
+                        className={`hover:underline ${isHelpful ? 'text-primary font-semibold' : ''}`}
+                    >
+                        Helpful
+                    </button>
+                    <button
+                        onClick={handleRate(false)}
+                        className={`hover:underline ${isNotHelpful ? 'text-primary font-semibold' : ''}`}
+                    >
+                        Not helpful
+                    </button>
+                </div>
             </div>
         </div>
     )

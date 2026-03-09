@@ -1,13 +1,16 @@
 'use client'
 import React, { useEffect } from 'react'
-import Tweet from "@/components/tweets/Tweet";
-import TweetForm from "@/components/tweets/TweetForm";
-import { ITweetResponse } from "@/DTO/ITweetResponse";
-import { useInView } from "react-intersection-observer";
-import { useFetchTweetDetails } from "@/hooks/tweets/useFetchTweetDetails";
+import { useQueryClient } from '@tanstack/react-query'
+import Tweet from '@/components/tweets/Tweet'
+import TweetForm from '@/components/tweets/TweetForm'
+import ReplyFooter from '@/components/tweets/ReplyFooter'
+import { ITweetResponse } from '@/DTO/ITweetResponse'
+import { useInView } from 'react-intersection-observer'
+import { useFetchTweetDetails } from '@/hooks/tweets/useFetchTweetDetails'
 
-const TweetDetails = ({ id, username, profilePicture }: { id: number, username: string, profilePicture: string }) => {
-    const { ref, inView } = useInView();
+const TweetDetails = ({ id, username, profilePicture }: { id: number; username: string; profilePicture: string | null }) => {
+    const queryClient = useQueryClient()
+    const { ref, inView } = useInView()
 
     const {
         data,
@@ -41,30 +44,46 @@ const TweetDetails = ({ id, username, profilePicture }: { id: number, username: 
     const parentTweet = data.pages[0].parentTweet;
 
     return (
-        <div className="w-full">
+        <div className="w-full pb-2">
             <div className="flex flex-col">
                 <div>
                     {parentTweet && (
                         <div className="relative">
-                            <div className="absolute left-[20px] top-[40px] bottom-0 w-[2px] bg-border shadow-sm" />
-
+                            <div className="absolute left-[36px] top-[32px] bottom-0 w-[2px] bg-border" aria-hidden />
                             <Tweet tweet={parentTweet} username={username} />
                         </div>
                     )}
-                    <Tweet tweet={tweet} username={username} detailView />
+                    <div className="relative">
+                        <div className="absolute left-[36px] top-10 bottom-0 w-[2px] bg-border" aria-hidden />
+                        <Tweet tweet={tweet} username={username} detailView />
+                    </div>
 
-                    <TweetForm username={username} parentId={tweet.id} profilePicture={profilePicture} />
-
+                    {/* large screen reply form) */}
+                    <div className="hidden md:block border-b border-border relative">
+                        <div className="absolute left-[36px] top-0 bottom-0 w-[2px] bg-border" aria-hidden />
+                        <TweetForm
+                            username={username}
+                            parentId={tweet.id}
+                            profilePicture={profilePicture ?? undefined}
+                            onSuccess={() => queryClient.invalidateQueries({ queryKey: ['tweet', String(id)] })}
+                        />
+                    </div>
                 </div>
                 {data.pages.map((group, i) => (
                     <React.Fragment key={i}>
-                        <div className="divide-y border-x border-b border-border">
-                            {group.replies.map((reply: ITweetResponse) => (
-                                <div key={reply.id} className="transition-colors hover:bg-accent/50">
-                                    <Tweet tweet={reply} username={username} />
-
-                                </div>
-                            ))}
+                        <div className="flex flex-col divide-y divide-border">
+                            {group.replies.map((reply: ITweetResponse, replyIndex) => {
+                                const isLast = replyIndex === group.replies.length - 1
+                                return (
+                                    <div
+                                        key={reply.id}
+                                        className="relative transition-colors hover:bg-white/50 dark:hover:bg-white/[0.03]"
+                                    >
+                                        <div className={`absolute left-[36px] top-0 w-[2px] bg-border ${isLast ? 'bottom-20' : 'bottom-0'}`} aria-hidden />
+                                        <Tweet tweet={reply} username={username} />
+                                    </div>
+                                )
+                            })}
                         </div>
                     </React.Fragment>
                 ))}
@@ -79,8 +98,18 @@ const TweetDetails = ({ id, username, profilePicture }: { id: number, username: 
                 ) : hasNextPage ? (
                     <span>Scroll for more</span>
                 ) : (
-                    <span className="italic font-light">You&apos;ve reached the end of the feed</span>
+                    <span className="italic font-light">You&apos;ve reached the end</span>
                 )}
+            </div>
+
+            {/* small screen reply footer */}
+            <div className="md:hidden">
+                <ReplyFooter
+                    username={username}
+                    parentId={tweet.id}
+                    profilePicture={profilePicture}
+                    onReplySuccess={() => queryClient.invalidateQueries({ queryKey: ['tweet', String(id)] })}
+                />
             </div>
         </div>
     )

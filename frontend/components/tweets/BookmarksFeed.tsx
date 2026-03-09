@@ -51,11 +51,11 @@ export default function BookmarksFeed({ username }: { username: string }) {
         ) : (
           data?.pages.map((group, i) => (
             <React.Fragment key={i}>
-              <div className="divide-y border-x border-b border-border">
+              <div className="flex flex-col divide-y divide-border">
                 {(group as ITweetResponse[]).map((tweet: ITweetResponse) => (
                   <div
                     key={`${tweet.id}-${tweet.retweetedBy ?? ''}`}
-                    className="transition-colors hover:bg-accent/50"
+                    className="transition-colors hover:bg-white/50 dark:hover:bg-white/[0.03]"
                   >
                     <Tweet tweet={tweet} username={username} />
                   </div>

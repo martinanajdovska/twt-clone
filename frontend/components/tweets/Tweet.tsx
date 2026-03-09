@@ -72,7 +72,7 @@ const Tweet = ({
     return (
         <TweetDropdownProvider value={{ onOpenChange: onDropdownOpenChange }}>
             <article
-                className={`flex flex-col p-4 border-b border-border hover:bg-muted/30 transition-colors group shadow-sm ${expandOnClick ? "cursor-pointer" : ""}`}
+                className={`flex flex-col px-4 py-3 hover:bg-white/50 dark:hover:bg-white/[0.03] transition-colors group ${expandOnClick ? "cursor-pointer" : ""}`}
                 style={dropdownOpenCount > 0 ? { pointerEvents: 'none' } : undefined}
                 onClick={expandOnClick ? showTweetInfo : undefined}
             >
@@ -144,10 +144,10 @@ const Tweet = ({
                         {tweet.quotedTweet && (
                             tweet.quotedTweet.isDeleted ? (
                                 <div
-                                    className="quoted-tweet-card cursor-default"
+                                    className="mt-3 w-full px-4 py-3 rounded-2xl border-2 border-border bg-muted/60 dark:bg-[#2f3336] text-left block overflow-hidden cursor-default hover:bg-muted/80 dark:hover:bg-[#3d4144] transition-colors"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    <div className="quoted-tweet-card-inner">
+                                    <div className="flex flex-col gap-2 min-w-0 p-0">
                                         <div className="text-[15px] text-muted-foreground italic py-2">
                                             This tweet was deleted
                                         </div>
@@ -160,9 +160,9 @@ const Tweet = ({
                                         e.stopPropagation()
                                         router.push(`/tweets/${tweet.quotedTweet!.id}`)
                                     }}
-                                    className="quoted-tweet-card"
+                                    className="mt-3 w-full px-4 py-3 rounded-2xl border-2 border-border bg-muted/60 dark:bg-[#2f3336] text-left block overflow-hidden hover:bg-muted/80 dark:hover:bg-[#3d4144] transition-colors"
                                 >
-                                    <div className="quoted-tweet-card-inner">
+                                    <div className="flex flex-col gap-2 min-w-0 p-0">
                                         <div className="flex items-center gap-2 min-w-0">
                                             <span className="font-semibold text-foreground hover:underline truncate">
                                                 {tweet.quotedTweet.username}
@@ -175,7 +175,7 @@ const Tweet = ({
                                             {tweet.quotedTweet.content || ''}
                                         </div>
                                         {tweet.quotedTweet.imageUrl && (
-                                            <div className="quoted-tweet-card-image-wrap">
+                                            <div className="mt-1 rounded-xl overflow-hidden border border-border">
                                                 <Image
                                                     src={tweet.quotedTweet.imageUrl}
                                                     alt="Quoted tweet"
