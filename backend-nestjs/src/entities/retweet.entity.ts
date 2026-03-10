@@ -23,6 +23,6 @@ export class Retweet {
   @JoinColumn({ name: 'tweet_id' })
   tweet: Tweet;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }

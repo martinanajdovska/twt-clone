@@ -36,7 +36,7 @@ const Reply = ({ tweet, username, repliesCount, hideCount = false }: { tweet: IT
             <DialogContent className="sm:max-w-[600px] p-0 gap-0 border-gray-800">
                 <div className="p-4">
                     <div className="relative">
-                        <div className="absolute left-[20px] top-[40px] bottom-0 w-[2px] bg-border shadow-sm" />
+                        <div className="absolute left-[36px] top-10 bottom-0 w-[2px] bg-border shadow-sm" aria-hidden />
 
                         <Tweet tweet={tweet} username={username} expandOnClick={false} />
                     </div>

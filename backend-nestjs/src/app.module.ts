@@ -31,6 +31,11 @@ import { PollVote } from './entities/poll-vote.entity';
 import { GrokModule } from './grok/grok.module';
 import { CommunityNotesModule } from './community-notes/community-notes.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
+import { MessagesModule } from './messages/messages.module';
+
+import { Conversation } from './entities/conversation.entity';
+import { ConversationParticipant } from './entities/conversation-participant.entity';
+import { Message } from './entities/message.entity';
 
 @Module({
   imports: [
@@ -42,7 +47,7 @@ import { BookmarksModule } from './bookmarks/bookmarks.module';
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      entities: [User, Tweet, Like, Retweet, Follow, Notification, CommunityNote, NoteRating, Bookmark, Poll, PollOption, PollVote],
+      entities: [User, Tweet, Like, Retweet, Follow, Notification, CommunityNote, NoteRating, Bookmark, Poll, PollOption, PollVote, Conversation, ConversationParticipant, Message],
       synchronize: true,
       logging: process.env.NODE_ENV !== 'production',
     }),
@@ -64,6 +69,7 @@ import { BookmarksModule } from './bookmarks/bookmarks.module';
     GrokModule,
     CommunityNotesModule,
     BookmarksModule,
+    MessagesModule,
   ],
 })
 export class AppModule {}

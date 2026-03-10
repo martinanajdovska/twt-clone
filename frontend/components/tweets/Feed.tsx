@@ -13,8 +13,8 @@ export default function Feed({
 }: {
     username: string
     isProfile: boolean
-    profileTab: string
-    profileUsername: string
+    profileTab?: string
+    profileUsername?: string
 }) {
     const { ref, inView } = useInView()
 
@@ -51,7 +51,7 @@ export default function Feed({
             <div className="flex flex-col divide-y divide-border">
                 {data.pages.map((group, i) => (
                     <React.Fragment key={i}>
-                        {group.map((tweet: ITweetResponse, j) => (
+                        {group.map((tweet: ITweetResponse, j: number) => (
                             <div
                                 key={`${i}-${j}-${tweet.id}`}
                                 className="transition-colors hover:bg-white/50 dark:hover:bg-white/[0.03]"

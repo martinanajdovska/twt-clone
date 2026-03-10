@@ -252,7 +252,7 @@ export class FeedService {
     dto.quotesCount = await this.tweetsService.countQuotes(tweet.id);
     dto.bookmarksCount = await this.bookmarksService.countBookmarks(tweet.id);
     dto.parentId = tweet.parentTweet?.id ?? null;
-    dto.retweetedBy = tweet.user.username !== username ? username : null;
+    dto.retweetedBy = username ?? null;
     dto.isLiked = await this.likesService.existsByTweetIdAndUsername(
       tweet.id,
       requesterUsername,

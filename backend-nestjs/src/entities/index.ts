@@ -4,3 +4,6 @@ export * from './like.entity';
 export * from './retweet.entity';
 export * from './follow.entity';
 export * from './notification.entity';
+export * from './conversation.entity';
+export * from './conversation-participant.entity';
+export * from './message.entity';

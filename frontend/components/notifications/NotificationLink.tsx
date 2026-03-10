@@ -9,7 +9,7 @@ import type { INotificationResponse } from '@/DTO/INotificationResponse'
 export default function NotificationLink() {
   const { data: notifications = [] } = useGetNotifications()
   const unreadCount = notifications.filter(
-    (n: INotificationResponse) => !n.isRead
+    (n: INotificationResponse) => !n.isRead && n.type !== 'MESSAGE'
   ).length
 
   return (

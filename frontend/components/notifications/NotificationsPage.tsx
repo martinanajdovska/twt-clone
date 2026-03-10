@@ -18,9 +18,9 @@ export default function NotificationsPage() {
   const filteredNotifications =
     activeTab === 'mentions'
       ? notifications.filter(
-          (n: INotificationResponse) =>
-            n.type === 'REPLY' || n.type === 'MENTION'
-        )
+        (n: INotificationResponse) =>
+          n.type === 'REPLY' || n.type === 'MENTION'
+      )
       : notifications
 
   const unreadCount = notifications.filter(
@@ -54,22 +54,20 @@ export default function NotificationsPage() {
           <button
             type="button"
             onClick={() => setActiveTab('all')}
-            className={`flex-1 py-3 text-[15px] font-medium transition-colors ${
-              activeTab === 'all'
-                ? 'text-foreground border-b-2 border-primary'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`flex-1 py-3 text-[15px] font-medium transition-colors ${activeTab === 'all'
+              ? 'text-foreground border-b-2 border-primary'
+              : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             All
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('mentions')}
-            className={`flex-1 py-3 text-[15px] font-medium transition-colors ${
-              activeTab === 'mentions'
-                ? 'text-foreground border-b-2 border-primary'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`flex-1 py-3 text-[15px] font-medium transition-colors ${activeTab === 'mentions'
+              ? 'text-foreground border-b-2 border-primary'
+              : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             Mentions
           </button>

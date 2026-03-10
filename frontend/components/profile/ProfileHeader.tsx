@@ -1,6 +1,6 @@
 'use client'
 
-import Follow from '@/components/Follow'
+import Follow from '@/components/profile/Follow'
 import React, { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useQuery, useQueryClient } from '@tanstack/react-query'

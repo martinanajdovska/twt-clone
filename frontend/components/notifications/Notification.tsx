@@ -1,9 +1,9 @@
 import React from 'react'
-import { formatDistanceToNow } from "date-fns";
 import { INotificationResponse } from "@/DTO/INotificationResponse";
-import { AtSign, Bell, FileWarning, Heart, MessageSquare, Repeat, UserIcon } from 'lucide-react';
+import { AtSign, Bell, FileWarning, Heart, Mail, MessageSquare, Repeat, UserIcon } from 'lucide-react';
 import { useReadNotification } from "@/hooks/notifications/useReadNotification";
 import { useRouter } from "next/navigation";
+import { formatRelativeTime } from '@/lib/relativeTime';
 
 const Notification = ({ notification }: { notification: INotificationResponse }) => {
     const { mutate: readNotification } = useReadNotification();
@@ -49,7 +49,7 @@ const Notification = ({ notification }: { notification: INotificationResponse })
                     <span className="font-bold">@{notification.actor}</span> {notification.message}
                 </p>
                 <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(notification.createdAt))} ago
+                    {formatRelativeTime(notification.createdAt)}
                 </span>
             </div>
         </div>

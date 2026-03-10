@@ -11,7 +11,7 @@ export const useFetchFeed = ({
   username: string;
   isProfile: boolean;
   profileTab: string;
-  profileUsername: string;
+  profileUsername?: string;
 }) => {
   return useInfiniteQuery({
     queryKey: isProfile ? ["profile", profileUsername, profileTab] : ["feed"],
@@ -19,7 +19,7 @@ export const useFetchFeed = ({
       const res = isProfile
         ? await fetchProfileFeed({
             pageParam,
-            username: profileUsername,
+            username: profileUsername!,
             tab: profileTab,
           })
         : await fetchTweets({ pageParam });

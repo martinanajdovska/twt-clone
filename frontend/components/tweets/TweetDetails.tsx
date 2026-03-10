@@ -3,7 +3,7 @@ import React, { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import Tweet from '@/components/tweets/Tweet'
 import TweetForm from '@/components/tweets/TweetForm'
-import ReplyFooter from '@/components/tweets/ReplyFooter'
+import ReplyFooter from '@/components/replies/ReplyFooter'
 import { ITweetResponse } from '@/DTO/ITweetResponse'
 import { useInView } from 'react-intersection-observer'
 import { useFetchTweetDetails } from '@/hooks/tweets/useFetchTweetDetails'
@@ -72,7 +72,7 @@ const TweetDetails = ({ id, username, profilePicture }: { id: number; username: 
                 {data.pages.map((group, i) => (
                     <React.Fragment key={i}>
                         <div className="flex flex-col divide-y divide-border">
-                            {group.replies.map((reply: ITweetResponse, replyIndex) => {
+                            {group.replies.map((reply: ITweetResponse, replyIndex: number) => {
                                 const isLast = replyIndex === group.replies.length - 1
                                 return (
                                     <div

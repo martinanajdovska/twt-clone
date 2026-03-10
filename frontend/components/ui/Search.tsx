@@ -8,6 +8,7 @@ import { Search as SearchIcon, User } from 'lucide-react';
 import { fetchUsers } from "@/api-calls/users-api";
 import { fetchTweetsBySearchTerm } from '@/api-calls/tweets-api';
 import { ITweetResponse } from '@/DTO/ITweetResponse';
+import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
 
 const Search = ({ onNavigate }: { onNavigate?: () => void } = {}) => {
     const searchParams = useSearchParams();
@@ -62,22 +63,17 @@ const Search = ({ onNavigate }: { onNavigate?: () => void } = {}) => {
         router.push(`/tweets/${id}`);
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (!isOpen || activeData.length === 0) return;
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            setHighlightedIndex((i) => Math.min(i + 1, activeData.length - 1));
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            setHighlightedIndex((i) => Math.max(i - 1, 0));
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (tab === 'users') handleSelectUser(users[highlightedIndex]);
-            else handleSelectTweet(tweets[highlightedIndex].id);
-        } else if (e.key === 'Escape') {
-            setIsOpen(false);
-        }
-    };
+    const handleKeyDown = useKeyboardNavigation({
+        items: activeData,
+        highlightedIndex,
+        setHighlightedIndex,
+        isOpen,
+        onClose: () => setIsOpen(false),
+        onSelect: (i) => {
+            if (tab === 'users') handleSelectUser(users[i]);
+            else handleSelectTweet(tweets[i].id);
+        },
+    });
 
     return (
         <div className={`relative w-full ${isOpen && inputValue.length > 0 ? 'z-[100]' : ''}`} ref={containerRef}>

@@ -9,10 +9,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import Retweet from '@/components/tweets/Retweet'
+import Retweet from '@/components/retweets/Retweet'
 import Quote from '@/components/tweets/Quote'
 import { ITweetResponse } from '@/DTO/ITweetResponse'
-import { useTweetDropdown } from '@/components/tweets/TweetDropdownContext'
+import { useTweetDropdown } from '@/contexts/TweetDropdownContext'
 
 type Props = {
   tweet: ITweetResponse

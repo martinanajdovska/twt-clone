@@ -1,8 +1,6 @@
 import Logout from "@/components/auth/Logout";
 import Link from "next/link";
 import { Home, User as UserIcon, Bookmark } from "lucide-react";
-import Search from "@/components/ui/Search";
-import { ModeToggle } from "@/components/ui/ModeToggle";
 import { fetchSelfUsernameAndProfilePicture } from "@/api-calls/users-api";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -10,8 +8,11 @@ import React from "react";
 import { BASE_URL } from "@/lib/constants";
 import NotificationListener from "@/listeners/NotificationListener";
 import NotificationLink from "@/components/notifications/NotificationLink";
+import MessagesLink from "@/components/layout/MessagesLink";
 import MobileTopBar from "@/components/layout/MobileTopBar";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import RightSidebarContent from "@/components/layout/RightSidebarContent";
+import MainContentPadding from "@/components/layout/MainContentPadding";
 
 export default async function AuthenticatedLayout({ children, }: { children: React.ReactNode; }) {
     const cookieStore = await cookies();
@@ -29,7 +30,7 @@ export default async function AuthenticatedLayout({ children, }: { children: Rea
     }
 
     return (
-        <div className="min-h-screen bg-background flex justify-between">
+        <div className="h-screen bg-background flex justify-between overflow-hidden">
             <NotificationListener />
 
             <div className="md:hidden">
@@ -44,6 +45,7 @@ export default async function AuthenticatedLayout({ children, }: { children: Rea
                     <NavLink href="/" icon={<Home size={26} strokeWidth={1.5} />} label="Home" />
                     <NavLink href={`/users/${self.username}`} icon={<UserIcon size={26} strokeWidth={1.5} />} label="Profile" />
                     <NotificationLink />
+                    <MessagesLink />
                     <NavLink href="/bookmarks" icon={<Bookmark size={26} strokeWidth={1.5} />} label="Bookmarks" />
                 </nav>
                 <div className="mt-auto mb-4">
@@ -52,18 +54,13 @@ export default async function AuthenticatedLayout({ children, }: { children: Rea
             </aside>
 
             {/* Center column */}
-            <main className="w-full min-w-0 border-x border-border bg-background min-h-screen pt-14 pb-16 md:pt-0 md:pb-0">
-                {children}
+            <main className="w-full min-w-0 border-x border-border bg-background h-screen overflow-y-auto pb-16 md:pb-0">
+                <MainContentPadding>{children}</MainContentPadding>
             </main>
 
             {/* Right sidebar */}
-            <aside className="hidden lg:flex flex-col w-[400px] xl:w-[440px] px-3 py-3 sticky top-0 h-fit gap-4">
-                <div className="sticky top-3 z-20">
-                    <Search />
-                </div>
-                <div className="relative z-0 p-4 bg-muted/50 dark:bg-[#16181c] rounded-2xl border border-border">
-                    <ModeToggle label="Theme" />
-                </div>
+            <aside className="hidden lg:flex flex-col w-[400px] xl:w-[440px] px-3 py-3 sticky top-0 h-screen overflow-y-auto gap-4">
+                <RightSidebarContent />
             </aside>
         </div>
     );

@@ -50,4 +50,13 @@ export class NotificationsGateway
   sendToUser(username: string, notification: Notification): void {
     this.server?.to(`user:${username}`).emit('notification', notification);
   }
+
+  emitNewMessage(
+    usernames: string[],
+    payload: { conversationId: number; message: unknown },
+  ): void {
+    usernames.forEach((username) => {
+      this.server?.to(`user:${username}`).emit('new_message', payload);
+    });
+  }
 }

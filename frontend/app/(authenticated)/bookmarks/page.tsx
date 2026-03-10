@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { fetchSelfUsernameAndProfilePicture } from '@/api-calls/users-api'
 import { BASE_URL } from '@/lib/constants'
-import BookmarksFeed from '@/components/tweets/BookmarksFeed'
+import BookmarksFeed from '@/components/bookmarks/BookmarksFeed'
 
 export default async function BookmarksPage() {
   const cookieStore = await cookies()

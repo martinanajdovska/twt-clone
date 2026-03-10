@@ -31,7 +31,7 @@ export default function MobileTopBar({
   const [visible, setVisible] = useState(true)
   const lastScrollY = useRef(0)
   const title = getHeaderTitle(pathname)
-  const isProfilePage = pathname.startsWith('/users/')
+  const isHomePage = pathname === '/'
   const isTweetDetailsPage = pathname.startsWith('/tweets/')
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function MobileTopBar({
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  if (isProfilePage) {
+  if (!isHomePage) {
     return null
   }
 
