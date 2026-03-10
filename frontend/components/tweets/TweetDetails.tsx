@@ -57,7 +57,6 @@ const TweetDetails = ({ id, username, profilePicture }: { id: number; username: 
                         <Tweet tweet={tweet} username={username} detailView />
                     </div>
 
-                    {/* reply form under the tweet */}
                     <div className="border-b border-border relative">
                         <div className="absolute left-[36px] top-0 bottom-0 w-[2px] bg-border" aria-hidden />
                         <TweetForm

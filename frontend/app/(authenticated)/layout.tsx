@@ -37,7 +37,7 @@ export default async function AuthenticatedLayout({ children, }: { children: Rea
                 <MobileTopBar />
             </div>
 
-            {/* Left sidebar - icons only on mobile, full on xl */}
+            {/* Left sidebar */}
             <aside className="flex flex-col w-[72px] md:w-[80px] xl:w-[230px] shrink-0 px-2 py-2 sticky top-0 h-screen border-r border-border items-center xl:items-stretch">
                 <nav className="flex flex-col gap-1 mt-1 w-full items-center xl:items-stretch">
                     <NavLink href="/" icon={<Home size={26} strokeWidth={1.5} />} label="Home" />

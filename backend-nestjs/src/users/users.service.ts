@@ -152,16 +152,21 @@ export class UsersService {
         throw new BadRequestException('Bio must be at most 160 characters');
       user.bio = updates.bio ?? null;
     }
+
     if (updates.location !== undefined) {
       if (updates.location != null && updates.location.length > 100)
-        throw new BadRequestException('Location must be at most 100 characters');
+        throw new BadRequestException(
+          'Location must be at most 100 characters',
+        );
       user.location = updates.location ?? null;
     }
+
     if (updates.website !== undefined) {
       if (updates.website != null && updates.website.length > 100)
         throw new BadRequestException('Website must be at most 100 characters');
       user.website = updates.website ?? null;
     }
+
     if (updates.birthday !== undefined) {
       if (updates.birthday && updates.birthday !== '') {
         const birthDate = new Date(updates.birthday);
@@ -174,11 +179,15 @@ export class UsersService {
       }
       user.birthday = updates.birthday !== '' ? updates.birthday : null;
     }
+
     if (updates.displayName !== undefined) {
       if (updates.displayName != null && updates.displayName.length > 50)
-        throw new BadRequestException('Display name must be at most 50 characters');
+        throw new BadRequestException(
+          'Display name must be at most 50 characters',
+        );
       user.displayName = updates.displayName ?? null;
     }
+
     if (bannerFile) {
       user.bannerUrl = await this.cloudinaryService.uploadFile(
         bannerFile,
