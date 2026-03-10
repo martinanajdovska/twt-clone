@@ -1,8 +1,6 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 
 const BANNER_HEIGHT = 200
 const STICKY_HEADER_HEIGHT = 48
@@ -47,13 +45,6 @@ export default function ProfilePageWrapper({
           }`}
         style={{ height: STICKY_HEADER_HEIGHT }}
       >
-        <Link
-          href="/"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full hover:bg-accent transition-colors text-foreground"
-          aria-label="Back to home"
-        >
-          <ArrowLeft size={22} strokeWidth={2} />
-        </Link>
         <span className="font-bold text-[17px] text-foreground truncate">
           @{username}
         </span>

@@ -10,7 +10,6 @@ import NotificationListener from "@/listeners/NotificationListener";
 import NotificationLink from "@/components/notifications/NotificationLink";
 import MessagesLink from "@/components/layout/MessagesLink";
 import MobileTopBar from "@/components/layout/MobileTopBar";
-import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import RightSidebarContent from "@/components/layout/RightSidebarContent";
 import MainContentPadding from "@/components/layout/MainContentPadding";
 import { ModeToggle } from "@/components/ui/ModeToggle";
@@ -35,13 +34,11 @@ export default async function AuthenticatedLayout({ children, }: { children: Rea
             <NotificationListener />
 
             <div className="md:hidden">
-                <MobileTopBar username={self.username} profilePicture={self.profilePicture} />
+                <MobileTopBar />
             </div>
 
-            <MobileBottomNav />
-
-            {/* Left sidebar */}
-            <aside className="hidden md:flex flex-col w-[80px] xl:w-[230px] shrink-0 px-2 py-2 sticky top-0 h-screen border-r border-border items-center xl:items-stretch">
+            {/* Left sidebar - icons only on mobile, full on xl */}
+            <aside className="flex flex-col w-[72px] md:w-[80px] xl:w-[230px] shrink-0 px-2 py-2 sticky top-0 h-screen border-r border-border items-center xl:items-stretch">
                 <nav className="flex flex-col gap-1 mt-1 w-full items-center xl:items-stretch">
                     <NavLink href="/" icon={<Home size={26} strokeWidth={1.5} />} label="Home" />
                     <NavLink href={`/users/${self.username}`} icon={<UserIcon size={26} strokeWidth={1.5} />} label="Profile" />
@@ -58,7 +55,7 @@ export default async function AuthenticatedLayout({ children, }: { children: Rea
             </aside>
 
             {/* Center column */}
-            <main className="w-full min-w-0 border-x border-border bg-background h-screen overflow-y-auto pb-16 md:pb-0">
+            <main className="w-full min-w-0 border-x border-border bg-background h-screen overflow-y-auto">
                 <MainContentPadding>{children}</MainContentPadding>
             </main>
 

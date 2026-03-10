@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { fetchSelfUsernameAndProfilePicture } from "@/api-calls/users-api";
 import ProfileHeader from "@/components/profile/ProfileHeader";
-import ProfilePageWrapper from "@/components/profile/ProfilePageWrapper";
+import ProfilePageWrapper from "@/contexts/ProfilePageWrapper";
 import TweetForm from "@/components/tweets/TweetForm";
 import ProfileFeed from "@/components/profile/ProfileFeed";
 import { redirect } from "next/navigation";

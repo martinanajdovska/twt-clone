@@ -2,12 +2,11 @@
 
 import Follow from '@/components/profile/Follow'
 import React, { useRef, useState } from 'react'
-import Link from 'next/link'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchProfileHeader } from '@/api-calls/users-api'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useEditProfilePicture } from '@/hooks/profile/useEditProfilePicture'
-import { Camera, Loader2, MapPin, Link2, Cake, Calendar, Pencil, ArrowLeft } from 'lucide-react'
+import { Camera, Loader2, MapPin, Link2, Cake, Calendar, Pencil } from 'lucide-react'
 import type { IProfileHeader } from '@/DTO/IProfileHeader'
 import EditProfileDialog from '@/components/profile/EditProfileDialog'
 
@@ -96,13 +95,6 @@ const ProfileHeader = ({
               : undefined
           }
         />
-        <Link
-          href="/"
-          className="absolute top-3 left-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white transition-colors md:hidden"
-          aria-label="Back to home"
-        >
-          <ArrowLeft size={22} strokeWidth={2} />
-        </Link>
       </div>
 
       <div className="px-4 pb-4">

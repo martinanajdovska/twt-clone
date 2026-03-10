@@ -3,8 +3,8 @@
 import React, { useState } from 'react'
 import Feed from '@/components/tweets/Feed'
 import { MessageCircle, Heart, ImageIcon } from 'lucide-react'
-import { useProfileScroll } from '@/components/profile/ProfilePageWrapper'
-import { STICKY_HEADER_HEIGHT } from '@/components/profile/ProfilePageWrapper'
+import { useProfileScroll } from '@/contexts/ProfilePageWrapper'
+import { STICKY_HEADER_HEIGHT } from '@/contexts/ProfilePageWrapper'
 
 const TABS: { id: string; label: string; icon?: React.ReactNode }[] = [
     { id: 'tweets', label: 'Tweets' },

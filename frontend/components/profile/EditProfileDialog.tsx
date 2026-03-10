@@ -73,14 +73,33 @@ export default function EditProfileDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    if (birthday) {
+      const birthDate = new Date(birthday)
+      birthDate.setHours(0, 0, 0, 0)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (birthDate > today) {
+        setError('Birth date cannot be in the future')
+        return
+      }
+    }
+    const lengthErrors: string[] = []
+    if (bio.length > 160) lengthErrors.push('Bio (max 160 characters)')
+    if (location.length > 100) lengthErrors.push('Location (max 100 characters)')
+    if (website.length > 100) lengthErrors.push('Website (max 100 characters)')
+    if (displayName.length > 50) lengthErrors.push('Name (max 50 characters)')
+    if (lengthErrors.length > 0) {
+      setError(`${lengthErrors.join(', ')} exceeded`)
+      return
+    }
     setIsPending(true)
     try {
       const formData = new FormData()
-      formData.append('bio', bio.slice(0, 160))
-      formData.append('location', location.slice(0, 100))
-      formData.append('website', website.slice(0, 100))
+      formData.append('bio', bio)
+      formData.append('location', location)
+      formData.append('website', website)
       formData.append('birthday', birthday || '')
-      formData.append('displayName', displayName.slice(0, 50))
+      formData.append('displayName', displayName)
       if (bannerFile) formData.append('banner', bannerFile)
       await updateProfile(formData)
       onSuccess()
@@ -196,6 +215,7 @@ export default function EditProfileDialog({
               type="date"
               value={birthday}
               onChange={(e) => setBirthday(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
               className={inputClass}
             />
           </div>
@@ -215,7 +235,7 @@ export default function EditProfileDialog({
             <button
               type="submit"
               disabled={isPending}
-              className="rounded-full bg-foreground text-background px-4 py-2 font-bold text-sm hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+              className="rounded-full bg-foreground text-background px-4 py-2 font-bold text-sm hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isPending && <Loader2 size={16} className="animate-spin" />}
               Save

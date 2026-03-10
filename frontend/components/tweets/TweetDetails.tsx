@@ -3,7 +3,6 @@ import React, { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import Tweet from '@/components/tweets/Tweet'
 import TweetForm from '@/components/tweets/TweetForm'
-import ReplyFooter from '@/components/replies/ReplyFooter'
 import { ITweetResponse } from '@/DTO/ITweetResponse'
 import { useInView } from 'react-intersection-observer'
 import { useFetchTweetDetails } from '@/hooks/tweets/useFetchTweetDetails'
@@ -58,8 +57,8 @@ const TweetDetails = ({ id, username, profilePicture }: { id: number; username: 
                         <Tweet tweet={tweet} username={username} detailView />
                     </div>
 
-                    {/* large screen reply form) */}
-                    <div className="hidden md:block border-b border-border relative">
+                    {/* reply form under the tweet */}
+                    <div className="border-b border-border relative">
                         <div className="absolute left-[36px] top-0 bottom-0 w-[2px] bg-border" aria-hidden />
                         <TweetForm
                             username={username}
@@ -79,7 +78,7 @@ const TweetDetails = ({ id, username, profilePicture }: { id: number; username: 
                                         key={reply.id}
                                         className="relative transition-colors hover:bg-white/50 dark:hover:bg-white/[0.03]"
                                     >
-                                        <div className={`absolute left-[36px] top-0 w-[2px] bg-border ${isLast ? 'bottom-20' : 'bottom-0'}`} aria-hidden />
+                                        <div className="absolute left-[36px] top-0 bottom-0 w-[2px] bg-border" aria-hidden />
                                         <Tweet tweet={reply} username={username} />
                                     </div>
                                 )
@@ -100,16 +99,6 @@ const TweetDetails = ({ id, username, profilePicture }: { id: number; username: 
                 ) : (
                     <span className="italic font-light">You&apos;ve reached the end</span>
                 )}
-            </div>
-
-            {/* small screen reply footer */}
-            <div className="md:hidden">
-                <ReplyFooter
-                    username={username}
-                    parentId={tweet.id}
-                    profilePicture={profilePicture}
-                    onReplySuccess={() => queryClient.invalidateQueries({ queryKey: ['tweet', String(id)] })}
-                />
             </div>
         </div>
     )

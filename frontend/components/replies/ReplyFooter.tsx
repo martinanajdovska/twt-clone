@@ -25,7 +25,7 @@ export default function ReplyFooter({
 
   return (
     <>
-      <div className="fixed left-0 right-0 z-30 border-t border-border bg-background bottom-16 md:bottom-0">
+      <div className="fixed left-0 right-0 z-30 border-t border-border bg-background bottom-0">
         <div className="w-full max-w-[600px] mx-auto">
           {expanded ? (
             <div className="relative max-h-[85vh] overflow-y-auto">

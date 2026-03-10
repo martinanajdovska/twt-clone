@@ -147,16 +147,38 @@ export class UsersService {
     const user = await this.userRepo.findOne({ where: { username } });
     if (!user) throw new NotFoundException('User not found');
 
-    if (updates.bio !== undefined)
-      user.bio = updates.bio?.slice(0, 160) ?? null;
-    if (updates.location !== undefined)
-      user.location = updates.location?.slice(0, 100) ?? null;
-    if (updates.website !== undefined)
-      user.website = updates.website?.slice(0, 100) ?? null;
-    if (updates.birthday !== undefined)
+    if (updates.bio !== undefined) {
+      if (updates.bio != null && updates.bio.length > 160)
+        throw new BadRequestException('Bio must be at most 160 characters');
+      user.bio = updates.bio ?? null;
+    }
+    if (updates.location !== undefined) {
+      if (updates.location != null && updates.location.length > 100)
+        throw new BadRequestException('Location must be at most 100 characters');
+      user.location = updates.location ?? null;
+    }
+    if (updates.website !== undefined) {
+      if (updates.website != null && updates.website.length > 100)
+        throw new BadRequestException('Website must be at most 100 characters');
+      user.website = updates.website ?? null;
+    }
+    if (updates.birthday !== undefined) {
+      if (updates.birthday && updates.birthday !== '') {
+        const birthDate = new Date(updates.birthday);
+        birthDate.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (birthDate > today) {
+          throw new BadRequestException('Birth date cannot be in the future');
+        }
+      }
       user.birthday = updates.birthday !== '' ? updates.birthday : null;
-    if (updates.displayName !== undefined)
-      user.displayName = updates.displayName?.slice(0, 50) ?? null;
+    }
+    if (updates.displayName !== undefined) {
+      if (updates.displayName != null && updates.displayName.length > 50)
+        throw new BadRequestException('Display name must be at most 50 characters');
+      user.displayName = updates.displayName ?? null;
+    }
     if (bannerFile) {
       user.bannerUrl = await this.cloudinaryService.uploadFile(
         bannerFile,
