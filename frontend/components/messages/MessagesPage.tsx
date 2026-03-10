@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { MessageCircle } from 'lucide-react'
 import { useGetConversations } from '@/hooks/messages/useGetConversations'
 import { useGetConversation } from '@/hooks/messages/useGetConversation'
@@ -21,11 +21,30 @@ export default function MessagesPage() {
     ? conversations.find((c) => c.id === conversationId) ?? conversationDetail ?? null
     : null
 
+  const router = useRouter()
+
   useEffect(() => {
     if (conversationId != null && currentConversation) {
       markAsRead(conversationId)
     }
   }, [conversationId, currentConversation, markAsRead])
+
+  useEffect(() => {
+    if (conversationId != null) {
+      localStorage.setItem('lastOpenedConversation', String(conversationId))
+    }
+  }, [conversationId])
+
+  useEffect(() => {
+    if (conversationId == null && conversations.length > 0) {
+      const lastId = localStorage.getItem('lastOpenedConversation')
+      if (!lastId) return
+      const exists = conversations.find((c) => c.id === parseInt(lastId, 10))
+      if (exists && window.innerWidth >= 1024) {
+        router.replace(`/messages?conversation=${lastId}`)
+      }
+    }
+  }, [conversations, conversationId, router])
 
   if (conversationId != null && currentConversation) {
     return (

@@ -24,7 +24,7 @@ const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }
     const isSelf = self.username === username;
 
     return (
-        <div className="min-h-screen -mt-14 md:mt-0">
+        <div className="min-h-screen">
             <HydrationBoundary state={dehydrate(queryClient)}>
                 <ProfilePageWrapper username={username}>
                     <ProfileHeader

@@ -18,4 +18,7 @@ export class Poll {
 
   @Column({ name: 'ends_at', type: 'timestamptz' })
   endsAt: Date;
+
+  @Column({ name: 'is_closed', type: 'boolean', default: false })
+  isClosed: boolean;
 }

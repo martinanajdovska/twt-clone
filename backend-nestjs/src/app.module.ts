@@ -36,10 +36,12 @@ import { MessagesModule } from './messages/messages.module';
 import { Conversation } from './entities/conversation.entity';
 import { ConversationParticipant } from './entities/conversation-participant.entity';
 import { Message } from './entities/message.entity';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
@@ -47,7 +49,23 @@ import { Message } from './entities/message.entity';
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      entities: [User, Tweet, Like, Retweet, Follow, Notification, CommunityNote, NoteRating, Bookmark, Poll, PollOption, PollVote, Conversation, ConversationParticipant, Message],
+      entities: [
+        User,
+        Tweet,
+        Like,
+        Retweet,
+        Follow,
+        Notification,
+        CommunityNote,
+        NoteRating,
+        Bookmark,
+        Poll,
+        PollOption,
+        PollVote,
+        Conversation,
+        ConversationParticipant,
+        Message,
+      ],
       synchronize: true,
       logging: process.env.NODE_ENV !== 'production',
     }),

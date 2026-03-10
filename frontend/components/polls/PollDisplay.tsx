@@ -18,7 +18,7 @@ const PollDisplay = ({
   username: string
 }) => {
   const { mutate: vote, isPending } = useVotePoll(tweetId, username)
-  const ended = new Date(poll.endsAt) <= new Date()
+  const ended = poll.isClosed
   const hasVoted = poll.selectedOptionId != null
   const totalVotes = poll.options.reduce((s, o) => s + o.votes, 0)
   const canVote = !ended && !hasVoted && !isPending

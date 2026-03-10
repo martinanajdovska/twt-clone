@@ -22,6 +22,9 @@ export default async function BookmarksPage() {
 
   return (
     <div className="flex flex-col">
+      <header className="sticky top-0 z-10 hidden md:flex items-center px-4 py-3 bg-background/80 backdrop-blur-md border-b border-border">
+        <h1 className="text-xl font-bold text-foreground">Bookmarks</h1>
+      </header>
       <BookmarksFeed username={self.username} />
     </div>
   )

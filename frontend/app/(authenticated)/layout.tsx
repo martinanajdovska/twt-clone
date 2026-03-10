@@ -13,6 +13,7 @@ import MobileTopBar from "@/components/layout/MobileTopBar";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import RightSidebarContent from "@/components/layout/RightSidebarContent";
 import MainContentPadding from "@/components/layout/MainContentPadding";
+import { ModeToggle } from "@/components/ui/ModeToggle";
 
 export default async function AuthenticatedLayout({ children, }: { children: React.ReactNode; }) {
     const cookieStore = await cookies();
@@ -47,6 +48,9 @@ export default async function AuthenticatedLayout({ children, }: { children: Rea
                     <NotificationLink />
                     <MessagesLink />
                     <NavLink href="/bookmarks" icon={<Bookmark size={26} strokeWidth={1.5} />} label="Bookmarks" />
+                    <div className="w-full flex justify-center xl:justify-start">
+                        <ModeToggle label="Theme" sidebar />
+                    </div>
                 </nav>
                 <div className="mt-auto mb-4">
                     <Logout />

@@ -11,6 +11,7 @@ import { PollVote } from '../entities/poll-vote.entity';
 import { UsersService } from '../users/users.service';
 import { PollDto } from './dto/poll.dto';
 import { PollOptionDto } from './dto/poll-option.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class PollsService {
@@ -97,6 +98,7 @@ export class PollsService {
       endsAt: poll.endsAt.toISOString(),
       options: optionsDto,
       selectedOptionId,
+      isClosed: poll.isClosed,
     };
   }
 
@@ -137,5 +139,16 @@ export class PollsService {
 
     const dto = await this.getPollDto(poll.id, username);
     return dto;
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async closeExpiredPolls(): Promise<void> {
+    await this.pollRepo
+      .createQueryBuilder()
+      .update()
+      .set({ isClosed: true })
+      .where('ends_at <= :now', { now: new Date() })
+      .andWhere('is_closed = false')
+      .execute();
   }
 }

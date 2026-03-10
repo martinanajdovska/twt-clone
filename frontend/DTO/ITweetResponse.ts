@@ -19,6 +19,7 @@ export interface ITweetResponse {
     endsAt: string;
     options: { id: number; label: string; votes: number }[];
     selectedOptionId: number | null;
+    isClosed: boolean;
   } | null;
   likesCount: number;
   repliesCount: number;

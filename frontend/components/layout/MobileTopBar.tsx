@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
 import MobileMenuDrawer from '@/components/layout/MobileMenuDrawer'
 
 const SCROLL_THRESHOLD = 10
@@ -62,18 +61,7 @@ export default function MobileTopBar({
       style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)' }}
     >
       <div className="w-9 flex-shrink-0">
-        {isTweetDetailsPage ? (
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex items-center justify-center rounded-full p-1 hover:bg-accent transition-colors text-foreground"
-            aria-label="Back"
-          >
-            <ArrowLeft size={26} strokeWidth={1.5} />
-          </button>
-        ) : (
-          <MobileMenuDrawer username={username} profilePicture={profilePicture} />
-        )}
+        <MobileMenuDrawer username={username} profilePicture={profilePicture} />
       </div>
       <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-foreground">
         {title}

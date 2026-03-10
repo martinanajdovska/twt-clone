@@ -5,4 +5,5 @@ export interface PollDto {
   endsAt: string;
   options: PollOptionDto[];
   selectedOptionId: number | null;
+  isClosed: boolean;
 }
