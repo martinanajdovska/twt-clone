@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { Suspense, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Search from '@/components/ui/Search'
 
@@ -46,7 +46,9 @@ export default function MobileTopBar() {
       <h1 className="text-lg font-bold text-foreground shrink-0">{title}</h1>
       {isHomePage && (
         <div className="w-[50%] max-w-[50%] min-w-0 flex justify-end">
-          <Search />
+          <Suspense fallback={<div className="animate-pulse h-10 w-full max-w-[120px] rounded-full bg-muted" />}>
+            <Search />
+          </Suspense>
         </div>
       )}
     </header>

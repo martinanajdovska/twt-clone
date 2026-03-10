@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MessageCircle } from 'lucide-react'
 import { useGetConversations } from '@/hooks/messages/useGetConversations'
@@ -84,7 +84,9 @@ export default function MessagesPage() {
       <MessagesHeader otherParticipant={null} />
       {/* small screens: show conversation list in center */}
       <div className="lg:hidden px-3 py-4 pb-24">
-        <ConversationsList variant="center" />
+        <Suspense fallback={<div className="animate-pulse h-24 rounded-lg bg-muted" />}>
+          <ConversationsList variant="center" />
+        </Suspense>
       </div>
       {/* large screens: empty state (list is in right sidebar) */}
       <div className="hidden lg:flex flex flex-col items-center justify-center py-24 px-4 text-center">

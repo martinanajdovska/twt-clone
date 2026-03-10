@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { Home, Search as SearchIcon, Bell, MessageCircle } from 'lucide-react'
 import Search from '@/components/ui/Search'
@@ -46,7 +46,9 @@ export default function MobileBottomNav() {
         <DialogContent className="max-w-[100vw] sm:max-w-md top-[10%] translate-y-0">
           <DialogTitle className="sr-only">Search</DialogTitle>
           <div className="pt-2">
-            <Search onNavigate={() => setSearchOpen(false)} />
+            <Suspense fallback={<div className="animate-pulse h-10 rounded-full bg-muted" />}>
+              <Search onNavigate={() => setSearchOpen(false)} />
+            </Suspense>
           </div>
         </DialogContent>
       </Dialog>
