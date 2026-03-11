@@ -18,12 +18,13 @@ export class AuthController {
         dto.username,
       );
 
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('token', access_token, {
       httpOnly: true,
-      secure: true,
+      secure: isProd,
       path: '/',
       maxAge: 86400 * 1000, // 24h
-      sameSite: 'lax',
+      sameSite: isProd ? 'none' : 'lax',
     });
 
     return { message: 'Session created' };
@@ -31,13 +32,27 @@ export class AuthController {
 
   @Post('logout')
   logout(@Res({ passthrough: true }) res: express.Response) {
-    res.cookie('token', '', { httpOnly: true, path: '/', maxAge: 0 });
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('token', '', {
+      httpOnly: true,
+      path: '/',
+      maxAge: 0,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+    });
     return { message: 'Logged out' };
   }
 
   @Get('clear-session')
   clearSession(@Res() res: express.Response, @Req() req: express.Request) {
-    res.cookie('token', '', { httpOnly: true, path: '/', maxAge: 0 });
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('token', '', {
+      httpOnly: true,
+      path: '/',
+      maxAge: 0,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+    });
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
     res.redirect(`${frontendUrl}/login?session_expired=1`);
   }
