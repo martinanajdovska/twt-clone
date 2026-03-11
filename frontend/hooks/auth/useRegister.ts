@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirebaseAuth } from '@/lib/firebase';
-import { BASE_URL } from '@/lib/constants';
+import { API_BASE } from '@/lib/constants';
 
 export const useRegister = () => {
   const queryClient = useQueryClient();
@@ -26,7 +26,7 @@ export const useRegister = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-      const res = await fetch(`${BASE_URL}/api/auth/session`, {
+      const res = await fetch(`${API_BASE}/api/auth/session`, {
         method: 'POST',
         body: JSON.stringify({ idToken, username: username.trim() || undefined }),
         headers: { 'Content-Type': 'application/json' },

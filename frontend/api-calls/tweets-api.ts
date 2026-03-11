@@ -1,8 +1,8 @@
-import {BASE_URL} from "@/lib/constants";
+import { API_BASE } from "@/lib/constants";
 
 //  feed for logged in user
 export const fetchTweets = async ({ pageParam = 0 }: {pageParam:number}) => {
-    const response = await fetch(`${BASE_URL}/api/tweets?page=${pageParam}`, {
+    const response = await fetch(`${API_BASE}/api/tweets?page=${pageParam}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -15,7 +15,7 @@ export const fetchTweets = async ({ pageParam = 0 }: {pageParam:number}) => {
 }
 
 export const fetchTweetDetails = async ({pageParam=0, id}:{pageParam:number, id:number}) => {
-    const res = await fetch(`${BASE_URL}/api/tweets/${id}/details?page=${pageParam}`, {
+    const res = await fetch(`${API_BASE}/api/tweets/${id}/details?page=${pageParam}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -41,7 +41,7 @@ export const fetchTweetQuotes = async ({
     pageSize?: number;
 }) => {
     const res = await fetch(
-        `${BASE_URL}/api/tweets/${tweetId}/quotes?page=${pageParam}&size=${pageSize}`,
+        `${API_BASE}/api/tweets/${tweetId}/quotes?page=${pageParam}&size=${pageSize}`,
         {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
@@ -56,7 +56,7 @@ export const fetchTweetQuotes = async ({
 };
 
 export const fetchTweetsBySearchTerm = async (searchTerm: string) => {
-    const res = await fetch(`${BASE_URL}/api/tweets/search?q=${searchTerm}`, {
+    const res = await fetch(`${API_BASE}/api/tweets/search?q=${searchTerm}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -66,7 +66,7 @@ export const fetchTweetsBySearchTerm = async (searchTerm: string) => {
 };
 
 export const pinTweet = async (id: number) => {
-    const res = await fetch(`${BASE_URL}/api/tweets/${id}/pin`, {
+    const res = await fetch(`${API_BASE}/api/tweets/${id}/pin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -76,7 +76,7 @@ export const pinTweet = async (id: number) => {
 };
 
 export const unpinTweet = async (id: number) => {
-    const res = await fetch(`${BASE_URL}/api/tweets/${id}/pin`, {
+    const res = await fetch(`${API_BASE}/api/tweets/${id}/pin`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

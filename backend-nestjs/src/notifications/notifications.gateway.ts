@@ -17,10 +17,23 @@ function getTokenFromCookie(cookieHeader: string | undefined): string | null {
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    origin: (origin, callback) => {
+      const allowed = [process.env.FRONTEND_URL, /\.vercel\.app$/];
+      const isAllowed =
+        !origin ||
+        allowed.some((o) =>
+          typeof o === 'string' ? o === origin : o!.test(origin),
+        );
+      if (isAllowed) {
+        callback(null, origin || true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   },
   path: '/ws',
+  transports: ['polling'],
 })
 export class NotificationsGateway
   implements OnGatewayConnection, OnGatewayDisconnect

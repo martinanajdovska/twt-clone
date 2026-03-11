@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {BASE_URL} from "@/lib/constants";
+import { API_BASE } from "@/lib/constants";
 
 export const useReadNotification = () => {
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
         mutationFn: async ({id}:{id: number} ) => {
-            const res = await fetch(`${BASE_URL}/api/notifications/${id}`, {
+            const res = await fetch(`${API_BASE}/api/notifications/${id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",

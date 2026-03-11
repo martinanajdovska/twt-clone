@@ -1,4 +1,4 @@
-import {BASE_URL} from "@/lib/constants";
+import { API_BASE } from "@/lib/constants";
 
 // get profile feed for username
 export const fetchProfileFeed = async ({
@@ -11,7 +11,7 @@ export const fetchProfileFeed = async ({
     tab: string;
 }) => {
     const response = await fetch(
-        `${BASE_URL}/api/users/${username}?page=${pageParam}&tab=${tab}`,
+        `${API_BASE}/api/users/${username}?page=${pageParam}&tab=${tab}`,
         {
             method: 'GET',
             headers: {
@@ -31,7 +31,7 @@ export const fetchProfileFeed = async ({
 
 // get username and profile picture of logged in user
 export const fetchSelfUsernameAndProfilePicture = async ({token}:{token:string}) => {
-    const response = await fetch(`${BASE_URL}/api/users/me/info`, {
+    const response = await fetch(`${API_BASE}/api/users/me/info`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export const fetchSelfUsernameAndProfilePicture = async ({token}:{token:string})
 
 // get profile header
 export const fetchProfileHeader = async ({username}:{username:string}) => {
-    const response = await fetch(`${BASE_URL}/api/users/${username}/info`, {
+    const response = await fetch(`${API_BASE}/api/users/${username}/info`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ export const fetchProfileHeader = async ({username}:{username:string}) => {
 }
 
 export const updateProfile = async (formData: FormData) => {
-  const res = await fetch(`${BASE_URL}/api/users/me/profile`, {
+  const res = await fetch(`${API_BASE}/api/users/me/profile`, {
     method: 'PATCH',
     body: formData,
     credentials: 'include',
@@ -81,7 +81,7 @@ export const updateProfile = async (formData: FormData) => {
 export const fetchUsers = async (searchTerm: string) => {
     if (!searchTerm) return [];
 
-    const res = await fetch(`${BASE_URL}/api/users?search=${searchTerm}`, {
+    const res = await fetch(`${API_BASE}/api/users?search=${searchTerm}`, {
         method: 'GET',
         headers: {'Content-Type': 'application/json'},
         credentials: 'include'

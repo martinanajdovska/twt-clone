@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { BASE_URL } from "@/lib/constants"
+import { API_BASE } from "@/lib/constants"
 
 export const useSubmitNote = (tweetId: number) => {
     const queryClient = useQueryClient()
 
     return useMutation({
         mutationFn: async (content: string) => {
-            const res = await fetch(`${BASE_URL}/api/community-notes/tweet/${tweetId}`, {
+            const res = await fetch(`${API_BASE}/api/community-notes/tweet/${tweetId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

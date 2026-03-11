@@ -5,22 +5,16 @@ import cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
-  // app.enableCors({
-  //   origin: process.env.FRONTEND_URL,
-  //   credentials: true,
-  //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  //   allowedHeaders: ['Content-Type', 'Authorization'],
-  // });
   app.enableCors({
     origin: (origin, callback) => {
       const allowed = [process.env.FRONTEND_URL, /\.vercel\.app$/];
-      if (
+      const isAllowed =
         !origin ||
         allowed.some((o) =>
           typeof o === 'string' ? o === origin : o!.test(origin),
-        )
-      ) {
-        callback(null, true);
+        );
+      if (isAllowed) {
+        callback(null, origin || true);
       } else {
         callback(new Error('Not allowed by CORS'));
       }

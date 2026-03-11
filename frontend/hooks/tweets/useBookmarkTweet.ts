@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BASE_URL } from '@/lib/constants';
+import { API_BASE } from '@/lib/constants';
 
 export const useBookmarkTweet = (username: string) => {
   const queryClient = useQueryClient();
@@ -12,7 +12,7 @@ export const useBookmarkTweet = (username: string) => {
       id: number;
       isBookmarked: boolean;
     }) => {
-      const res = await fetch(`${BASE_URL}/api/bookmarks/${id}`, {
+      const res = await fetch(`${API_BASE}/api/bookmarks/${id}`, {
         method: isBookmarked ? 'DELETE' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

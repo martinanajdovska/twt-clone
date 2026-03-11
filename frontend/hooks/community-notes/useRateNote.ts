@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BASE_URL } from "@/lib/constants";
+import { API_BASE } from "@/lib/constants";
 
 export const useRateNote = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async ({ noteId, helpful }: { noteId: number, helpful: boolean }) => {
-            const res = await fetch(`${BASE_URL}/api/community-notes/${noteId}/rate`, {
+            const res = await fetch(`${API_BASE}/api/community-notes/${noteId}/rate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

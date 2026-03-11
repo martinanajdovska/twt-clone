@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BASE_URL } from "@/lib/constants";
+import { API_BASE } from "@/lib/constants";
 import type { ITweetResponse } from "@/DTO/ITweetResponse";
 
 export const useVotePoll = (tweetId: number, username: string) => {
@@ -9,7 +9,7 @@ export const useVotePoll = (tweetId: number, username: string) => {
 
   return useMutation({
     mutationFn: async (optionId: number) => {
-      const res = await fetch(`${BASE_URL}/api/tweets/${tweetId}/poll/vote`, {
+      const res = await fetch(`${API_BASE}/api/tweets/${tweetId}/poll/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

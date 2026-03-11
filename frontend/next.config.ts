@@ -9,13 +9,14 @@ const frontendDir =
 
 const frontendNodeModules = path.join(frontendDir, "node_modules");
 
-const backendUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const backendUrl =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  "http://localhost:3000";
 
 const nextConfig: NextConfig = {
   async rewrites() {
-    return [
-      { source: '/api/:path*', destination: `${backendUrl}/api/:path*` },
-    ];
+    return [{ source: "/api/:path*", destination: `${backendUrl}/api/:path*` }];
   },
   turbopack: {
     root: frontendDir,
@@ -35,14 +36,14 @@ const nextConfig: NextConfig = {
     return config;
   },
   images: {
-        remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: 'res.cloudinary.com',
-                pathname: '/**',
-            },
-        ],
-    },
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

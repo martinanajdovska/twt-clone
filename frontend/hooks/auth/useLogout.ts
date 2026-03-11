@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { getFirebaseAuth } from '@/lib/firebase';
-import { BASE_URL } from '@/lib/constants';
+import { API_BASE } from '@/lib/constants';
 
 export const useLogout = () => {
   const queryClient = useQueryClient();
@@ -14,7 +14,7 @@ export const useLogout = () => {
       if (auth?.currentUser) {
         await signOut(auth);
       }
-      const response = await fetch(`${BASE_URL}/api/auth/logout`, {
+      const response = await fetch(`${API_BASE}/api/auth/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

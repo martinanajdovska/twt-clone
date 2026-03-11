@@ -1,13 +1,13 @@
 import { IConversationListItem } from "@/DTO/IConversationListItem";
 import { ICreateConversationResponse } from "@/DTO/ICreateConversationResponse";
 import { IMessageResponse } from "@/DTO/IMessageResponse";
-import { BASE_URL } from "@/lib/constants";
+import { API_BASE } from "@/lib/constants";
 
 export async function fetchConversation(
   conversationId: number,
 ): Promise<ICreateConversationResponse | null> {
   const res = await fetch(
-    `${BASE_URL}/api/messages/conversations/${conversationId}`,
+    `${API_BASE}/api/messages/conversations/${conversationId}`,
     { credentials: "include" },
   );
   if (!res.ok) throw new Error("Failed to fetch conversation");
@@ -15,7 +15,7 @@ export async function fetchConversation(
 }
 
 export async function fetchConversations(): Promise<IConversationListItem[]> {
-  const res = await fetch(`${BASE_URL}/api/messages/conversations`, {
+  const res = await fetch(`${API_BASE}/api/messages/conversations`, {
     credentials: "include",
   });
   if (!res.ok) throw new Error("Failed to fetch conversations");
@@ -23,7 +23,7 @@ export async function fetchConversations(): Promise<IConversationListItem[]> {
 }
 
 export async function fetchUnreadCount(): Promise<number> {
-  const res = await fetch(`${BASE_URL}/api/messages/unread-count`, {
+  const res = await fetch(`${API_BASE}/api/messages/unread-count`, {
     credentials: "include",
   });
   if (!res.ok) throw new Error("Failed to fetch unread count");
@@ -35,7 +35,7 @@ export async function markConversationAsRead(
   conversationId: number,
 ): Promise<void> {
   const res = await fetch(
-    `${BASE_URL}/api/messages/conversations/${conversationId}/read`,
+    `${API_BASE}/api/messages/conversations/${conversationId}/read`,
     { method: "PATCH", credentials: "include" },
   );
   if (!res.ok) throw new Error("Failed to mark as read");
@@ -44,7 +44,7 @@ export async function markConversationAsRead(
 export async function createOrGetConversation(
   otherUsername: string,
 ): Promise<ICreateConversationResponse> {
-  const res = await fetch(`${BASE_URL}/api/messages/conversations`, {
+  const res = await fetch(`${API_BASE}/api/messages/conversations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -61,7 +61,7 @@ export async function fetchMessages(
   conversationId: number,
 ): Promise<IMessageResponse[]> {
   const res = await fetch(
-    `${BASE_URL}/api/messages/conversations/${conversationId}/messages`,
+    `${API_BASE}/api/messages/conversations/${conversationId}/messages`,
     { credentials: "include" },
   );
   if (!res.ok) throw new Error("Failed to fetch messages");
@@ -73,7 +73,7 @@ export async function sendMessage(
   content: string,
 ): Promise<IMessageResponse> {
   const res = await fetch(
-    `${BASE_URL}/api/messages/conversations/${conversationId}/messages`,
+    `${API_BASE}/api/messages/conversations/${conversationId}/messages`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -89,7 +89,7 @@ export async function sendMessage(
 }
 
 export const archiveConversation = async (id: number) => {
-  const res = await fetch(`${BASE_URL}/api/messages/conversations/${id}`, {
+  const res = await fetch(`${API_BASE}/api/messages/conversations/${id}`, {
     method: "PATCH",
     credentials: "include",
   });

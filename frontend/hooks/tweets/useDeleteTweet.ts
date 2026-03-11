@@ -1,12 +1,12 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
-import { BASE_URL } from "@/lib/constants";
+import { API_BASE } from "@/lib/constants";
 
 export const useDeleteTweet = ({username, parentId}:{username:string, parentId?:number}) => {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async ({id}:{id:number, username:string, parentId?:number}) => {
-            const res = await fetch(`${BASE_URL}/api/tweets/${id}`, {
+            const res = await fetch(`${API_BASE}/api/tweets/${id}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json"

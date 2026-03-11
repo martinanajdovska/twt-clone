@@ -1,5 +1,5 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {BASE_URL} from "@/lib/constants";
+import { API_BASE } from "@/lib/constants";
 
 export const useCreateTweet = ({
     username,
@@ -14,7 +14,7 @@ export const useCreateTweet = ({
 
     return useMutation({
         mutationFn: async (formData: FormData) => {
-            const res = await fetch(`${BASE_URL}/api/tweets`, {
+            const res = await fetch(`${API_BASE}/api/tweets`, {
                 method: "POST",
                 body: formData,
                 credentials: 'include'

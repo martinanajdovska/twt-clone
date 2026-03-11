@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/lib/constants";
+import { API_BASE } from "@/lib/constants";
 
 export const fetchBookmarks = async ({
   pageParam = 0,
@@ -6,7 +6,7 @@ export const fetchBookmarks = async ({
   pageParam: number;
 }) => {
   const res = await fetch(
-    `${BASE_URL}/api/bookmarks?page=${pageParam}&size=5`,
+    `${API_BASE}/api/bookmarks?page=${pageParam}&size=5`,
     {
       method: "GET",
       headers: { "Content-Type": "application/json" },

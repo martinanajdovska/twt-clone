@@ -16,41 +16,49 @@ export default function NotificationListener() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const socket = io(BASE_URL, {
-      path: '/ws',
-      withCredentials: true,
-      autoConnect: true,
-    });
+    if (!BASE_URL) return;
 
-    socket.on('connect', () => {
-      console.log('Socket connected');
-    });
+    let socket: ReturnType<typeof io> | null = null;
+    const t = setTimeout(() => {
+      socket = io(BASE_URL, {
+        path: '/ws',
+        withCredentials: true,
+        autoConnect: true,
+        transports: ['polling'],
+        upgrade: false,
+      });
 
-    socket.on('notification', (notification: { message?: string; actor?: string }) => {
-      const description = notification?.message ?? `${notification?.actor ?? 'Someone'} did something`;
-      toast.message('New Activity', { description });
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    });
+      socket.on('connect', () => {
+        console.log('Socket connected');
+      });
 
-    socket.on('new_message', (payload: NewMessagePayload) => {
-      const { conversationId, message } = payload;
-      const queryKey = ['messages', 'conversation', conversationId] as const;
-      const existing = queryClient.getQueryData<IMessageResponse[]>(queryKey);
-      if (existing) {
-        queryClient.setQueryData<IMessageResponse[]>(queryKey, [...existing, message]);
-      } else {
-        queryClient.invalidateQueries({ queryKey });
-      }
-      queryClient.invalidateQueries({ queryKey: ['messages', 'conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['messages', 'unread-count'] });
-    });
+      socket.on('notification', (notification: { message?: string; actor?: string }) => {
+        const description = notification?.message ?? `${notification?.actor ?? 'Someone'} did something`;
+        toast.message('New Activity', { description });
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      });
 
-    socket.on('connect_error', (err: Error) => {
-      console.error('Socket connection error', err.message);
-    });
+      socket.on('new_message', (payload: NewMessagePayload) => {
+        const { conversationId, message } = payload;
+        const queryKey = ['messages', 'conversation', conversationId] as const;
+        const existing = queryClient.getQueryData<IMessageResponse[]>(queryKey);
+        if (existing) {
+          queryClient.setQueryData<IMessageResponse[]>(queryKey, [...existing, message]);
+        } else {
+          queryClient.invalidateQueries({ queryKey });
+        }
+        queryClient.invalidateQueries({ queryKey: ['messages', 'conversations'] });
+        queryClient.invalidateQueries({ queryKey: ['messages', 'unread-count'] });
+      });
+
+      socket.on('connect_error', (err: Error) => {
+        console.error('Socket connection error', err.message);
+      });
+    }, 300);
 
     return () => {
-      socket.disconnect();
+      clearTimeout(t);
+      if (socket) socket.disconnect();
     };
   }, [queryClient]);
 
