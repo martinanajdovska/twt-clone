@@ -44,7 +44,9 @@ export class NotificationsGateway
   constructor(private readonly jwtService: JwtService) {}
 
   handleConnection(socket: Socket) {
-    const token = getTokenFromCookie(socket.handshake.headers.cookie);
+    const token =
+      (socket.handshake.auth as { token?: string })?.token ??
+      getTokenFromCookie(socket.handshake.headers.cookie);
     if (!token) {
       socket.disconnect();
       return;

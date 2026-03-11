@@ -43,6 +43,15 @@ export class AuthController {
     return { message: 'Logged out' };
   }
 
+  @Get('socket-token')
+  socketToken(@Req() req: express.Request) {
+    const token = req.cookies?.token;
+    if (!token) {
+      return { token: null };
+    }
+    return { token };
+  }
+
   @Get('clear-session')
   clearSession(@Res() res: express.Response, @Req() req: express.Request) {
     const isProd = process.env.NODE_ENV === 'production';
