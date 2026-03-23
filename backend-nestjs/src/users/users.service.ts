@@ -3,18 +3,39 @@ import {
   ConflictException,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like as TypeOrmLike } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User, Role } from '../entities/user.entity';
+import { FollowsService } from '../follows/follows.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+
+export interface UserInfoDto {
+  username: string;
+  displayName: string | null;
+  followers: number;
+  following: number;
+  isFollowed: boolean;
+  isFollowingYou: boolean;
+  imageUrl: string | null;
+  bannerUrl: string | null;
+  bio: string | null;
+  location: string | null;
+  website: string | null;
+  birthday: string | null;
+  createdAt: string;
+}
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @Inject(forwardRef(() => FollowsService))
+    private readonly followsService: FollowsService,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
@@ -122,69 +143,112 @@ export class UsersService {
   async updateProfileImage(
     username: string,
     file: Express.Multer.File,
-  ): Promise<void> {
+  ): Promise<{ imageUrl: string | null }> {
     const user = await this.userRepo.findOne({ where: { username } });
     if (!user) throw new NotFoundException('User not found');
 
-    const imageUrl = file
-      ? await this.cloudinaryService.uploadFile(file, 'profile_pictures')
-      : null;
+    if (!file) throw new BadRequestException('No file uploaded');
+
+    const imageUrl = await this.cloudinaryService.uploadFile(
+      file,
+      'profile_pictures',
+    );
+
     user.imageUrl = imageUrl;
     await this.userRepo.save(user);
+    return { imageUrl };
   }
 
   async updateProfile(
     username: string,
-    updates: {
-      bio?: string | null;
-      location?: string | null;
-      website?: string | null;
-      birthday?: string | null;
-      displayName?: string | null;
-    },
+    bio?: string,
+    location?: string,
+    website?: string,
+    birthday?: string,
+    displayName?: string,
     bannerFile?: Express.Multer.File,
-  ): Promise<void> {
+  ): Promise<{
+    displayName?: string;
+    bio?: string;
+    location?: string;
+    website?: string;
+    birthday?: string;
+    bannerUrl?: string;
+    createdAt: string;
+  }> {
     const user = await this.userRepo.findOne({ where: { username } });
     if (!user) throw new NotFoundException('User not found');
 
-    if (updates.bio !== undefined) {
-      if (updates.bio != null && updates.bio.length > 160)
+    if (bio) {
+      if (bio.length > 160)
         throw new BadRequestException('Bio must be at most 160 characters');
-      user.bio = updates.bio ?? null;
     }
-    if (updates.location !== undefined) {
-      if (updates.location != null && updates.location.length > 100)
-        throw new BadRequestException('Location must be at most 100 characters');
-      user.location = updates.location ?? null;
+    user.bio = bio ?? null;
+
+    if (location) {
+      if (location.length > 100)
+        throw new BadRequestException(
+          'Location must be at most 100 characters',
+        );
     }
-    if (updates.website !== undefined) {
-      if (updates.website != null && updates.website.length > 100)
+    user.location = location ?? null;
+
+    if (website) {
+      if (website.length > 100)
         throw new BadRequestException('Website must be at most 100 characters');
-      user.website = updates.website ?? null;
     }
-    if (updates.birthday !== undefined) {
-      if (updates.birthday && updates.birthday !== '') {
-        const birthDate = new Date(updates.birthday);
-        birthDate.setHours(0, 0, 0, 0);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (birthDate > today) {
-          throw new BadRequestException('Birth date cannot be in the future');
-        }
+    user.website = website ?? null;
+
+    if (birthday) {
+      const birthDate = new Date(birthday);
+      birthDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (birthDate > today) {
+        throw new BadRequestException('Birth date cannot be in the future');
       }
-      user.birthday = updates.birthday !== '' ? updates.birthday : null;
     }
-    if (updates.displayName !== undefined) {
-      if (updates.displayName != null && updates.displayName.length > 50)
-        throw new BadRequestException('Display name must be at most 50 characters');
-      user.displayName = updates.displayName ?? null;
+    user.birthday = birthday && birthday !== '' ? birthday : null;
+
+    if (displayName) {
+      if (displayName.length > 50)
+        throw new BadRequestException(
+          'Display name must be at most 50 characters',
+        );
     }
+    user.displayName = displayName ?? null;
+
     if (bannerFile) {
       user.bannerUrl = await this.cloudinaryService.uploadFile(
         bannerFile,
         'profile_banners',
       );
     }
+
+    const saved = await this.userRepo.save(user);
+    const createdAt =
+      saved.createdAt instanceof Date
+        ? saved.createdAt.toISOString()
+        : String(saved.createdAt ?? new Date());
+
+    return {
+      displayName: saved.displayName ?? undefined,
+      bio: saved.bio ?? undefined,
+      location: saved.location ?? undefined,
+      website: saved.website ?? undefined,
+      birthday: saved.birthday ?? undefined,
+      bannerUrl: saved.bannerUrl ?? undefined,
+      createdAt,
+    };
+  }
+
+  async saveExpoPushToken(username: string, token: string): Promise<void> {
+    if (!token) return;
+
+    const user = await this.userRepo.findOne({ where: { username } });
+    if (!user) throw new NotFoundException('User not found');
+
+    user.expoPushToken = token;
     await this.userRepo.save(user);
   }
 
@@ -198,6 +262,40 @@ export class UsersService {
     return {
       username: user.username,
       profilePicture: user.imageUrl ?? null,
+    };
+  }
+
+  async getUserInfo(username: string, requester: string): Promise<UserInfoDto> {
+    const user = await this.findByUsername(username);
+    if (!user) throw new NotFoundException('User not found');
+
+    const createdAt =
+      user.createdAt instanceof Date
+        ? user.createdAt.toISOString()
+        : String(user.createdAt ?? new Date());
+
+    const [followers, following, isFollowed, isFollowingYou] =
+      await Promise.all([
+        this.followsService.getFollowerCount(username),
+        this.followsService.getFollowingCount(username),
+        this.followsService.existsFollowed(requester, username),
+        this.followsService.existsFollowingYou(username, requester),
+      ]);
+
+    return {
+      username: user.username,
+      displayName: user.displayName ?? null,
+      followers,
+      following,
+      isFollowed,
+      isFollowingYou,
+      imageUrl: user.imageUrl ?? null,
+      bannerUrl: user.bannerUrl ?? null,
+      bio: user.bio ?? null,
+      location: user.location ?? null,
+      website: user.website ?? null,
+      birthday: user.birthday ?? null,
+      createdAt,
     };
   }
 }

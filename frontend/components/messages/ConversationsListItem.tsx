@@ -4,7 +4,7 @@ import { formatRelativeTime } from "@/lib/relativeTime";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Archive } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { useArchiveConversation as useArchiveConversation } from "@/hooks/messages/useDeleteConversations";
+import { useArchiveConversation as useArchiveConversation } from "@/hooks/messages/useArchiveConversations";
 
 
 export default function ConversationListItem({ conv, currentId }: { conv: IConversationListItem; currentId: number | null }) {

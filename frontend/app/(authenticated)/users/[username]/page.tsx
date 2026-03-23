@@ -7,7 +7,7 @@ import ProfilePageWrapper from "@/contexts/ProfilePageWrapper";
 import TweetForm from "@/components/tweets/TweetForm";
 import ProfileFeed from "@/components/profile/ProfileFeed";
 import { redirect } from "next/navigation";
-import { prefetchProfile } from "@/hooks/profile/prefetchProfile";
+import { prefetchProfile } from "@/hooks/users/prefetchProfile";
 
 const ProfilePage = async ({ params }: { params: Promise<{ username: string }> }) => {
     const cookieStore = await cookies();

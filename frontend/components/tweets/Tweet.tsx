@@ -2,7 +2,7 @@
 
 import { ITweetResponse } from "@/DTO/ITweetResponse"
 import Image from "next/image"
-import React, { useCallback, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import Like from "./Like"
 import Bookmark from "../bookmarks/Bookmark"
 import { useRouter } from "next/navigation"
@@ -27,6 +27,50 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
+
+// immediately shows the uploaded image instead of waiting for server response
+function TweetImageWithFallback({
+    src,
+    fallbackSrc,
+    alt,
+    className,
+}: {
+    src: string;
+    fallbackSrc?: string | null;
+    alt: string;
+    className?: string;
+}) {
+    const [loaded, setLoaded] = useState(false);
+    useEffect(() => {
+        setLoaded(false);
+        if (!fallbackSrc || fallbackSrc === src) return;
+        const img = new window.Image();
+        img.onload = () => setLoaded(true);
+        img.onerror = () => setLoaded(false);
+        img.src = src;
+        return () => {
+            img.onload = null;
+            img.onerror = null;
+        };
+    }, [src, fallbackSrc]);
+    const displaySrc = !fallbackSrc || loaded ? src : fallbackSrc;
+    return (
+        <Image
+            src={displaySrc}
+            alt={alt}
+            width={0}
+            height={0}
+            sizes="100vw"
+            style={{
+                width: "auto",
+                height: "auto",
+            }}
+            className={className}
+        />
+    );
+}
+
 
 const Tweet = ({
     tweet,
@@ -186,26 +230,45 @@ const Tweet = ({
                                                 />
                                             </div>
                                         )}
+                                        {tweet.quotedTweet.gifUrl && (
+                                            <div className="relative mt-3 rounded-2xl overflow-hidden border border-border">
+                                                <img
+                                                    src={tweet.quotedTweet.gifUrl}
+                                                    alt="GIF"
+                                                    className="w-full object-cover"
+                                                    style={{ height: "280px" }}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </button>
                             )
                         )}
 
                         {tweet.imageUrl && (
-                            <div className="relative mt-3 rounded-2xl overflow-hidden border border-border">
-                                <Image
+                            <div className="relative mt-3 rounded-2xl overflow-hidden">
+                                <TweetImageWithFallback
                                     src={tweet.imageUrl}
+                                    fallbackSrc={tweet.optimisticImageUrl ?? null}
                                     alt="Tweet image"
+                                    className="object-contain rounded-2xl"
+                                />
+                            </div>
+                        )}
+                        {tweet.gifUrl && (
+                            <div className="relative mt-3 rounded-2xl overflow-hidden">
+                                <img
+                                    src={tweet.gifUrl}
+                                    alt="GIF"
                                     width={0}
                                     height={0}
                                     sizes="100vw"
+                                    className="object-contain rounded-2xl"
                                     style={{
                                         width: "auto",
                                         height: "auto",
                                         maxHeight: "500px",
-                                    }}
-                                    className="object-contain"
-                                />
+                                    }} />
                             </div>
                         )}
 

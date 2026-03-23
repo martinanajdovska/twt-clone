@@ -35,14 +35,19 @@ const nextConfig: NextConfig = {
     return config;
   },
   images: {
-        remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: 'res.cloudinary.com',
-                pathname: '/**',
-            },
-        ],
-    },
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static.klipy.com',
+        pathname: '/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

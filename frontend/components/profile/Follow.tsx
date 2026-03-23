@@ -1,6 +1,6 @@
 'use client'
 import { useState } from "react";
-import { useFollow } from "@/hooks/useFollow";
+import { useFollow } from "@/hooks/users/useFollow";
 
 const Follow = ({ username, isFollowed, isFollowingYou, token }: { username: string, isFollowed: boolean, isFollowingYou: boolean, token: string }) => {
     const [isFollowedState, setIsFollowedState] = useState(isFollowed)

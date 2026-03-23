@@ -10,7 +10,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Retweet]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => TweetsModule),
     NotificationsModule,
   ],

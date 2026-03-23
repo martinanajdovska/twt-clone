@@ -8,12 +8,12 @@ import {
   Body,
   UseGuards,
   UseInterceptors,
-  UploadedFile,
+  UploadedFiles,
   ParseIntPipe,
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { TweetsService } from './tweets.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUsername } from '../common/decorators/current-user.decorator';
@@ -24,53 +24,48 @@ export class TweetsController {
   constructor(private readonly tweetsService: TweetsService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 1 },
+      { name: 'video', maxCount: 1 },
+    ]),
+  )
   async save(
-    @Body('content') content: string,
-    @Body('parentId') parentId: string | undefined,
-    @Body('quoteId') quoteId: string | undefined,
-    @Body('pollOptions') pollOptionsRaw: string | undefined,
-    @Body('pollDurationHours') pollDurationHoursStr: string | undefined,
-    @UploadedFile() file: Express.Multer.File | undefined,
     @CurrentUsername() username: string,
+    @Body('content') content: string,
+    @Body('parentId', new ParseIntPipe({ optional: true }))
+    parentId?: number,
+    @Body('quoteId', new ParseIntPipe({ optional: true }))
+    quoteId?: number,
+    @Body('pollOptions') pollOptions?: string,
+    @Body('pollDurationMinutes', new ParseIntPipe({ optional: true }))
+    pollDurationMinutes?: number,
+    @Body('gifUrl') gifUrl?: string,
+    @UploadedFiles()
+    files?: { image?: Express.Multer.File[]; video?: Express.Multer.File[] },
   ) {
-    const parent = parentId ? parseInt(parentId, 10) : null;
-    const quote = quoteId ? parseInt(quoteId, 10) : null;
-    let pollOptions: string[] | undefined;
-
-    if (pollOptionsRaw) {
-      try {
-        const parsed = JSON.parse(pollOptionsRaw) as unknown;
-        pollOptions = Array.isArray(parsed)
-          ? parsed.filter((x): x is string => typeof x === 'string')
-          : undefined;
-      } catch {
-        pollOptions = undefined;
-      }
-    }
-
-    const pollDurationHours = pollDurationHoursStr
-      ? parseInt(pollDurationHoursStr, 10)
-      : undefined;
-
+    const imageFile = files?.image?.[0];
+    const videoFile = files?.video?.[0];
     return this.tweetsService.save(
       username,
-      isNaN(parent as number) ? null : parent,
-      isNaN(quote as number) ? null : quote,
-      content || '',
-      file,
+      content,
+      parentId,
+      quoteId,
+      imageFile,
+      videoFile,
+      gifUrl,
       pollOptions,
-      pollDurationHours,
+      pollDurationMinutes,
     );
   }
 
   @Post(':id/poll/vote')
   async votePoll(
-    @Param('id', ParseIntPipe) id: string,
-    @Body('optionId') optionId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body('optionId', ParseIntPipe) optionId: number,
     @CurrentUsername() username: string,
   ) {
-    return this.tweetsService.votePoll(parseInt(id, 10), optionId, username);
+    return this.tweetsService.votePoll(id, optionId, username);
   }
 
   @Get('search')
@@ -84,25 +79,25 @@ export class TweetsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUsername() username: string,
   ) {
-    await this.tweetsService.deleteById(parseInt(id, 10), username);
+    await this.tweetsService.deleteById(id, username);
   }
 
   @Post(':id/pin')
   async pinTweet(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUsername() username: string,
   ) {
-    return this.tweetsService.pinTweetById(parseInt(id, 10), username);
+    return this.tweetsService.pinTweetById(id, username);
   }
 
   @Delete(':id/pin')
   async unpinTweet(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUsername() username: string,
   ) {
-    return this.tweetsService.unpinTweetById(parseInt(id, 10), username);
+    return this.tweetsService.unpinTweetById(id, username);
   }
 }

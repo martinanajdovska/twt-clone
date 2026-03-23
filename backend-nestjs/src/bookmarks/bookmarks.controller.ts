@@ -35,18 +35,18 @@ export class BookmarksController {
 
   @Post(':tweetId')
   async save(
-    @Param('tweetId', ParseIntPipe) tweetId: string,
+    @Param('tweetId', ParseIntPipe) tweetId: number,
     @CurrentUsername() username: string,
   ) {
-    return this.bookmarksService.save(username, parseInt(tweetId, 10));
+    return this.bookmarksService.save(username, tweetId);
   }
 
   @Delete(':tweetId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
-    @Param('tweetId', ParseIntPipe) tweetId: string,
+    @Param('tweetId', ParseIntPipe) tweetId: number,
     @CurrentUsername() username: string,
   ) {
-    await this.bookmarksService.delete(username, parseInt(tweetId, 10));
+    await this.bookmarksService.delete(username, tweetId);
   }
 }

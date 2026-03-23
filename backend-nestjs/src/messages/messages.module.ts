@@ -7,16 +7,14 @@ import { MessagesService } from './messages.service';
 import { MessagesController } from './messages.controller';
 import { UsersModule } from '../users/users.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Conversation,
-      ConversationParticipant,
-      Message,
-    ]),
+    TypeOrmModule.forFeature([Conversation, ConversationParticipant, Message]),
     UsersModule,
     NotificationsModule,
+    CloudinaryModule,
   ],
   controllers: [MessagesController],
   providers: [MessagesService],

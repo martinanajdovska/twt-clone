@@ -4,7 +4,6 @@ import { X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
 import { useCreateTweet } from '@/hooks/tweets/useCreateTweet'
-import { getMentionTrigger } from '@/hooks/tweets/useMentionSuggestions'
 import { fetchUsers } from '@/api-calls/users-api'
 import Image from 'next/image'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -12,8 +11,25 @@ import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation'
 import PollForm from '../polls/PollForm'
 import MentionDropdown from './MentionDropdown'
 import TweetFormToolbar from './TweetFormToolbar'
+import GifPicker from '@/components/GifPicker'
 
 const MAX_TWEET_LENGTH = 280
+
+export function pollDurationToMinutes(minutes: number, hours: number, days: number): number {
+    const total = days * 24 * 60 + hours * 60 + minutes
+    return total < 1 ? 1 : total
+}
+
+export function getMentionTrigger(
+    text: string,
+    cursorPosition: number,
+): { query: string; atIndex: number } | null {
+    const before = text.slice(0, cursorPosition);
+    const match = before.match(/@(\w*)$/);
+    if (!match) return null;
+    const atIndex = before.length - match[0].length;
+    return { query: match[1], atIndex };
+}
 
 const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
     username: string; parentId?: number; quoteId?: number; onSuccess?: () => void; profilePicture?: string
@@ -22,14 +38,23 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
     const [cursorPosition, setCursorPosition] = useState(0)
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [gifUrl, setGifUrl] = useState<string | null>(null)
+    const [gifPickerOpen, setGifPickerOpen] = useState(false)
     const [mentionHighlightIndex, setMentionHighlightIndex] = useState(0)
     const [showPoll, setShowPoll] = useState(false)
     const [pollOptions, setPollOptions] = useState<string[]>(['', ''])
-    const [pollDurationHours, setPollDurationHours] = useState(24)
+    const [pollDurationMinutes, setPollDurationMinutes] = useState(0)
+    const [pollDurationHours, setPollDurationHours] = useState(0)
+    const [pollDurationDays, setPollDurationDays] = useState(1)
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const { mutate: createTweet, isPending } = useCreateTweet({ username, parentId, quoteId })
+    const { mutate: createTweet } = useCreateTweet({
+        username,
+        parentId,
+        quoteId,
+        profilePictureUrl: profilePicture ?? null,
+    })
 
     const mentionTrigger = getMentionTrigger(content, cursorPosition)
     const mentionQuery = mentionTrigger?.query ?? ''
@@ -44,36 +69,38 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
     const canAddPoll = parentId == null && quoteId == null
     const validPollOptions = pollOptions.map(o => o.trim()).filter(Boolean)
     const hasEnoughPollOptions = validPollOptions.length >= 2
-    const canSubmit = (content.trim().length > 0 || selectedFile || (showPoll && hasEnoughPollOptions)) && content.length <= MAX_TWEET_LENGTH
+    const canSubmit: boolean = (content.trim().length > 0 || !!selectedFile || !!gifUrl || (showPoll && hasEnoughPollOptions)) && content.length <= MAX_TWEET_LENGTH
 
     const removeImage = () => {
         setSelectedFile(null)
         setPreviewUrl(null)
         if (fileInputRef.current) fileInputRef.current.value = ''
     }
+    const removeGif = () => setGifUrl(null)
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (!canSubmit) return
+
         const formData = new FormData()
         formData.append('content', content)
         if (parentId) formData.append('parentId', parentId.toString())
         if (quoteId) formData.append('quoteId', quoteId.toString())
         if (selectedFile) formData.append('image', selectedFile)
+        if (gifUrl) formData.append('gifUrl', gifUrl)
         if (showPoll && hasEnoughPollOptions && canAddPoll) {
             formData.append('pollOptions', JSON.stringify(validPollOptions))
-            formData.append('pollDurationHours', pollDurationHours.toString())
+            formData.append('pollDurationMinutes', String(pollDurationToMinutes(pollDurationMinutes, pollDurationHours, pollDurationDays)))
         }
-        createTweet(formData, {
-            onSuccess: () => {
-                setContent('')
-                removeImage()
-                setShowPoll(false)
-                setPollOptions(['', ''])
-                setPollDurationHours(24)
-                onSuccess?.()
-            }
-        })
+        createTweet(formData, { onSuccess: () => onSuccess?.() })
+        setContent('')
+        removeImage()
+        removeGif()
+        setShowPoll(false)
+        setPollOptions(['', ''])
+        setPollDurationMinutes(0)
+        setPollDurationHours(0)
+        setPollDurationDays(1)
     }
 
     const handleTextareaKeyDown = useKeyboardNavigation({
@@ -83,10 +110,12 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
         isOpen: mentionTrigger !== null,
         onSelect: (i) => {
             if (!mentionTrigger || !textareaRef.current) return
+
             const before = content.slice(0, mentionTrigger.atIndex)
             const after = content.slice(cursorPosition)
             const newContent = `${before}@${displayMentionUsers[i]} ${after}`
             setContent(newContent)
+
             const newCursor = mentionTrigger.atIndex + displayMentionUsers[i].length + 2
             requestAnimationFrame(() => {
                 textareaRef.current?.focus()
@@ -116,13 +145,12 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey && mentionTrigger === null) {
                                 e.preventDefault()
-                                if (canSubmit && !isPending) handleSubmit(e as any)
+                                if (canSubmit) handleSubmit(e as any)
                                 return
                             }
                             handleTextareaKeyDown(e)
                         }} onKeyUp={(e) => setCursorPosition((e.target as HTMLTextAreaElement).selectionStart)}
                         onClick={() => setCursorPosition(textareaRef.current?.selectionStart ?? 0)}
-                        disabled={isPending}
                         className="w-full bg-transparent border-none text-xl placeholder:text-muted-foreground focus:ring-0 resize-none outline-none py-2 min-h-[50px]"
                     />
 
@@ -147,33 +175,48 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
                             </button>
                         </div>
                     )}
+                    {gifUrl && (
+                        <div className="relative mt-2 mb-4">
+                            <Image src={gifUrl} width={300} height={200} className="rounded-2xl max-h-80 w-full object-cover border" alt="GIF" unoptimized />
+                            <button type="button" onClick={removeGif} className="absolute top-2 left-2 p-1.5 bg-black/60 rounded-full text-white">
+                                <X size={18} />
+                            </button>
+                        </div>
+                    )}
 
                     {showPoll && canAddPoll && (
                         <PollForm
                             pollOptions={pollOptions}
+                            pollDurationMinutes={pollDurationMinutes}
                             pollDurationHours={pollDurationHours}
+                            pollDurationDays={pollDurationDays}
                             onOptionChange={(i, v) => setPollOptions(prev => { const next = [...prev]; next[i] = v.slice(0, 25); return next })}
                             onAddOption={() => setPollOptions(prev => [...prev, ''])}
                             onRemoveOption={(i) => setPollOptions(prev => prev.filter((_, idx) => idx !== i))}
-                            onDurationChange={setPollDurationHours}
+                            onMinutesChange={setPollDurationMinutes}
+                            onHoursChange={setPollDurationHours}
+                            onDaysChange={setPollDurationDays}
                         />
                     )}
 
                     <TweetFormToolbar
                         content={content}
-                        isPending={isPending}
+                        isPending={false}
                         canSubmit={canSubmit}
                         canAddPoll={canAddPoll}
                         showPoll={showPoll}
+                        hasGif={!!gifUrl}
                         onTogglePoll={() => setShowPoll(p => !p)}
                         onFileClick={() => fileInputRef.current?.click()}
                         fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
                         onFileChange={(e) => {
                             const file = e.target.files?.[0]
-                            if (file) { setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)) }
+                            if (file) { setGifUrl(null); setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)) }
                         }}
+                        onGifClick={() => setGifPickerOpen(true)}
                     />
                 </form>
+                <GifPicker open={gifPickerOpen} onClose={() => setGifPickerOpen(false)} onSelect={(url) => { setGifUrl(url); setGifPickerOpen(false) }} />
             </div>
         </div>
     )

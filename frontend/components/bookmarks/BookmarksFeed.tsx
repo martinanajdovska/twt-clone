@@ -4,7 +4,7 @@ import React, { useEffect } from 'react'
 import { ITweetResponse } from '@/DTO/ITweetResponse'
 import Tweet from '@/components/tweets/Tweet'
 import { useInView } from 'react-intersection-observer'
-import { useFetchBookmarks } from '@/hooks/tweets/useFetchBookmarks'
+import { useFetchBookmarks } from '@/hooks/bookmarks/useFetchBookmarks'
 
 export default function BookmarksFeed({ username }: { username: string }) {
   const { ref, inView } = useInView()

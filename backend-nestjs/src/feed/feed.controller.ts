@@ -29,24 +29,37 @@ export class FeedController {
     });
   }
 
-  @Get(':id')
-  async getTweet(
-    @Param('id', ParseIntPipe) id: string,
+  @Get('videos')
+  async getVideoTweets(
+    @Query('page') page = '0',
+    @Query('size') size = '5',
     @CurrentUsername() username: string,
   ) {
-    return this.feedService.getTweetById(parseInt(id, 10), username);
+    return this.feedService.getVideoTweetsForReels(
+      username,
+      parseInt(page, 10),
+      parseInt(size, 10),
+    );
+  }
+
+  @Get(':id')
+  async getTweet(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUsername() username: string,
+  ) {
+    return this.feedService.getTweetById(id, username);
   }
 
   @Get(':id/quotes')
   async getQuotes(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Query('page') page = '0',
     @Query('size') size = '20',
     @CurrentUsername() username: string,
   ) {
     const pageNum = Math.max(0, parseInt(page, 10));
     const sizeNum = Math.min(50, Math.max(1, parseInt(size, 10)));
-    return this.feedService.getTweetQuotes(parseInt(id, 10), username, {
+    return this.feedService.getTweetQuotes(id, username, {
       page: pageNum,
       size: sizeNum,
     });
@@ -54,14 +67,14 @@ export class FeedController {
 
   @Get(':id/details')
   async getDetails(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Query('page') page = '0',
     @Query('size') size = '5',
     @CurrentUsername() username: string,
   ) {
     const pageNum = Math.max(0, parseInt(page, 10));
     const sizeNum = Math.min(50, Math.max(1, parseInt(size, 10)));
-    return this.feedService.getTweetDetails(parseInt(id, 10), username, {
+    return this.feedService.getTweetDetails(id, username, {
       page: pageNum,
       size: sizeNum,
     });

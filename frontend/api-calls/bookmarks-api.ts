@@ -17,3 +17,16 @@ export const fetchBookmarks = async ({
   const data = await res.json();
   return data.content ?? [];
 };
+
+export const toggleBookmark = async (id: number, isBookmarked: boolean) => {
+  const res = await fetch(`${BASE_URL}/api/bookmarks/${id}`, {
+    method: isBookmarked ? "DELETE" : "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error);
+  }
+  return res;
+};

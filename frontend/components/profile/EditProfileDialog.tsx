@@ -10,6 +10,8 @@ import {
 } from '@/components/ui/dialog'
 import { updateProfile } from '@/api-calls/users-api'
 import { Loader2 } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import type { IProfileHeader } from '@/DTO/IProfileHeader'
 
 const inputClass =
   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50'
@@ -45,6 +47,7 @@ export default function EditProfileDialog({
   const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const bannerInputRef = useRef<HTMLInputElement>(null)
+  const queryClient = useQueryClient()
 
   React.useEffect(() => {
     if (open) {
@@ -72,36 +75,22 @@ export default function EditProfileDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    if (birthday) {
-      const birthDate = new Date(birthday)
-      birthDate.setHours(0, 0, 0, 0)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      if (birthDate > today) {
-        setError('Birth date cannot be in the future')
-        return
-      }
-    }
-    const lengthErrors: string[] = []
-    if (bio.length > 160) lengthErrors.push('Bio (max 160 characters)')
-    if (location.length > 100) lengthErrors.push('Location (max 100 characters)')
-    if (website.length > 100) lengthErrors.push('Website (max 100 characters)')
-    if (displayName.length > 50) lengthErrors.push('Name (max 50 characters)')
-    if (lengthErrors.length > 0) {
-      setError(`${lengthErrors.join(', ')} exceeded`)
-      return
-    }
     setIsPending(true)
+
     try {
       const formData = new FormData()
       formData.append('bio', bio)
       formData.append('location', location)
       formData.append('website', website)
-      formData.append('birthday', birthday || '')
+      formData.append('birthday', birthday)
       formData.append('displayName', displayName)
+
       if (bannerFile) formData.append('banner', bannerFile)
-      await updateProfile(formData)
+      const data = await updateProfile(formData)
+      queryClient.setQueryData<IProfileHeader>(
+        ['profileHeader', username],
+        (old) => (old ? { ...old, ...data } : old)
+      )
       onSuccess()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update profile')
@@ -189,6 +178,7 @@ export default function EditProfileDialog({
               className={inputClass}
               placeholder="Location"
             />
+            <p className="text-muted-foreground text-xs mt-1">{location.length}/100</p>
           </div>
 
           <div>
@@ -204,6 +194,7 @@ export default function EditProfileDialog({
               className={inputClass}
               placeholder="https://example.com"
             />
+            <p className="text-muted-foreground text-xs mt-1">{website.length}/100</p>
           </div>
 
           <div>

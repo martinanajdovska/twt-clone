@@ -1,86 +1,175 @@
-import {BASE_URL} from "@/lib/constants";
+import { ITweetResponse } from "@/DTO/ITweetResponse";
+import { BASE_URL } from "@/lib/constants";
 
 //  feed for logged in user
-export const fetchTweets = async ({ pageParam = 0 }: {pageParam:number}) => {
-    const response = await fetch(`${BASE_URL}/api/tweets?page=${pageParam}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-    });
-    if (!response.ok) throw new Error("Failed to fetch tweets");
-    const data = await response.json();
-    return data.content;
-}
+export const fetchTweets = async ({ pageParam = 0 }: { pageParam: number }) => {
+  const response = await fetch(`${BASE_URL}/api/tweets?page=${pageParam}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+  if (!response.ok) throw new Error("Failed to fetch tweets");
+  const data = await response.json();
+  return data.content;
+};
 
-export const fetchTweetDetails = async ({pageParam=0, id}:{pageParam:number, id:number}) => {
-    const res = await fetch(`${BASE_URL}/api/tweets/${id}/details?page=${pageParam}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'include'
-    });
-    if (!res.ok) {
-        const error = await res.text()
-        throw new Error(error)
-    }
+export const fetchTweetDetails = async ({
+  pageParam = 0,
+  id,
+}: {
+  pageParam: number;
+  id: number;
+}) => {
+  const res = await fetch(
+    `${BASE_URL}/api/tweets/${id}/details?page=${pageParam}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    },
+  );
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error);
+  }
 
-    const data = await res.json();
-    return data;
-}
+  const data = await res.json();
+  return data;
+};
 
 export const fetchTweetQuotes = async ({
-    tweetId,
-    pageParam = 0,
-    pageSize = 10,
+  tweetId,
+  pageParam = 0,
+  pageSize = 10,
 }: {
-    tweetId: number;
-    pageParam?: number;
-    pageSize?: number;
+  tweetId: number;
+  pageParam?: number;
+  pageSize?: number;
 }) => {
-    const res = await fetch(
-        `${BASE_URL}/api/tweets/${tweetId}/quotes?page=${pageParam}&size=${pageSize}`,
-        {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-        }
-    );
-    if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error);
-    }
-    return res.json();
+  const res = await fetch(
+    `${BASE_URL}/api/tweets/${tweetId}/quotes?page=${pageParam}&size=${pageSize}`,
+    {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    },
+  );
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error);
+  }
+  return res.json();
 };
 
 export const fetchTweetsBySearchTerm = async (searchTerm: string) => {
-    const res = await fetch(`${BASE_URL}/api/tweets/search?q=${searchTerm}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
+  const res = await fetch(`${BASE_URL}/api/tweets/search?q=${searchTerm}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
 };
 
 export const pinTweet = async (id: number) => {
-    const res = await fetch(`${BASE_URL}/api/tweets/${id}/pin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
+  const res = await fetch(`${BASE_URL}/api/tweets/${id}/pin`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
 };
 
 export const unpinTweet = async (id: number) => {
-    const res = await fetch(`${BASE_URL}/api/tweets/${id}/pin`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
+  const res = await fetch(`${BASE_URL}/api/tweets/${id}/pin`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+export const createTweet = async (formData: FormData) => {
+  const res = await fetch(`${BASE_URL}/api/tweets`, {
+    method: "POST",
+    body: formData,
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error);
+  }
+  return res.json();
+};
+
+export const deleteTweet = async (id: number) => {
+  const res = await fetch(`${BASE_URL}/api/tweets/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  if (res.status !== 204) {
+    const error = await res.text();
+    throw new Error(error);
+  }
+
+  return res;
+};
+
+export const toggleLike = async (id: number, isLiked: boolean) => {
+  const res = await fetch(`${BASE_URL}/api/tweets/${id}/likes`, {
+    method: `${isLiked ? "DELETE" : "POST"}`,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error);
+  }
+
+  return res;
+};
+
+export const toggleRetweet = async (id: number, isRetweeted: boolean) => {
+  const res = await fetch(`${BASE_URL}/api/tweets/${id}/retweets`, {
+    method: `${isRetweeted ? "DELETE" : "POST"}`,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error);
+  }
+
+  return res;
+};
+
+export const votePoll = async (id: number, optionId: number) => {
+  const res = await fetch(`${BASE_URL}/api/tweets/${id}/poll/vote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ optionId }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  return res.json() as Promise<ITweetResponse["poll"]>;
 };

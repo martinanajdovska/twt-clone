@@ -2,10 +2,10 @@
 
 import Follow from '@/components/profile/Follow'
 import React, { useRef, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { fetchProfileHeader } from '@/api-calls/users-api'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useEditProfilePicture } from '@/hooks/profile/useEditProfilePicture'
+import { useEditProfilePicture } from '@/hooks/users/useEditProfilePicture'
 import { Camera, Loader2, MapPin, Link2, Cake, Calendar, Pencil } from 'lucide-react'
 import type { IProfileHeader } from '@/DTO/IProfileHeader'
 import EditProfileDialog from '@/components/profile/EditProfileDialog'
@@ -42,7 +42,6 @@ const ProfileHeader = ({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [editOpen, setEditOpen] = useState(false)
-  const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
     queryKey: ['profileHeader', username],
@@ -69,7 +68,6 @@ const ProfileHeader = ({
       formData.append('image', file)
       editProfilePicture(formData, {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['profileHeader', username] })
           setPreviewUrl(null)
         },
       })
@@ -172,7 +170,7 @@ const ProfileHeader = ({
           {data.location != null && data.location !== '' && (
             <span className="flex items-center gap-1.5">
               <MapPin size={18} className="shrink-0" />
-              <span>{data.location}</span>
+              <span className='truncate max-w-[300px]'>{data.location}</span>
             </span>
           )}
           {data.website != null && data.website !== '' && (
@@ -183,7 +181,7 @@ const ProfileHeader = ({
               className="flex items-center gap-1.5 text-primary hover:underline"
             >
               <Link2 size={18} className="shrink-0" />
-              <span className="truncate max-w-[200px]">{data.website.replace(/^https?:\/\//i, '')}</span>
+              <span className="truncate max-w-[300px]">{data.website.replace(/^https?:\/\//i, '')}</span>
             </a>
           )}
           {birthdayStr && (
@@ -231,7 +229,6 @@ const ProfileHeader = ({
           birthday: data.birthday ?? '',
         }}
         onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['profileHeader', username] })
           setEditOpen(false)
         }}
       />

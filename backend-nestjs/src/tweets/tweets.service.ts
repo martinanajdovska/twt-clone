@@ -33,16 +33,46 @@ export class TweetsService {
     private readonly pollsService: PollsService,
   ) {}
 
+  private parsePollOptions(raw: string): string[] | undefined {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return undefined;
+      return parsed.filter((x): x is string => typeof x === 'string');
+    } catch {
+      return undefined;
+    }
+  }
+
   async save(
     username: string,
-    parentId: number | null,
-    quoteId: number | null,
     content?: string,
-    file?: Express.Multer.File,
-    pollOptions?: string[],
-    pollDurationHours?: number,
+    parentId?: number,
+    quoteId?: number,
+    imageFile?: Express.Multer.File,
+    videoFile?: Express.Multer.File,
+    gifUrl?: string,
+    pollOptionsRaw?: string,
+    pollDurationMinutes?: number,
   ): Promise<TweetResponseDto> {
-    if (!content?.trim() && !file && !pollOptions) {
+    let pollOptions: string[] | undefined;
+    if (pollOptionsRaw) {
+      pollOptions = this.parsePollOptions(pollOptionsRaw);
+    }
+
+    const mediaCount = [imageFile, videoFile, gifUrl].filter(Boolean).length;
+    if (mediaCount > 1) {
+      throw new BadRequestException(
+        'Tweet can have only one of: image, video, or GIF',
+      );
+    }
+
+    if (
+      !content?.trim() &&
+      !imageFile &&
+      !videoFile &&
+      !gifUrl &&
+      !pollOptions
+    ) {
       throw new BadRequestException("Can't post empty tweet");
     }
 
@@ -73,10 +103,10 @@ export class TweetsService {
         );
       }
 
-      const duration = pollDurationHours ?? 24;
-      if (duration < 1 || duration > 168) {
+      const durationMinutes = pollDurationMinutes ?? 24 * 60; // default 1 day
+      if (durationMinutes < 1 || durationMinutes > 10080) {
         throw new BadRequestException(
-          'Poll duration must be between 1 and 168 hours (7 days)',
+          'Poll duration must be between 1 minute and 7 days (10080 minutes)',
         );
       }
     }
@@ -104,16 +134,28 @@ export class TweetsService {
     }
 
     let imageUrl: string | null = null;
-    if (file) {
-      imageUrl = await this.cloudinaryService.uploadFile(file, 'tweet_images');
+    let videoUrl: string | null = null;
+    if (imageFile) {
+      imageUrl = await this.cloudinaryService.uploadFile(
+        imageFile,
+        'tweet_images',
+      );
+    }
+    if (videoFile) {
+      videoUrl = await this.cloudinaryService.uploadVideo(
+        videoFile,
+        'tweet_videos',
+      );
     }
 
     const tweet = this.tweetRepo.create({
       user,
       parentTweet,
       quotedTweet,
-      content: content!.trim(),
+      content,
       imageUrl,
+      gifUrl,
+      videoUrl,
     });
     const saved = await this.tweetRepo.save(tweet);
 
@@ -123,7 +165,7 @@ export class TweetsService {
       createdPoll = await this.pollsService.createPoll(
         saved.id,
         validOptions,
-        pollDurationHours ?? 24,
+        pollDurationMinutes ?? 24 * 60,
       );
     }
 
@@ -338,6 +380,39 @@ export class TweetsService {
     return replies.map((t) => t.user!.username);
   }
 
+  async findVideoTweetsForReels(
+    page: number,
+    size: number,
+  ): Promise<{
+    tweets: TweetWithNotes[];
+    totalElements: number;
+    size: number;
+    page: number;
+  }> {
+    const qb = this.tweetRepo
+      .createQueryBuilder('t')
+      .leftJoinAndSelect('t.user', 'user')
+      .leftJoinAndSelect('t.quotedTweet', 'quotedTweet')
+      .leftJoinAndSelect('quotedTweet.user', 'quotedUser')
+      .leftJoinAndSelect('t.poll', 'poll')
+      .where('t.parent_id IS NULL')
+      .andWhere('t.videoUrl IS NOT NULL');
+
+    qb.orderBy('t.createdAt', 'DESC')
+      .skip(page * size)
+      .take(size);
+
+    const tweets = await qb.getMany();
+    const totalElements = await qb.getCount();
+    await this.addNotesWithRatings(tweets);
+    return {
+      tweets,
+      totalElements,
+      size,
+      page,
+    };
+  }
+
   async addNotesWithRatings(tweet: TweetWithNotes): Promise<void>;
   async addNotesWithRatings(tweets: TweetWithNotes[]): Promise<void>;
   async addNotesWithRatings(
@@ -406,6 +481,8 @@ export class TweetsService {
         username: tweet.quotedTweet.user.username,
         content: tweet.quotedTweet.content ?? '',
         imageUrl: tweet.quotedTweet.imageUrl ?? null,
+        gifUrl: tweet.quotedTweet.gifUrl ?? null,
+        videoUrl: tweet.quotedTweet.videoUrl ?? null,
         createdAt:
           tweet.quotedTweet.createdAt instanceof Date
             ? tweet.quotedTweet.createdAt.toISOString()
@@ -418,6 +495,8 @@ export class TweetsService {
         username: '',
         content: 'This tweet was deleted',
         imageUrl: null,
+        gifUrl: null,
+        videoUrl: null,
         createdAt: '',
         isDeleted: true,
       };
@@ -449,6 +528,8 @@ export class TweetsService {
       username: tweet.user!.username,
       content: tweet.content ?? '',
       imageUrl: tweet.imageUrl ?? null,
+      gifUrl: tweet.gifUrl ?? null,
+      videoUrl: tweet.videoUrl ?? null,
       isPinned: tweet.pinnedAt != null,
       quotedTweet: quoted,
       poll: null,
@@ -572,7 +653,7 @@ export class TweetsService {
     const tweets = await this.tweetRepo
       .createQueryBuilder('tweet')
       .leftJoinAndSelect('tweet.user', 'user')
-      .where('tweet.content ILIKE :q', { q: `%${q}%` })
+      .where('tweet.content ILIKE :q', { q: `${q}%` })
       .orderBy('tweet.createdAt', 'DESC')
       .take(10)
       .getMany();

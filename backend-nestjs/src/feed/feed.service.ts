@@ -117,7 +117,7 @@ export class FeedService {
         tweets,
         retweets,
         requesterUsername,
-        (t) => !!t.imageUrl,
+        (t) => !!t.imageUrl || !!t.videoUrl || !!t.gifUrl,
       );
       const pageItems = this.paginateItems(
         sorted,
@@ -171,6 +171,32 @@ export class FeedService {
     return this.addTweetInfo(tweet, null, username);
   }
 
+  async getVideoTweetsForReels(
+    username: string,
+    page: number,
+    size: number,
+  ): Promise<{
+    content: TweetResponseDto[];
+    totalElements: number;
+    size: number;
+    page: number;
+  }> {
+    const content = await this.tweetsService.findVideoTweetsForReels(
+      page,
+      size,
+    );
+    const dtos: TweetResponseDto[] = [];
+    for (const t of content.tweets) {
+      dtos.push(await this.addTweetInfo(t, null, username));
+    }
+    return {
+      content: dtos,
+      totalElements: content.totalElements,
+      size: content.size,
+      page: content.page,
+    };
+  }
+
   async getTweetQuotes(
     tweetId: number,
     username: string,
@@ -208,11 +234,24 @@ export class FeedService {
     if (!tweet) throw new NotFoundException('Tweet not found');
 
     const tweetDto = await this.getTweetById(id, username);
-    let parentTweetDto: TweetResponseDto | null = null;
+    const parentChain: TweetResponseDto[] = [];
+    let parentId = tweetDto.parentId;
+    const visited = new Set<number>();
+    const maxDepth = 20; // safety against cycles/malformed data
 
-    if (tweetDto.parentId != null) {
-      parentTweetDto = await this.getTweetById(tweetDto.parentId, username);
+    while (
+      parentId != null &&
+      !visited.has(parentId) &&
+      parentChain.length < maxDepth
+    ) {
+      visited.add(parentId);
+      const parent = await this.getTweetById(parentId, username);
+      parentChain.push(parent);
+      parentId = parent.parentId;
     }
+
+    const parentTweetDto: TweetResponseDto | null =
+      parentChain.length > 0 ? parentChain[0] : null;
 
     const replies = await this.tweetsService.findAllRepliesOfTweet(
       id,
@@ -225,9 +264,10 @@ export class FeedService {
       repliesDto.push(await this.addTweetInfo(r, null, username));
     }
 
-    const tweetDetailsDto: TweetDetailsDto = {
+    const tweetDetailsDto = {
       tweet: tweetDto,
       parentTweet: parentTweetDto,
+      parentChain,
       replies: repliesDto,
     };
 

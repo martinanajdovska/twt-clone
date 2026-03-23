@@ -25,6 +25,12 @@ export class Message {
   @Column({ type: 'text' })
   content: string;
 
+  @Column({ type: 'text', nullable: true })
+  imageUrl: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  gifUrl: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }

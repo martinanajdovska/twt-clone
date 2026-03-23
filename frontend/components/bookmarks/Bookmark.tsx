@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Bookmark as BookmarkIcon } from 'lucide-react'
-import { useBookmarkTweet } from '@/hooks/tweets/useBookmarkTweet'
+import { useBookmarkTweet } from '@/hooks/bookmarks/useBookmarkTweet'
 
 
 const Bookmark = ({ id, isBookmarked, username }: {

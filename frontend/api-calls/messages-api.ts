@@ -1,6 +1,7 @@
 import { IConversationListItem } from "@/DTO/IConversationListItem";
 import { ICreateConversationResponse } from "@/DTO/ICreateConversationResponse";
 import { IMessageResponse } from "@/DTO/IMessageResponse";
+import { ISendMessagePayload } from "@/DTO/ISendMessagePayload";
 import { BASE_URL } from "@/lib/constants";
 
 export async function fetchConversation(
@@ -70,8 +71,32 @@ export async function fetchMessages(
 
 export async function sendMessage(
   conversationId: number,
-  content: string,
+  payload: ISendMessagePayload,
 ): Promise<IMessageResponse> {
+  const { content, imageFile, gifUrl } = payload;
+  const hasMedia = imageFile || gifUrl;
+
+  if (hasMedia) {
+    const formData = new FormData();
+    formData.append("content", content);
+    if (imageFile) formData.append("image", imageFile);
+    if (gifUrl) formData.append("gifUrl", gifUrl);
+
+    const res = await fetch(
+      `${BASE_URL}/api/messages/conversations/${conversationId}/messages`,
+      {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      },
+    );
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err || "Failed to send message");
+    }
+    return res.json();
+  }
+
   const res = await fetch(
     `${BASE_URL}/api/messages/conversations/${conversationId}/messages`,
     {

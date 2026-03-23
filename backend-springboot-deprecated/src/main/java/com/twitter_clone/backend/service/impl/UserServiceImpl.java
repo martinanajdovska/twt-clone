@@ -25,7 +25,8 @@ public class UserServiceImpl implements UserService {
     private final ModelMapper modelMapper;
     private final CloudinaryService cloudinaryService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper, CloudinaryService cloudinaryService) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper,
+            CloudinaryService cloudinaryService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
@@ -79,9 +80,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateProfileImage(String username, MultipartFile file) {
-        User user = this.userRepository.findByUsername(username).orElseThrow(()->new UsernameNotFoundException(username));
+        User user = this.userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException(username));
         String imageUrl = null;
-        if (file!=null && !file.isEmpty()) {
+        if (file != null && !file.isEmpty()) {
             imageUrl = this.cloudinaryService.uploadFile(file, "profile_pictures");
         }
         user.setImageUrl(imageUrl);
@@ -90,7 +92,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UsernameAndProfilePictureDTO getUsernameAndProfilePicture(String username) {
-        User user = this.userRepository.findByUsername(username).orElseThrow(()->new UsernameNotFoundException(username));
+        User user = this.userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException(username));
         UsernameAndProfilePictureDTO usernameAndProfilePictureDTO = new UsernameAndProfilePictureDTO();
         usernameAndProfilePictureDTO.setUsername(username);
         usernameAndProfilePictureDTO.setProfilePicture(user.getImageUrl());

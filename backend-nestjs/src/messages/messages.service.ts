@@ -11,6 +11,8 @@ import { ConversationParticipant } from '../entities/conversation-participant.en
 import { Message } from '../entities/message.entity';
 import { UsersService } from '../users/users.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import type { ConversationListItemDto } from './dto/conversation-list-item.dto';
 import type { MessageResponseDto } from './dto/message-response.dto';
 
@@ -25,6 +27,8 @@ export class MessagesService {
     private readonly messageRepo: Repository<Message>,
     private readonly usersService: UsersService,
     private readonly notificationsGateway: NotificationsGateway,
+    private readonly notificationsService: NotificationsService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async findOrCreateConversation(
@@ -289,6 +293,8 @@ export class MessagesService {
       senderUsername: (m.sender as { username: string }).username,
       senderImageUrl:
         (m.sender as { imageUrl: string | null }).imageUrl ?? null,
+      imageUrl: m.imageUrl ?? null,
+      gifUrl: m.gifUrl ?? null,
     }));
   }
 
@@ -296,23 +302,36 @@ export class MessagesService {
     conversationId: number,
     username: string,
     content: string,
+    file?: Express.Multer.File,
+    gifUrl?: string | null,
   ): Promise<MessageResponseDto> {
     const { conversation, currentUser } = await this.ensureParticipant(
       conversationId,
       username,
     );
 
-    if (content.length === 0 || content == null)
+    if ((!content || content.length === 0) && !file && !gifUrl) {
       throw new BadRequestException('Message cannot be empty');
+    }
     if (content.length > 10000)
       throw new BadRequestException(
         'Message cannot be longer than 10000 characters',
       );
 
+    let imageUrl: string | null = null;
+    if (file) {
+      imageUrl = await this.cloudinaryService.uploadFile(
+        file,
+        'message_images',
+      );
+    }
+
     const message = this.messageRepo.create({
       conversation,
       sender: currentUser,
-      content,
+      content: content ?? '',
+      imageUrl: imageUrl ?? null,
+      gifUrl: gifUrl ?? null,
     });
     const saved = await this.messageRepo.save(message);
 
@@ -325,6 +344,8 @@ export class MessagesService {
       createdAt: saved.createdAt,
       senderUsername: username,
       senderImageUrl: currentUser.imageUrl ?? null,
+      imageUrl: saved.imageUrl ?? null,
+      gifUrl: saved.gifUrl ?? null,
     };
 
     const participants = await this.participantRepo.find({
@@ -340,6 +361,17 @@ export class MessagesService {
       conversationId,
       message: messageResponse,
     });
+
+    const contentPreview =
+      saved.content?.trim() || (saved.imageUrl ? 'Sent an image' : saved.gifUrl ? 'Sent a GIF' : 'New message');
+    for (const recipient of recipientUsernames) {
+      await this.notificationsService.sendMessagePush(
+        recipient,
+        conversationId,
+        username,
+        contentPreview,
+      );
+    }
 
     return messageResponse;
   }

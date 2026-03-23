@@ -4,4 +4,6 @@ export interface MessageResponseDto {
   createdAt: Date;
   senderUsername: string;
   senderImageUrl: string | null;
+  imageUrl: string | null;
+  gifUrl: string | null;
 }

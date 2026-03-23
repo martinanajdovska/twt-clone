@@ -18,45 +18,32 @@ export class CommunityNotesController {
 
   @Post('tweet/:tweetId')
   submitNote(
-    @Param('tweetId', ParseIntPipe) tweetId: string,
+    @Param('tweetId', ParseIntPipe) tweetId: number,
     @Body('content') content: string,
     @CurrentUsername() username: string,
   ) {
-    return this.communityNotesService.submitNote(
-      parseInt(tweetId, 10),
-      username,
-      content,
-    );
+    return this.communityNotesService.submitNote(tweetId, username, content);
   }
 
   @Get('tweet/:tweetId')
-  getNotesForTweet(@Param('tweetId', ParseIntPipe) tweetId: string) {
-    return this.communityNotesService.getMostHelpfulNoteWithRating(
-      parseInt(tweetId, 10),
-    );
+  getNotesForTweet(@Param('tweetId', ParseIntPipe) tweetId: number) {
+    return this.communityNotesService.getMostHelpfulNoteWithRating(tweetId);
   }
 
   @Get('tweet/:tweetId/all')
   getAllNotesForTweet(
-    @Param('tweetId', ParseIntPipe) tweetId: string,
+    @Param('tweetId', ParseIntPipe) tweetId: number,
     @CurrentUsername() username: string,
   ) {
-    return this.communityNotesService.getAllNotesForTweetDto(
-      parseInt(tweetId, 10),
-      username,
-    );
+    return this.communityNotesService.getAllNotesForTweetDto(tweetId, username);
   }
 
   @Post(':noteId/rate')
   rateNote(
-    @Param('noteId', ParseIntPipe) noteId: string,
+    @Param('noteId', ParseIntPipe) noteId: number,
     @Body('helpful') isHelpful: boolean,
     @CurrentUsername() username: string,
   ) {
-    return this.communityNotesService.rateNote(
-      parseInt(noteId, 10),
-      username,
-      isHelpful,
-    );
+    return this.communityNotesService.rateNote(noteId, username, isHelpful);
   }
 }

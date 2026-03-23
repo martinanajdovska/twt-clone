@@ -18,22 +18,22 @@ export class LikesController {
 
   @Post(':tweetId/likes')
   async save(
-    @Param('tweetId', ParseIntPipe) tweetId: string,
+    @Param('tweetId', ParseIntPipe) tweetId: number,
     @CurrentUsername() username: string,
   ) {
-    return this.likesService.save(username, parseInt(tweetId, 10));
+    return this.likesService.save(username, tweetId);
   }
 
   @Get(':tweetId/likes')
-  async count(@Param('tweetId', ParseIntPipe) tweetId: string) {
-    return this.likesService.countLikes(parseInt(tweetId, 10));
+  async count(@Param('tweetId', ParseIntPipe) tweetId: number) {
+    return this.likesService.countLikes(tweetId);
   }
 
   @Delete(':tweetId/likes')
   async delete(
-    @Param('tweetId', ParseIntPipe) tweetId: string,
+    @Param('tweetId', ParseIntPipe) tweetId: number,
     @CurrentUsername() username: string,
   ) {
-    await this.likesService.delete(username, parseInt(tweetId, 10));
+    await this.likesService.delete(username, tweetId);
   }
 }

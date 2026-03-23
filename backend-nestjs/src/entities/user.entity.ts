@@ -52,6 +52,9 @@ export class User {
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  expoPushToken: string | null;
+
   @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;
 }

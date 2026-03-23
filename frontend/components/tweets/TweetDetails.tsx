@@ -1,6 +1,5 @@
 'use client'
 import React, { useEffect } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import Tweet from '@/components/tweets/Tweet'
 import TweetForm from '@/components/tweets/TweetForm'
 import { ITweetResponse } from '@/DTO/ITweetResponse'
@@ -8,7 +7,6 @@ import { useInView } from 'react-intersection-observer'
 import { useFetchTweetDetails } from '@/hooks/tweets/useFetchTweetDetails'
 
 const TweetDetails = ({ id, username, profilePicture }: { id: number; username: string; profilePicture: string | null }) => {
-    const queryClient = useQueryClient()
     const { ref, inView } = useInView()
 
     const {
@@ -53,32 +51,24 @@ const TweetDetails = ({ id, username, profilePicture }: { id: number; username: 
                         </div>
                     )}
                     <div className="relative">
-                        <div className="absolute left-[36px] top-10 bottom-0 w-[2px] bg-border" aria-hidden />
                         <Tweet tweet={tweet} username={username} detailView />
                     </div>
 
-                    {/* reply form under the tweet */}
                     <div className="border-b border-border relative">
-                        <div className="absolute left-[36px] top-0 bottom-0 w-[2px] bg-border" aria-hidden />
                         <TweetForm
                             username={username}
                             parentId={tweet.id}
                             profilePicture={profilePicture ?? undefined}
-                            onSuccess={() => queryClient.invalidateQueries({ queryKey: ['tweet', String(id)] })}
+                            onSuccess={() => { }}
                         />
                     </div>
                 </div>
                 {data.pages.map((group, i) => (
                     <React.Fragment key={i}>
                         <div className="flex flex-col divide-y divide-border">
-                            {group.replies.map((reply: ITweetResponse, replyIndex: number) => {
-                                const isLast = replyIndex === group.replies.length - 1
+                            {group.replies.map((reply: ITweetResponse) => {
                                 return (
-                                    <div
-                                        key={reply.id}
-                                        className="relative transition-colors hover:bg-white/50 dark:hover:bg-white/[0.03]"
-                                    >
-                                        <div className="absolute left-[36px] top-0 bottom-0 w-[2px] bg-border" aria-hidden />
+                                    <div key={reply.id}>
                                         <Tweet tweet={reply} username={username} />
                                     </div>
                                 )

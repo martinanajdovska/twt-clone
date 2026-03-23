@@ -1,33 +1,38 @@
-import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {BASE_URL} from "@/lib/constants";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateTweetInAllCaches } from "@/lib/cache-updates";
+import type { ITweetResponse } from "@/DTO/ITweetResponse";
+import { toggleRetweet } from "@/api-calls/tweets-api";
 
-export const useRetweet = (username:string) => {
-    const queryClient = useQueryClient();
+export const useRetweet = (username: string) => {
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: async ({id, isRetweeted}:{id:number, isRetweeted:boolean}) => {
-            const res = await fetch(`${BASE_URL}/api/tweets/${id}/retweets`, {
-                method: `${isRetweeted ? "DELETE" : "POST"}`,
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: 'include'
-            });
-
-            if (!res.ok) {
-                const error = await res.text()
-                throw new Error(error)
-            }
-
-            return res;
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['feed'] });
-            queryClient.invalidateQueries({ queryKey: ['profile', username] });
-            queryClient.invalidateQueries({ queryKey: ['tweet', variables.id.toString()] });
-        },
-        onError: (err: Error) => {
-            alert(err.message);
-        }
-    });
-}
+  return useMutation({
+    mutationFn: async ({
+      id,
+      isRetweeted,
+    }: {
+      id: number;
+      isRetweeted: boolean;
+    }) => toggleRetweet(id, isRetweeted),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({
+        queryKey: ["tweet", String(variables.id)],
+      });
+      const updater = (t: ITweetResponse) => ({
+        ...t,
+        isRetweeted: !variables.isRetweeted,
+        retweetsCount: t.retweetsCount + (variables.isRetweeted ? -1 : 1),
+      });
+      updateTweetInAllCaches(queryClient, variables.id, updater);
+    },
+    onError: (err, variables) => {
+      const updater = (t: ITweetResponse) => ({
+        ...t,
+        isRetweeted: variables.isRetweeted,
+        retweetsCount: t.retweetsCount + (variables.isRetweeted ? 1 : -1),
+      });
+      updateTweetInAllCaches(queryClient, variables.id, updater);
+      alert(err.message);
+    },
+  });
+};

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Poll } from '../entities/poll.entity';
 import { PollOption } from '../entities/poll-option.entity';
@@ -9,7 +9,7 @@ import { UsersModule } from '../users/users.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Poll, PollOption, PollVote]),
-    UsersModule,
+    forwardRef(() => UsersModule),
   ],
   providers: [PollsService],
   exports: [PollsService],

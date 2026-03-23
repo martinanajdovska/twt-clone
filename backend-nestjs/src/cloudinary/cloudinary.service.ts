@@ -28,4 +28,22 @@ export class CloudinaryService {
       uploadStream.end(file.buffer);
     });
   }
+
+  async uploadVideo(
+    file: Express.Multer.File,
+    folderName: string,
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: folderName, resource_type: 'video' },
+        (err, result) => {
+          if (err) return reject(err);
+          if (!result?.secure_url) return reject(new Error('No URL returned'));
+
+          resolve(result.secure_url);
+        },
+      );
+      uploadStream.end(file.buffer);
+    });
+  }
 }

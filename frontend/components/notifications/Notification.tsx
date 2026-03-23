@@ -30,7 +30,7 @@ const Notification = ({ notification }: { notification: INotificationResponse })
 
     async function openNotification({ link, id, isRead }: { link: string, id: number, isRead: boolean }) {
         if (!isRead) {
-            await readNotification({ id });
+            await readNotification(id);
         }
         router.push(link);
     }

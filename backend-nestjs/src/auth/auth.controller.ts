@@ -11,6 +11,7 @@ export class AuthController {
   async session(
     @Body() dto: SessionDto,
     @Res({ passthrough: true }) res: express.Response,
+    @Req() req: express.Request,
   ) {
     const { access_token } =
       await this.authService.createSessionFromFirebaseToken(
@@ -26,7 +27,13 @@ export class AuthController {
       sameSite: 'lax',
     });
 
-    return { message: 'Session created' };
+    const isBrowserClient = req.headers['x-client-type'] !== 'native';
+
+    if (isBrowserClient) {
+      return { message: 'Session created' };
+    }
+
+    return { message: 'Session created', access_token };
   }
 
   @Post('logout')

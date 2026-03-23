@@ -12,7 +12,6 @@ import { FeedModule } from './feed/feed.module';
 import { LikesModule } from './likes/likes.module';
 import { RetweetsModule } from './retweets/retweets.module';
 import { FollowsModule } from './follows/follows.module';
-import { ProfileModule } from './profile/profile.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
@@ -32,6 +31,7 @@ import { GrokModule } from './grok/grok.module';
 import { CommunityNotesModule } from './community-notes/community-notes.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { MessagesModule } from './messages/messages.module';
+import { PushTokensModule } from './push-tokens/push-tokens.module';
 
 import { Conversation } from './entities/conversation.entity';
 import { ConversationParticipant } from './entities/conversation-participant.entity';
@@ -81,13 +81,13 @@ import { ScheduleModule } from '@nestjs/schedule';
     LikesModule,
     RetweetsModule,
     FollowsModule,
-    ProfileModule,
     NotificationsModule,
     CloudinaryModule,
     GrokModule,
     CommunityNotesModule,
     BookmarksModule,
     MessagesModule,
+    PushTokensModule,
   ],
 })
 export class AppModule {}

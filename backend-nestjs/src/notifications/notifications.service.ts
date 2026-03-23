@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -7,14 +12,17 @@ import {
 } from '../entities/notification.entity';
 import { NotificationsGateway } from './notifications.gateway';
 import { UsersService } from 'src/users/users.service';
+import { PushService } from 'src/push/push.service';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepo: Repository<Notification>,
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
     private readonly notificationsGateway: NotificationsGateway,
+    private readonly pushService: PushService,
   ) {}
 
   async createNotification(
@@ -33,6 +41,44 @@ export class NotificationsService {
     });
     const saved = await this.notificationRepo.save(notification);
     this.notificationsGateway.sendToUser(recipient, saved);
+
+    try {
+      await this.pushService.sendNotificationToUser(recipient, {
+        title: message,
+        body: `@${actor}`,
+        data: { link },
+        sound: 'default',
+        channelId: 'default',
+      });
+    } catch (err) {
+      console.warn('Push notification failed for', recipient, err);
+    }
+  }
+
+  async sendMessagePush(
+    recipientUsername: string,
+    conversationId: number,
+    senderUsername: string,
+    contentPreview: string,
+  ): Promise<void> {
+    const link = `/messages/${conversationId}`;
+    const title = `@${senderUsername}`;
+    const body =
+      contentPreview.length > 80
+        ? contentPreview.slice(0, 77) + '...'
+        : contentPreview || 'New message';
+
+    try {
+      await this.pushService.sendNotificationToUser(recipientUsername, {
+        title,
+        body,
+        data: { link },
+        sound: 'default',
+        channelId: 'default',
+      });
+    } catch (err) {
+      console.warn('Message push failed for', recipientUsername, err);
+    }
   }
 
   async findAllByRecipient(username: string): Promise<Notification[]> {

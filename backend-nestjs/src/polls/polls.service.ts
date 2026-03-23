@@ -28,10 +28,9 @@ export class PollsService {
   async createPoll(
     tweetId: number,
     options: string[],
-    durationHours: number,
+    durationMinutes: number,
   ): Promise<Poll> {
-    const endsAt = new Date();
-    endsAt.setHours(endsAt.getHours() + durationHours);
+    const endsAt = new Date(Date.now() + durationMinutes * 60 * 1000);
 
     const poll = this.pollRepo.create({
       tweet: { id: tweetId },
@@ -114,7 +113,7 @@ export class PollsService {
       where: { tweet: { id: tweetId } },
     });
     if (!poll) throw new NotFoundException('Poll not found');
-    if (new Date() >= poll.endsAt) {
+    if (Date.now() > poll.endsAt.getTime()) {
       throw new BadRequestException('Poll has ended');
     }
 

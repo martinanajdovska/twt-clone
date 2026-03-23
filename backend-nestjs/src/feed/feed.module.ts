@@ -12,7 +12,7 @@ import { PollsModule } from '../polls/polls.module';
 @Module({
   imports: [
     TweetsModule,
-    UsersModule,
+    forwardRef(() => UsersModule),
     FollowsModule,
     LikesModule,
     RetweetsModule,

@@ -8,7 +8,6 @@ import com.twitter_clone.backend.service.UserService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class ProfileServiceImpl implements ProfileService {
     private final UserService userService;
@@ -21,7 +20,8 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public UserInfoDTO getUserInfo(String username, String requester) {
-        User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
+        User user = this.userService.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException(username));
 
         UserInfoDTO userInfoDTO = new UserInfoDTO();
         userInfoDTO.setUsername(username);

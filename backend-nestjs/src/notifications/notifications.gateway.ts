@@ -15,6 +15,14 @@ function getTokenFromCookie(cookieHeader: string | undefined): string | null {
   return match ? match[1].trim() : null;
 }
 
+function getTokenFromAuthorizationHeader(
+  authorizationHeader: unknown,
+): string | null {
+  if (typeof authorizationHeader !== 'string') return null;
+  const match = authorizationHeader.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1].trim() : null;
+}
+
 @WebSocketGateway({
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:3001',
@@ -31,11 +39,20 @@ export class NotificationsGateway
   constructor(private readonly jwtService: JwtService) {}
 
   handleConnection(socket: Socket) {
-    const token = getTokenFromCookie(socket.handshake.headers.cookie);
+    const token =
+      // browser session cookie (web)
+      getTokenFromCookie(socket.handshake.headers.cookie) ??
+      // native client Authorization header (mobile)
+      getTokenFromAuthorizationHeader(socket.handshake.headers.authorization) ??
+      // fallback: socket auth payload
+      (typeof (socket.handshake.auth as any)?.token === 'string'
+        ? (socket.handshake.auth as any).token
+        : null);
     if (!token) {
       socket.disconnect();
       return;
     }
+
     try {
       const payload = this.jwtService.verify<{ sub: string }>(token);
       const username = payload.sub;

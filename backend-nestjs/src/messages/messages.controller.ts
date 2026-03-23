@@ -7,10 +7,13 @@ import {
   Param,
   ParseIntPipe,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUsername } from '../common/decorators/current-user.decorator';
 import { MessagesService } from './messages.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('api/messages')
 @UseGuards(JwtAuthGuard)
@@ -63,12 +66,21 @@ export class MessagesController {
   }
 
   @Post('conversations/:id/messages')
+  @UseInterceptors(FileInterceptor('image'))
   async sendMessage(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUsername() username: string,
     @Body('content') content: string,
+    @Body('gifUrl') gifUrl?: string,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.messagesService.sendMessage(id, username, content);
+    return this.messagesService.sendMessage(
+      id,
+      username,
+      content,
+      file,
+      gifUrl ?? null,
+    );
   }
 
   @Patch('conversations/:id')

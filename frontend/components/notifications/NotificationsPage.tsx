@@ -29,7 +29,7 @@ export default function NotificationsPage() {
 
   function readAll() {
     notifications.forEach((n: INotificationResponse) =>
-      readNotification({ id: n.id })
+      readNotification(n.id)
     )
   }
 

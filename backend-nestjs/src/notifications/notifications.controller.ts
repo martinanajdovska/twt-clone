@@ -22,9 +22,9 @@ export class NotificationsController {
 
   @Patch(':id')
   async readNotification(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUsername() username: string,
   ) {
-    await this.notificationsService.markAsRead(parseInt(id, 10), username);
+    await this.notificationsService.markAsRead(id, username);
   }
 }

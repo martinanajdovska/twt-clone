@@ -5,12 +5,18 @@ export interface ITweetResponse {
   parentId: number | null;
   content: string;
   imageUrl: string | null;
+  optimisticImageUrl?: string | null;
+  gifUrl: string | null;
+  videoUrl: string | null;
+  optimisticVideoUrl?: string | null;
   isPinned: boolean;
   quotedTweet: {
     id: number;
     username: string;
     content: string;
     imageUrl: string | null;
+    gifUrl?: string | null;
+    videoUrl?: string | null;
     createdAt: string;
     isDeleted: boolean;
   } | null;

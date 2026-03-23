@@ -10,7 +10,7 @@ import { FeedModule } from '../feed/feed.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Bookmark]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     TweetsModule,
     forwardRef(() => FeedModule),
   ],

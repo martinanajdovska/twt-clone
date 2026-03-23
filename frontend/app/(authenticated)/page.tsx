@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers';
 import TweetForm from "@/components/tweets/TweetForm";
 import Feed from "@/components/tweets/Feed";
-import React from "react";
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { fetchSelfUsernameAndProfilePicture } from "@/api-calls/users-api";
 import { redirect } from "next/navigation";

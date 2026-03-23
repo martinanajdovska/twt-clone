@@ -13,7 +13,7 @@ import { PollsModule } from '../polls/polls.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Tweet]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     PollsModule,
     CloudinaryModule,
     NotificationsModule,
