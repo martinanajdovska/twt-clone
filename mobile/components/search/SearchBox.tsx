@@ -15,6 +15,7 @@ import { Colors } from "@/constants/theme";
 import { ThemedView } from "@/components/ui/themed-view";
 import { ThemedText } from "@/components/ui/themed-text";
 import { Image } from "expo-image";
+import { ISearchBoxUser } from "@/types/profile";
 
 type Tab = "users" | "tweets";
 
@@ -28,7 +29,9 @@ export function SearchBox({
   isLoading,
   users = [],
   onUserPress,
+  onUserSelect,
   userSecondaryText = "View profile",
+  showUserChevron = true,
   renderTweets,
   emptyUsersText,
   emptyTweetsText,
@@ -42,9 +45,11 @@ export function SearchBox({
   tab?: Tab;
   onTabChange?: (t: Tab) => void;
   isLoading?: boolean;
-  users?: { username: string; displayName: string | null, imageUrl: string | null }[];
+  users?: ISearchBoxUser[];
   onUserPress?: (username: string) => void;
+  onUserSelect?: (item: ISearchBoxUser) => void;
   userSecondaryText?: string;
+  showUserChevron?: boolean;
   renderTweets?: React.ReactNode;
   emptyUsersText?: string;
   emptyTweetsText?: string;
@@ -118,30 +123,41 @@ export function SearchBox({
       ) : activeTab === "users" ? (
         <FlatList
           data={users}
-          keyExtractor={(item) => item.username}
+          keyExtractor={(item, index) => item.key ?? `${item.username}-${index}`}
           keyboardShouldPersistTaps="always"
           contentContainerStyle={styles.list}
-          renderItem={({ item: { username, displayName, imageUrl } }) => (
+          renderItem={({ item }) => (
             <Pressable
               style={({ pressed }) => [
                 styles.userRow,
                 {
                   borderBottomColor: borderColor,
-                  backgroundColor: pressed ? mutedColor + "15" : undefined,
+                  backgroundColor: (onUserPress || onUserSelect) && pressed ? mutedColor + "15" : undefined,
                 },
               ]}
-              onPress={() => onUserPress?.(username)}
+              disabled={!onUserPress && !onUserSelect}
+              onPress={() => {
+                if (onUserSelect) {
+                  onUserSelect(item);
+                  return;
+                }
+                onUserPress?.(item.username);
+              }}
             >
               <View style={[styles.avatar, { backgroundColor: mutedColor + "25" }]}>
-                {imageUrl ?
-                  <Image source={{ uri: imageUrl }} style={styles.avatar} />
+                {item.imageUrl ?
+                  <Image source={{ uri: item.imageUrl }} style={styles.avatar} />
                   : <MaterialIcons name="person" size={22} color={mutedColor} />}
               </View>
               <View style={styles.userInfo}>
-                <Text style={[styles.userHandle, { color: textColor }]}>{displayName ?? username} @{username}</Text>
-                <Text style={[styles.userSecondary, { color: mutedColor }]}>{userSecondaryText}</Text>
+                <Text style={[styles.userHandle, { color: textColor }]}>{item.displayName ?? item.username} @{item.username}</Text>
+                <Text style={[styles.userSecondary, { color: mutedColor }]}>
+                  {item.secondaryText ?? userSecondaryText}
+                </Text>
               </View>
-              <MaterialIcons name="chevron-right" size={22} color={mutedColor} />
+              {showUserChevron ? (
+                <MaterialIcons name="chevron-right" size={22} color={mutedColor} />
+              ) : null}
             </Pressable>
           )}
           ListEmptyComponent={

@@ -23,3 +23,13 @@ export interface IUpdateProfileResponse {
   bannerUrl: string | null;
   createdAt: string;
 }
+
+export interface ISearchBoxUser {
+  id?: number;
+  createdAt?: string;
+  username: string;
+  displayName: string | null;
+  imageUrl: string | null;
+  secondaryText?: string;
+  key?: string;
+}

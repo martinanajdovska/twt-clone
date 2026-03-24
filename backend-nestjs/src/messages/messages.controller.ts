@@ -21,6 +21,20 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
+  @Get('search')
+  async search(
+    @Query('q') q: string,
+    @Query('username') otherUsername: string,
+    @CurrentUsername() currentUsername: string,
+    @Query('page', ParseIntPipe) page: number = 0,
+    @Query('size', ParseIntPipe) size: number = 10,
+  ) {
+    return this.messagesService.search(q, currentUsername, otherUsername, {
+      page,
+      size,
+    });
+  }
+
   @Get('conversations')
   async getMyConversations(
     @CurrentUsername() username: string,
@@ -73,6 +87,16 @@ export class MessagesController {
     @Query('size', ParseIntPipe) size: number = 10,
   ) {
     return this.messagesService.getMessages(id, username, { page, size });
+  }
+
+  @Get('conversations/:id/messages/context')
+  async getMessageContext(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUsername() username: string,
+    @Query('createdAt') createdAt: string,
+    @Query('size', ParseIntPipe) size: number = 10,
+  ) {
+    return this.messagesService.getMessageContext(id, username, createdAt, size);
   }
 
   @Post('conversations/:id/messages')

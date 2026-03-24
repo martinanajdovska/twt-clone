@@ -305,6 +305,24 @@ export function markConversationAsReadInCache(
   );
 }
 
+export function removeConversationFromCache(
+  queryClient: QueryClient,
+  conversationId: number,
+): void {
+  queryClient.setQueryData<InfiniteData<IConversationListItem[]>>(
+    ["conversations"],
+    (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) =>
+          page.filter((conv) => conv.id !== conversationId),
+        ),
+      };
+    },
+  );
+}
+
 export function addTempMessageToCache(
   queryClient: QueryClient,
   conversationId: number,

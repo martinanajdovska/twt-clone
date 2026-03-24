@@ -31,3 +31,12 @@ export interface IMessagePage {
   size: number;
   number: number;
 }
+
+export interface IMessageSearchResult {
+  id: number;
+  content: string;
+  username: string;
+  displayName: string | null;
+  imageUrl: string | null;
+  createdAt: string;
+}

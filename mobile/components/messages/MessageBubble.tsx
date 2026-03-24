@@ -7,7 +7,15 @@ import { useTheme } from '@/contexts/ThemeContext';
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const BUBBLE_MAX_WIDTH = SCREEN_WIDTH * 0.72;
 
-export default function MessageBubble({ item, other }: { item: IMessageItem, other: { username: string, imageUrl: string | null, displayName: string | null } }) {
+export default function MessageBubble({
+    item,
+    other,
+    highlighted = false,
+}: {
+    item: IMessageItem,
+    other: { username: string, imageUrl: string | null, displayName: string | null },
+    highlighted?: boolean,
+}) {
     const { colorScheme, isDark } = useTheme();
     const colors = Colors[colorScheme];
 
@@ -30,6 +38,7 @@ export default function MessageBubble({ item, other }: { item: IMessageItem, oth
                         isSelf
                             ? { backgroundColor: '#1d9bf0' }
                             : { backgroundColor: isDark ? '#2f3336' : '#e8e8e8' },
+                        highlighted && styles.highlightedBubble,
                     ]}
                 >
                     {item.content ? (
@@ -70,6 +79,10 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         minWidth: 0,
         maxWidth: BUBBLE_MAX_WIDTH,
+    },
+    highlightedBubble: {
+        borderWidth: 2,
+        borderColor: '#f7b500',
     },
     bubbleText: {
         fontSize: 15,

@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, StyleSheet } from "react-native";
+import { TouchableOpacity, View, StyleSheet, Alert } from "react-native";
 import { ThemedText } from "../ui/themed-text";
 import { formatRelativeTime } from "@/lib/relativeTime";
 import { router } from "expo-router";
@@ -8,7 +8,15 @@ import { IConversationListItem } from "@/types/message";
 import { Image } from 'expo-image';
 
 
-export default function ConversationListItem({ item }: { item: IConversationListItem }) {
+export default function ConversationListItem({
+    item,
+    onArchive,
+    isArchiving = false,
+}: {
+    item: IConversationListItem;
+    onArchive?: (id: number) => void;
+    isArchiving?: boolean;
+}) {
     const { colorScheme, isDark } = useTheme();
     const colors = Colors[colorScheme];
 
@@ -20,10 +28,24 @@ export default function ConversationListItem({ item }: { item: IConversationList
         router.push(`/(tabs)/conversation/${id}` as any);
     };
 
+    const confirmArchive = () => {
+        if (!onArchive) return;
+        Alert.alert(
+            "Archive conversation?",
+            "This will remove the conversation from your inbox. The other person will still be able to see it.",
+            [
+                { text: "Cancel", style: "cancel" },
+                { text: "Confirm", style: "destructive", onPress: () => onArchive(item.id) },
+            ],
+        );
+    };
+
     return (
         <TouchableOpacity
             style={[styles.row, { borderBottomColor: borderColor }]}
             onPress={() => openConversation(item.id)}
+            onLongPress={confirmArchive}
+            delayLongPress={280}
             activeOpacity={0.7}
         >
             {item.otherParticipant.imageUrl ? (

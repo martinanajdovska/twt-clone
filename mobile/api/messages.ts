@@ -3,6 +3,7 @@ import type {
   IConversationListItem,
   IMessageItem,
   IMessagePage,
+  IMessageSearchResult,
 } from "@/types/message";
 
 function normalizeListResponse<T>(data: unknown): T[] {
@@ -128,4 +129,38 @@ export async function markConversationAsRead(
     method: "PATCH",
   });
   if (!res.ok) throw new Error((await res.text()) || "Failed to mark read");
+}
+
+export async function searchConversationMessages(
+  q: string,
+  otherUsername: string,
+  page: number = 0,
+  size: number = 20,
+): Promise<IMessageSearchResult[]> {
+  const query = new URLSearchParams({
+    q,
+    username: otherUsername,
+    page: String(page),
+    size: String(size),
+  });
+  return apiJson<IMessageSearchResult[]>(`/messages/search?${query.toString()}`);
+}
+
+export async function fetchMessageContext(
+  conversationId: number,
+  createdAt: string,
+  size: number = 10,
+): Promise<IMessageItem[]> {
+  return apiJson<IMessageItem[]>(
+    `/messages/conversations/${conversationId}/messages/context?createdAt=${encodeURIComponent(createdAt)}&size=${size}`,
+  );
+}
+
+export async function archiveConversation(conversationId: number): Promise<void> {
+  const res = await apiFetch(`/messages/conversations/${conversationId}`, {
+    method: "PATCH",
+  });
+  if (!res.ok) {
+    throw new Error((await res.text()) || "Failed to archive conversation");
+  }
 }

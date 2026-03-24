@@ -335,6 +335,63 @@ export class MessagesService {
     };
   }
 
+  async getMessageContext(
+    conversationId: number,
+    username: string,
+    createdAt: string,
+    size: number,
+  ): Promise<MessageResponseDto[]> {
+    await this.ensureParticipant(conversationId, username);
+
+    const targetDate = new Date(createdAt);
+    if (Number.isNaN(targetDate.getTime())) {
+      throw new BadRequestException('Invalid createdAt date');
+    }
+
+    const safeSize = 20;
+    const olderCount = safeSize / 2;
+    const newerCount = safeSize / 2;
+
+    const olderOrEqual = await this.messageRepo
+      .createQueryBuilder('m')
+      .innerJoin('m.conversation', 'c')
+      .innerJoinAndSelect('m.sender', 's')
+      .where('c.id = :conversationId', { conversationId })
+      .andWhere('m.createdAt <= :targetDate', { targetDate })
+      .orderBy('m.createdAt', 'DESC')
+      .take(olderCount)
+      .getMany();
+
+    const newer = await this.messageRepo
+      .createQueryBuilder('m')
+      .innerJoin('m.conversation', 'c')
+      .innerJoinAndSelect('m.sender', 's')
+      .where('c.id = :conversationId', { conversationId })
+      .andWhere('m.createdAt > :targetDate', { targetDate })
+      .orderBy('m.createdAt', 'ASC')
+      .take(newerCount)
+      .getMany();
+
+    const byId = new Map<number, Message>();
+    for (const m of [...olderOrEqual, ...newer]) byId.set(m.id, m);
+
+    return [...byId.values()]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+      .slice(0, safeSize)
+      .map((m) => ({
+        id: m.id,
+        content: m.content,
+        createdAt: m.createdAt,
+        senderUsername: (m.sender as { username: string }).username,
+        senderImageUrl: (m.sender as { imageUrl: string | null }).imageUrl,
+        imageUrl: m.imageUrl ?? null,
+        gifUrl: m.gifUrl ?? null,
+      }));
+  }
+
   async sendMessage(
     conversationId: number,
     username: string,
@@ -469,5 +526,49 @@ export class MessagesService {
 
     participant!.archivedAt = new Date();
     await this.participantRepo.save(participant!);
+  }
+
+  async search(
+    q: string,
+    currentUsername: string,
+    otherUsername: string,
+    pageable: { page: number; size: number },
+  ): Promise<
+    {
+      id: number;
+      content: string;
+      username: string;
+      displayName: string | null;
+      imageUrl: string | null;
+      createdAt: Date;
+    }[]
+  > {
+    const user = await this.usersService.findByUsername(otherUsername);
+    if (!user) throw new NotFoundException('User not found');
+
+    return this.messageRepo
+      .createQueryBuilder('m')
+      .select('m.id', 'id')
+      .addSelect('m.content', 'content')
+      .addSelect('s.username', 'username')
+      .addSelect('s.displayName', 'displayName')
+      .addSelect('s.imageUrl', 'imageUrl')
+      .addSelect('m.createdAt', 'createdAt')
+      .innerJoin('m.sender', 's')
+      .where('m.content ILIKE :q', { q: `${q}%` })
+      .andWhere('s.username IN (:...usernames)', {
+        usernames: [currentUsername, otherUsername],
+      })
+      .orderBy('m.createdAt', 'DESC')
+      .skip(pageable.page * pageable.size)
+      .take(pageable.size)
+      .getRawMany<{
+        id: number;
+        content: string;
+        username: string;
+        displayName: string | null;
+        imageUrl: string | null;
+        createdAt: Date;
+      }>();
   }
 }

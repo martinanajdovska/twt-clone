@@ -19,6 +19,7 @@ import ConversationListItem from '@/components/messages/ConversationListItem';
 import { SearchBox } from '@/components/search/SearchBox';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import useFetchConversations from '@/hooks/messages/useFetchConversations';
+import { useArchiveConversation } from '@/hooks/messages/useArchiveConversation';
 
 
 export default function MessagesScreen() {
@@ -48,6 +49,7 @@ export default function MessagesScreen() {
   const { data: self, isLoading: selfLoading } = useFetchSelf();
   const { data: searchResults = [] as { username: string; displayName: string | null, imageUrl: string | null }[], isLoading: searchLoading } = useFetchUsersByName(debouncedQ);
   const { mutate: createConversation, isPending: isCreating } = useCreateConversation();
+  const { mutate: archiveConversation, variables: archivingConversationId } = useArchiveConversation();
 
 
   return (
@@ -80,7 +82,13 @@ export default function MessagesScreen() {
         <FlatList
           data={conversations}
           keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <ConversationListItem item={item} />}
+          renderItem={({ item }) => (
+            <ConversationListItem
+              item={item}
+              onArchive={(id) => archiveConversation(id)}
+              isArchiving={archivingConversationId === item.id}
+            />
+          )}
           ListEmptyComponent={
             <ThemedView style={styles.empty}>
               <MaterialIcons name="mail-outline" size={48} color={mutedColor} />
