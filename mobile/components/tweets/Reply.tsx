@@ -1,16 +1,17 @@
 import { ITweet } from "@/types/tweet";
-import { router } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
 import { Colors } from "@/constants/theme";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCompose } from "@/contexts/ComposeContext";
 
 export default function Reply({ self, tweet }: { self: { profilePicture?: string | null, username: string }, tweet: ITweet }) {
     const { colorScheme, isDark } = useTheme();
     const colors = Colors[colorScheme];
 
     const insets = useSafeAreaInsets();
+    const { openCompose } = useCompose();
 
     const borderColor = isDark ? '#3d4146' : '#d8dde1';
     const mutedColor = colors.icon;
@@ -20,12 +21,7 @@ export default function Reply({ self, tweet }: { self: { profilePicture?: string
         <TouchableOpacity
             activeOpacity={0.8}
             style={[styles.replyBar, { backgroundColor: barBg, borderTopColor: borderColor, paddingBottom: insets.bottom + 10 }]}
-            onPress={() =>
-                router.push({
-                    pathname: '/(tabs)/compose',
-                    params: { parentId: String(tweet.id) },
-                })
-            }
+            onPress={() => openCompose({ parentId: tweet.id })}
         >
             {self.profilePicture ? (
                 <Image source={{ uri: self.profilePicture }} style={styles.replyBarAvatar} />

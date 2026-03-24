@@ -3,7 +3,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
 import { ThemedView } from '@/components/ui/themed-view';
 import { Feed } from '@/components/tweets/Feed';
 import { Colors } from '@/constants/theme';
@@ -15,17 +14,23 @@ import { useNavigation } from '@react-navigation/native';
 import { useFetchSelf } from '@/hooks/users/useFetchSelf';
 import { useHeaderAndTabFade } from '@/hooks/useHeaderAndTabFade';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useCompose } from '@/contexts/ComposeContext';
+
+const HEADER_MAX_HEIGHT = 46;
 
 export default function HomeScreen() {
   const { colorScheme, isDark } = useTheme();
   const colors = Colors[colorScheme];
   const { openDrawer } = useDrawer();
   const insets = useSafeAreaInsets();
+  const { openCompose } = useCompose();
 
   const { data: self, isLoading: selfLoading } = useFetchSelf();
   const navigation = useNavigation();
   const { headerOpacity, headerHeight, handleScroll } = useHeaderAndTabFade({
     navigation,
+    headerMaxHeight: HEADER_MAX_HEIGHT,
     tabBarMaxHeight: insets.bottom + 49,
   });
 
@@ -38,32 +43,34 @@ export default function HomeScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ScreenHeader
-        title="Feed"
-        leftAction="avatar"
-        onLeftPress={openDrawer}
-        avatarUrl={self.profilePicture}
-        avatarFallbackText={self.displayName?.charAt(0).toUpperCase() ?? self.username.charAt(0).toUpperCase()}
-        animated
-        animatedOpacity={headerOpacity}
-        animatedHeight={headerHeight}
-      />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemedView style={styles.container}>
+        <ScreenHeader
+          title="Feed"
+          leftAction="avatar"
+          onLeftPress={openDrawer}
+          avatarUrl={self.profilePicture}
+          avatarFallbackText={self.displayName?.charAt(0).toUpperCase() ?? self.username.charAt(0).toUpperCase()}
+          animated
+          animatedOpacity={headerOpacity}
+          animatedHeight={headerHeight}
+        />
 
-      <Feed
-        mode="home"
-        currentUsername={self.username}
-        onScroll={handleScroll}
-      />
+        <Feed
+          mode="home"
+          currentUsername={self.username}
+          onScroll={handleScroll}
+        />
 
-      <TouchableOpacity
-        style={[styles.fab, { bottom: 15 }]}
-        onPress={() => router.push('../(tabs)/compose')}
-        activeOpacity={0.85}
-      >
-        <MaterialIcons name="edit" size={24} color="#fff" />
-      </TouchableOpacity>
-    </ThemedView>
+        <TouchableOpacity
+          style={[styles.fab, { bottom: 15 }]}
+          onPress={() => openCompose({ topOffset: insets.top + HEADER_MAX_HEIGHT })}
+          activeOpacity={0.85}
+        >
+          <MaterialIcons name="edit" size={24} color="#fff" />
+        </TouchableOpacity>
+      </ThemedView>
+    </GestureHandlerRootView>
   );
 }
 

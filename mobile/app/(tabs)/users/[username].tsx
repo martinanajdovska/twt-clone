@@ -26,6 +26,7 @@ import Animated, {
 import { useFetchProfileFeed } from '@/hooks/users/useFetchProfileFeed';
 import { useFetchSelf } from '@/hooks/users/useFetchSelf';
 import { useFetchProfileHeader } from '@/hooks/users/useFetchProfileHeader';
+import { useCompose } from '@/contexts/ComposeContext';
 
 
 const TABS = ['tweets', 'replies', 'likes', 'media'] as const;
@@ -42,6 +43,7 @@ type ListItem =
 export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const router = useRouter();
+  const { openCompose } = useCompose();
   const insets = useSafeAreaInsets();
 
   const { colorScheme, isDark } = useTheme();
@@ -115,7 +117,7 @@ export default function UserProfileScreen() {
 
 
   const handleBackPress = () => router.back();
-  const handleComposePress = () => router.push('../compose');
+  const handleComposePress = () => openCompose();
   const handleTabPress = (selectedTab: TabType) => setTab(selectedTab);
 
   const handleProfileHeaderLayout = (height: number) => {

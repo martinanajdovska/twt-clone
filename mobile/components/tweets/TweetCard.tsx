@@ -21,6 +21,7 @@ import { useKeyboard } from '@/hooks/useKeyboard';
 import { TweetQuotedCard } from './TweetQuotedCard';
 import { TweetActions } from './TweetActions';
 import { useTweetCardHandlers } from '../../hooks/useTweetCardHandlers';
+import { useCompose } from '@/contexts/ComposeContext';
 
 export function TweetCard({
   tweet,
@@ -32,6 +33,7 @@ export function TweetCard({
   showPinnedLabel?: boolean;
 }) {
   const router = useRouter();
+  const { openCompose } = useCompose();
   const { colorScheme, isDark } = useTheme();
   const colors = Colors[colorScheme];
   const insets = useSafeAreaInsets();
@@ -76,11 +78,7 @@ export function TweetCard({
     setAddNoteContent,
     setAddNoteModalVisible,
     setDeleteConfirmVisible,
-    onNavigateToComposeQuote: (tweetId) =>
-      router.push({
-        pathname: '/(tabs)/compose',
-        params: { quotedTweetId: String(tweetId) },
-      } as any),
+    onNavigateToComposeQuote: (tweetId) => openCompose({ quotedTweetId: tweetId }),
   });
 
 
@@ -251,7 +249,6 @@ export function TweetCard({
               tweet={tweet}
               iconColor={iconColor}
               mutedColor={mutedColor}
-              onOpenReplies={() => router.push(`/(tabs)/tweets/${tweet.id}`)}
               onRetweetPress={handleRetweetPress}
               onLikePress={handleLike}
               onBookmarkPress={handleBookmark}
