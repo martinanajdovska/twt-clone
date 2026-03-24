@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -6,9 +6,12 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
+import * as VideoThumbnails from "expo-video-thumbnails";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import type { ITweet } from "@/types/tweet";
 import { Colors } from "@/constants/theme";
@@ -41,6 +44,47 @@ export function ReelItem({
     useToggleRetweet();
   const { mutate: toggleBookmarkMutation, isPending: isBookmarkPending } =
     useToggleBookmark();
+  const fallbackPreviewUrl = useMemo(
+    () => tweet.imageUrl ?? tweet.gifUrl ?? null,
+    [tweet.imageUrl, tweet.gifUrl]
+  );
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(fallbackPreviewUrl);
+  const [isThumbnailLoading, setIsThumbnailLoading] = useState(false);
+
+  useEffect(() => {
+    setThumbnailUrl(fallbackPreviewUrl);
+  }, [fallbackPreviewUrl, tweet.id]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function generateVideoPreview() {
+      if (!tweet.videoUrl) return;
+      if (thumbnailUrl) return;
+
+      try {
+        setIsThumbnailLoading(true);
+        const result = await VideoThumbnails.getThumbnailAsync(tweet.videoUrl, {
+          time: 1200,
+        });
+        if (!isCancelled) {
+          setThumbnailUrl(result.uri);
+        }
+      } catch {
+        // Keep fallback placeholder if thumbnail generation fails.
+      } finally {
+        if (!isCancelled) {
+          setIsThumbnailLoading(false);
+        }
+      }
+    }
+
+    generateVideoPreview();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [tweet.videoUrl, thumbnailUrl]);
 
   const handleLike = () => {
     toggleLikeMutation({
@@ -82,11 +126,18 @@ export function ReelItem({
           <Text style={{ color: mutedColor, marginTop: 8 }}>Video plays in native app</Text>
         </View>
       ) : !shouldMountVideo ? (
-        <View style={[styles.placeholder, { backgroundColor: "#000" }]}>
-          <MaterialIcons name="play-circle-filled" size={56} color="rgba(255,255,255,0.85)" />
-        </View>
+        <VideoPreview
+          previewUrl={thumbnailUrl}
+          showSpinner={isThumbnailLoading}
+          iconColor="rgba(255,255,255,0.85)"
+        />
       ) : (
-        <ActiveVideo videoUrl={tweet.videoUrl} isActive={isActive} />
+        <ActiveVideo
+          videoUrl={tweet.videoUrl}
+          isActive={isActive}
+          previewUrl={thumbnailUrl}
+          showSpinner={isThumbnailLoading}
+        />
       )}
 
       {/* overlay: user + content + actions */}
@@ -168,28 +219,75 @@ export function ReelItem({
 function ActiveVideo({
   videoUrl,
   isActive,
+  previewUrl,
+  showSpinner,
 }: {
   videoUrl: string | null;
   isActive: boolean;
+  previewUrl: string | null;
+  showSpinner: boolean;
 }) {
   const player = useVideoPlayer(videoUrl!, (p) => {
     p.loop = true;
-    p.muted = false;
+    p.muted = true;
   });
+  const [showPreviewOverlay, setShowPreviewOverlay] = useState(true);
 
   useEffect(() => {
     if (!videoUrl) return;
-    if (isActive) player.play();
-    else player.pause();
+    if (isActive) {
+      setShowPreviewOverlay(true);
+      player.play();
+      const timer = setTimeout(() => {
+        setShowPreviewOverlay(false);
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+
+    setShowPreviewOverlay(true);
+    player.pause();
   }, [isActive, videoUrl, player]);
 
   return (
-    <VideoView
-      player={player}
-      style={StyleSheet.absoluteFill}
-      contentFit="cover"
-      nativeControls={false}
-    />
+    <View style={StyleSheet.absoluteFill}>
+      <VideoView
+        player={player}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        nativeControls={false}
+      />
+      {showPreviewOverlay ? (
+        <VideoPreview
+          previewUrl={previewUrl}
+          showSpinner={showSpinner}
+          iconColor="rgba(255,255,255,0.9)"
+        />
+      ) : null}
+    </View>
+  );
+}
+
+function VideoPreview({
+  previewUrl,
+  showSpinner,
+  iconColor,
+}: {
+  previewUrl: string | null;
+  showSpinner: boolean;
+  iconColor: string;
+}) {
+  return (
+    <View style={styles.previewWrap}>
+      {previewUrl ? (
+        <Image source={{ uri: previewUrl }} style={styles.previewImage} resizeMode="cover" />
+      ) : (
+        <View style={[styles.placeholder, { backgroundColor: "#000" }]} />
+      )}
+      {showSpinner ? (
+        <ActivityIndicator size="large" color="#fff" style={styles.previewSpinner} />
+      ) : null}
+      <MaterialIcons name="play-circle-filled" size={56} color={iconColor} style={styles.previewIcon} />
+    </View>
   );
 }
 
@@ -203,6 +301,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  previewWrap: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#000",
+  },
+  previewImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  previewIcon: {
+    zIndex: 2,
+  },
+  previewSpinner: {
+    position: "absolute",
+    top: "50%",
+    marginTop: -42,
+    zIndex: 3,
   },
   overlay: {
     position: "absolute",

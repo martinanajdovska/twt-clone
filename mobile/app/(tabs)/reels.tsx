@@ -93,7 +93,7 @@ export default function ReelsScreen() {
           <ReelItem
             tweet={item}
             isActive={index === activeIndex}
-            shouldMountVideo={index === activeIndex}
+            shouldMountVideo={Math.abs(index - activeIndex) <= 1}
           />
         )}
         style={styles.carousel}
