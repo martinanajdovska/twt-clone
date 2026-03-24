@@ -46,7 +46,7 @@ export default function MessagesScreen() {
 
   const conversations = data?.pages.flatMap((page) => page ?? []) ?? [];
   const { data: self, isLoading: selfLoading } = useFetchSelf();
-  const { data: searchResults = [], isLoading: searchLoading } = useFetchUsersByName(debouncedQ);
+  const { data: searchResults = [] as { username: string; displayName: string | null, imageUrl: string | null }[], isLoading: searchLoading } = useFetchUsersByName(debouncedQ);
   const { mutate: createConversation, isPending: isCreating } = useCreateConversation();
 
 

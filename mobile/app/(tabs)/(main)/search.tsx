@@ -32,7 +32,7 @@ export default function SearchScreen() {
   }, [q]);
 
   const { data: self } = useFetchSelf();
-  const { data: users = [], isLoading: usersLoading } = useFetchUsersByName(debouncedQ);
+  const { data: users = [] as { username: string; displayName: string | null, imageUrl: string | null }[], isLoading: usersLoading } = useFetchUsersByName(debouncedQ);
   const { data: tweets = [], isLoading: tweetsLoading } = useFetchTweetsBySearch(debouncedQ);
 
 

@@ -47,11 +47,11 @@ export function AppDrawer() {
                     ) : (
                         <View style={[styles.drawerAvatar, { backgroundColor: '#536471', justifyContent: 'center', alignItems: 'center' }]}>
                             <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 22 }}>
-                                {self?.username.charAt(0).toUpperCase()}
+                                {self?.displayName?.charAt(0).toUpperCase() ?? self?.username.charAt(0).toUpperCase()}
                             </Text>
                         </View>
                     )}
-                    <Text style={[styles.drawerUsername, { color: textColor }]}>{self?.username}</Text>
+                    <Text style={[styles.drawerUsername, { color: textColor }]}>{self?.displayName ?? self?.username}</Text>
                     <Text style={[styles.drawerHandle, { color: mutedColor }]}>@{self?.username.toLowerCase()}</Text>
                 </View>
 

@@ -85,7 +85,10 @@ export function TweetCardModals({
   deletePending,
   onDeleteConfirm,
 }: TweetCardModalsProps) {
-  const { data: allNotes = [], isLoading: allNotesLoading } = useFetchNotesForTweet(tweetId);
+  const { data: allNotes = [], isLoading: allNotesLoading } = useFetchNotesForTweet(
+    tweetId,
+    viewNotesModalVisible,
+  );
 
   return (
     <>

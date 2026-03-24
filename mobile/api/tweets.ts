@@ -16,7 +16,7 @@ export async function fetchTweetDetails(
 
 export async function fetchTweetsBySearch(q: string): Promise<ITweet[]> {
   const data = await apiJson<ITweet[] | { content: ITweet[] }>(
-    `/tweets/search?q=${encodeURIComponent(q)}`,
+    `/tweets/search/content?q=${encodeURIComponent(q)}`,
   );
   return Array.isArray(data)
     ? data

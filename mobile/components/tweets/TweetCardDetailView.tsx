@@ -16,7 +16,6 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from "@/constants/theme";
 import { TweetCardModals } from "./TweetCardModals";
 import { useKeyboard } from "@/hooks/useKeyboard";
-import { useFetchMostHelpfulNote } from "@/hooks/community-notes/useFetchMostHelpfulNote";
 
 
 type Props = {
@@ -47,8 +46,6 @@ export function TweetCardDetailView({
   const [addNoteContent, setAddNoteContent] = useState('');
   const [viewNotesModalVisible, setViewNotesModalVisible] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
-
-  const { data: mostHelpfulNote = undefined } = useFetchMostHelpfulNote(tweet.id);
 
   const isSelf = currentUsername === tweet.username;
 
@@ -257,7 +254,7 @@ export function TweetCardDetailView({
             showCounts={false}
           />
 
-          {mostHelpfulNote && <CommunityNoteDisplay note={mostHelpfulNote} tweetId={tweet.id} />}
+          {tweet.communityNote && <CommunityNoteDisplay note={tweet.communityNote} tweetId={tweet.id} />}
         </View>
       </View>
     </>

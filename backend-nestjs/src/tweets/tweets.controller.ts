@@ -68,7 +68,7 @@ export class TweetsController {
     return this.tweetsService.votePoll(id, optionId, username);
   }
 
-  @Get('search')
+  @Get('search/content')
   async searchTweets(
     @Query('q') q: string,
     @CurrentUsername() username: string,

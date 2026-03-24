@@ -129,15 +129,28 @@ export class UsersService {
     return (await this.userRepo.count({ where: { email } })) > 0;
   }
 
-  async findByUsernameContaining(search: string): Promise<string[]> {
+  async findByUsernameContaining(
+    search: string,
+  ): Promise<{ username: string; displayName: string | null }[]> {
     const users = await this.userRepo
       .createQueryBuilder('u')
-      .select('u.username')
+      .select('u.username', 'username')
+      .addSelect('u.displayName', 'displayName')
+      .addSelect('u.imageUrl', 'imageUrl')
       .where('u.username ILIKE :pattern', { pattern: `${search}%` })
+      .orWhere('u.displayName ILIKE :pattern', { pattern: `${search}%` })
       .orderBy('u.username')
-      .limit(5)
-      .getMany();
-    return users.map((u) => u.username);
+      .limit(10)
+      .getRawMany<{
+        username: string;
+        displayName: string | null;
+        imageUrl: string | null;
+      }>();
+    return users.map((u) => ({
+      username: u.username,
+      displayName: u.displayName ?? null,
+      imageUrl: u.imageUrl ?? null,
+    }));
   }
 
   async updateProfileImage(
@@ -255,6 +268,7 @@ export class UsersService {
   async getUsernameAndProfilePicture(username: string): Promise<{
     username: string;
     profilePicture: string | null;
+    displayName: string | null;
   }> {
     const user = await this.userRepo.findOne({ where: { username } });
     if (!user) throw new NotFoundException('User not found');
@@ -262,6 +276,7 @@ export class UsersService {
     return {
       username: user.username,
       profilePicture: user.imageUrl ?? null,
+      displayName: user.displayName ?? null,
     };
   }
 

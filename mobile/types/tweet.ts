@@ -1,6 +1,7 @@
 export interface ITweet {
   id: number;
   username: string;
+  displayName: string | null;
   content: string;
   imageUrl: string | null;
   gifUrl: string | null;

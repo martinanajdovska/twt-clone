@@ -95,8 +95,8 @@ export function TweetForm({
     return () => clearTimeout(t);
   }, [mentionQuery]);
 
-  const { data: mentionUsers = [], isLoading: mentionLoading } = useFetchUsersByName(debouncedMentionQuery);
-  const displayMentionUsers = mentionQuery.length > 0 ? mentionUsers : [];
+  const { data: mentionUsers = [] as { username: string; displayName: string | null, imageUrl: string | null }[], isLoading: mentionLoading } = useFetchUsersByName(debouncedMentionQuery);
+  const displayMentionUsers = mentionQuery.length > 0 ? mentionUsers.map((u) => u.username) : [];
 
   const insertMention = (selectedUsername: string) => {
     if (!mentionTrigger) return;

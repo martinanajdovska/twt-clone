@@ -44,7 +44,7 @@ export default function HomeScreen() {
         leftAction="avatar"
         onLeftPress={openDrawer}
         avatarUrl={self.profilePicture}
-        avatarFallbackText={self.username.charAt(0).toUpperCase()}
+        avatarFallbackText={self.displayName?.charAt(0).toUpperCase() ?? self.username.charAt(0).toUpperCase()}
         animated
         animatedOpacity={headerOpacity}
         animatedHeight={headerHeight}

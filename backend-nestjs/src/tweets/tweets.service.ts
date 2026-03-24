@@ -526,6 +526,7 @@ export class TweetsService {
     const tweetResponseDto: TweetResponseDto = {
       id: tweet.id,
       username: tweet.user!.username,
+      displayName: tweet.user!.displayName ?? null,
       content: tweet.content ?? '',
       imageUrl: tweet.imageUrl ?? null,
       gifUrl: tweet.gifUrl ?? null,

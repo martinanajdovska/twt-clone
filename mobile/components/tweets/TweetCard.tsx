@@ -21,7 +21,6 @@ import { useKeyboard } from '@/hooks/useKeyboard';
 import { TweetQuotedCard } from './TweetQuotedCard';
 import { TweetActions } from './TweetActions';
 import { useTweetCardHandlers } from '../../hooks/useTweetCardHandlers';
-import { useFetchMostHelpfulNote } from '@/hooks/community-notes/useFetchMostHelpfulNote';
 
 export function TweetCard({
   tweet,
@@ -54,8 +53,6 @@ export function TweetCard({
   const borderColor = isDark ? '#3d4146' : '#d8dde1';
   const quotedBg = isDark ? colors.background : '#f7f9f9';
   const menuBg = colors.background;
-
-  const { data: mostHelpfulNote = undefined } = useFetchMostHelpfulNote(tweet.id);
 
   const {
     handleLike,
@@ -164,7 +161,7 @@ export function TweetCard({
               ) : (
                 <View style={[styles.avatar, { backgroundColor: '#536471', justifyContent: 'center', alignItems: 'center' }]}>
                   <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>
-                    {tweet.username.charAt(0).toUpperCase()}
+                    {tweet.displayName?.charAt(0).toUpperCase() ?? tweet.username.charAt(0).toUpperCase()}
                   </Text>
                 </View>
               )}
@@ -179,7 +176,7 @@ export function TweetCard({
                   style={styles.displayNameBtn}
                 >
                   <Text style={[styles.displayName, { color: textColor }]} numberOfLines={1}>
-                    {tweet.username}
+                    {tweet.displayName ?? tweet.username}
                   </Text>
                 </TouchableOpacity>
                 <Text style={[styles.handle, { color: mutedColor }]} numberOfLines={1} ellipsizeMode="tail">
@@ -261,8 +258,8 @@ export function TweetCard({
               showCounts
             />
 
-            {mostHelpfulNote && (
-              <CommunityNoteDisplay note={mostHelpfulNote} tweetId={tweet.id} />
+            {tweet.communityNote && (
+              <CommunityNoteDisplay note={tweet.communityNote} tweetId={tweet.id} />
             )}
           </View>
         </View>

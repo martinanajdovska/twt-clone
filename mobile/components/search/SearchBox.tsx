@@ -14,6 +14,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { Colors } from "@/constants/theme";
 import { ThemedView } from "@/components/ui/themed-view";
 import { ThemedText } from "@/components/ui/themed-text";
+import { Image } from "expo-image";
 
 type Tab = "users" | "tweets";
 
@@ -41,7 +42,7 @@ export function SearchBox({
   tab?: Tab;
   onTabChange?: (t: Tab) => void;
   isLoading?: boolean;
-  users?: string[];
+  users?: { username: string; displayName: string | null, imageUrl: string | null }[];
   onUserPress?: (username: string) => void;
   userSecondaryText?: string;
   renderTweets?: React.ReactNode;
@@ -117,10 +118,10 @@ export function SearchBox({
       ) : activeTab === "users" ? (
         <FlatList
           data={users}
-          keyExtractor={(username) => username}
+          keyExtractor={(item) => item.username}
           keyboardShouldPersistTaps="always"
           contentContainerStyle={styles.list}
-          renderItem={({ item: username }) => (
+          renderItem={({ item: { username, displayName, imageUrl } }) => (
             <Pressable
               style={({ pressed }) => [
                 styles.userRow,
@@ -132,10 +133,12 @@ export function SearchBox({
               onPress={() => onUserPress?.(username)}
             >
               <View style={[styles.avatar, { backgroundColor: mutedColor + "25" }]}>
-                <MaterialIcons name="person" size={22} color={mutedColor} />
+                {imageUrl ?
+                  <Image source={{ uri: imageUrl }} style={styles.avatar} />
+                  : <MaterialIcons name="person" size={22} color={mutedColor} />}
               </View>
               <View style={styles.userInfo}>
-                <Text style={[styles.userHandle, { color: textColor }]}>@{username}</Text>
+                <Text style={[styles.userHandle, { color: textColor }]}>{displayName ?? username} @{username}</Text>
                 <Text style={[styles.userSecondary, { color: mutedColor }]}>{userSecondaryText}</Text>
               </View>
               <MaterialIcons name="chevron-right" size={22} color={mutedColor} />

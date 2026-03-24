@@ -5,6 +5,7 @@ import type { IProfileHeader, IUpdateProfileResponse } from "@/types/profile";
 export async function fetchSelf(): Promise<{
   username: string;
   profilePicture: string | null;
+  displayName: string | null;
 }> {
   return apiJson("/users/me/info");
 }
@@ -28,7 +29,9 @@ export async function fetchProfileFeed(
 
 export async function fetchUsersByUsername(
   searchTerm: string,
-): Promise<string[]> {
+): Promise<
+  { username: string; displayName: string | null; imageUrl: string | null }[]
+> {
   if (!searchTerm.trim()) return [];
   return apiJson(`/users?search=${encodeURIComponent(searchTerm.trim())}`);
 }
