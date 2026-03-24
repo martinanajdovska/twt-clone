@@ -5,7 +5,11 @@ import type {
   IVideoTweetsResponse,
   ITweetDetailsResponse,
 } from "@/types/tweet";
-import type { IConversationListItem, IMessageItem } from "@/types/message";
+import type {
+  IConversationListItem,
+  IMessageItem,
+  IMessagePage,
+} from "@/types/message";
 import { IProfileHeader } from "@/types/profile";
 
 type TweetDetailData = {
@@ -287,14 +291,21 @@ export function markConversationAsReadInCache(
   queryClient: QueryClient,
   conversationId: number,
 ): void {
-  queryClient.setQueryData<IConversationListItem[]>(
+  queryClient.setQueryData<InfiniteData<IConversationListItem[]>>(
     ["conversations"],
-    (old) =>
-      old?.map((c) =>
-        c.id === conversationId
-          ? { ...c, hasUnread: false, unreadCount: 0 }
-          : c,
-      ) ?? old,
+    (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) =>
+          page.map((c) =>
+            c.id === conversationId
+              ? { ...c, hasUnread: false, unreadCount: 0 }
+              : c,
+          ),
+        ),
+      };
+    },
   );
 }
 
@@ -303,9 +314,42 @@ export function addTempMessageToCache(
   conversationId: number,
   tempMessage: IMessageItem,
 ): void {
-  queryClient.setQueryData<IMessageItem[]>(
+  queryClient.setQueryData<InfiniteData<IMessagePage>>(
     ["messages", conversationId],
-    (old) => (old ? [...old, tempMessage] : [tempMessage]),
+    (old) => {
+      if (!old) {
+        return {
+          pages: [
+            {
+              content: [tempMessage],
+              totalElements: 1,
+              size: 10,
+              number: 0,
+            },
+          ],
+          pageParams: [0],
+        };
+      }
+      const pages = [...old.pages];
+      if (!pages.length) {
+        pages.push({
+          content: [],
+          totalElements: 0,
+          size: 10,
+          number: 0,
+        });
+      }
+      const first = pages[0];
+      pages[0] = {
+        ...first,
+        content: [tempMessage, ...first.content],
+        totalElements: first.totalElements + 1,
+      };
+      return {
+        ...old,
+        pages,
+      };
+    },
   );
 }
 
@@ -314,12 +358,41 @@ export function replaceTempMessageInCache(
   conversationId: number,
   newMessage: IMessageItem,
 ): void {
-  queryClient.setQueryData<IMessageItem[]>(
+  queryClient.setQueryData<InfiniteData<IMessagePage>>(
     ["messages", conversationId],
     (old) => {
-      if (!old) return [newMessage];
-      const withoutTemp = old.filter((m) => m.id >= 0);
-      return [...withoutTemp, newMessage];
+      if (!old) {
+        return {
+          pages: [
+            {
+              content: [newMessage],
+              totalElements: 1,
+              size: 10,
+              number: 0,
+            },
+          ],
+          pageParams: [0],
+        };
+      }
+      const pages = [...old.pages];
+      if (!pages.length) {
+        pages.push({
+          content: [],
+          totalElements: 0,
+          size: 10,
+          number: 0,
+        });
+      }
+      const first = pages[0];
+      const withoutTemp = first.content.filter((m) => m.id >= 0);
+      pages[0] = {
+        ...first,
+        content: [newMessage, ...withoutTemp],
+      };
+      return {
+        ...old,
+        pages,
+      };
     },
   );
 }
@@ -329,12 +402,13 @@ export function updateConversationLastMessage(
   conversationId: number,
   newMessage: IMessageItem,
 ): void {
-  queryClient.setQueryData<IConversationListItem[]>(
+  queryClient.setQueryData<InfiniteData<IConversationListItem[]>>(
     ["conversations"],
     (old) => {
       if (!old) return old;
 
-      const updated = old.map((c) =>
+      const flattened = old.pages.flatMap((page) => page);
+      const updated = flattened.map((c) =>
         c.id === conversationId
           ? {
               ...c,
@@ -348,11 +422,17 @@ export function updateConversationLastMessage(
           : c,
       );
 
-      return updated.sort(
+      const sorted = updated.sort(
         (a, b) =>
           new Date(b.lastMessageAt ?? "").getTime() -
           new Date(a.lastMessageAt ?? "").getTime(),
       );
+
+      return {
+        ...old,
+        pages: [sorted],
+        pageParams: [old.pageParams[0] ?? 0],
+      };
     },
   );
 }

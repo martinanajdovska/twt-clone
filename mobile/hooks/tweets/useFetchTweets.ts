@@ -15,9 +15,12 @@ export default function useFetchTweets(queryKey: string[]) {
       if (queryKey[0] === "feed") {
         return fetchTweets(pageParam as number);
       }
+      return [];
     },
     initialPageParam: 0,
-    getNextPageParam: (lastPage, _, lastParam) =>
-      !lastPage || lastPage.length < 5 ? undefined : (lastParam as number) + 1,
+    getNextPageParam: (lastPage, _, lastParam) => {
+      const page = Array.isArray(lastPage) ? lastPage : [];
+      return page.length < 5 ? undefined : (lastParam as number) + 1;
+    },
   });
 }

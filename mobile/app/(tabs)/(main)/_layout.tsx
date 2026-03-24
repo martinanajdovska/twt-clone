@@ -5,22 +5,28 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { HapticTab } from '@/components/ui/haptic-tab';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { fetchConversations } from '@/api/messages';
 import { fetchNotifications } from '@/api/notifications';
 
 export default function MainTabsLayout() {
   const colorScheme = useColorScheme();
 
-  const { data: conversations = [] } = useQuery({
+  const { data: conversationsData } = useInfiniteQuery({
     queryKey: ['conversations'],
-    queryFn: fetchConversations,
+    queryFn: ({ pageParam }) => fetchConversations(pageParam as number),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, _, lastParam) => {
+      const page = Array.isArray(lastPage) ? lastPage : [];
+      return page.length < 10 ? undefined : (lastParam as number) + 1;
+    },
   });
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
     queryFn: fetchNotifications,
   });
 
+  const conversations = conversationsData?.pages.flatMap((page) => page ?? []) ?? [];
   const messagesUnreadCount = conversations.filter((c) => c.hasUnread).length;
   const notificationsUnreadCount = notifications.filter((n) => !n.isRead).length;
 

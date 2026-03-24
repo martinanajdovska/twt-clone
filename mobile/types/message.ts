@@ -24,3 +24,10 @@ export interface IMessageItem {
   imageUrl: string | null;
   gifUrl: string | null;
 }
+
+export interface IMessagePage {
+  content: IMessageItem[];
+  totalElements: number;
+  size: number;
+  number: number;
+}

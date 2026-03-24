@@ -8,10 +8,12 @@ export function useVideoTweetsForReels(initialTweetId?: string) {
     queryFn: ({ pageParam }) => fetchVideoTweets(pageParam as number),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
-      if (!lastPage.content.length || lastPage.content.length < lastPage.size) {
+      const content = Array.isArray(lastPage?.content) ? lastPage.content : [];
+      const size = typeof lastPage?.size === "number" ? lastPage.size : content.length;
+      if (!content.length || content.length < size) {
         return undefined;
       }
-      const lastTweet = lastPage.content[lastPage.content.length - 1];
+      const lastTweet = content[content.length - 1];
       return lastTweet?.id;
     },
   });

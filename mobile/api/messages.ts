@@ -1,8 +1,29 @@
 import { apiFetch, apiJson } from "@/lib/api";
-import type { IConversationListItem, IMessageItem } from "@/types/message";
+import type {
+  IConversationListItem,
+  IMessageItem,
+  IMessagePage,
+} from "@/types/message";
 
-export async function fetchConversations(): Promise<IConversationListItem[]> {
-  return apiJson("/messages/conversations");
+function normalizeListResponse<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (
+    data &&
+    typeof data === "object" &&
+    Array.isArray((data as { content?: unknown }).content)
+  ) {
+    return (data as { content: T[] }).content;
+  }
+  return [];
+}
+
+export async function fetchConversations(
+  page: number = 0,
+): Promise<IConversationListItem[]> {
+  const data = await apiJson<unknown>(
+    `/messages/conversations?page=${page}&size=10`,
+  );
+  return normalizeListResponse<IConversationListItem>(data);
 }
 
 export async function fetchConversation(id: number): Promise<{
@@ -20,8 +41,39 @@ export async function fetchConversation(id: number): Promise<{
 
 export async function fetchMessages(
   conversationId: number,
-): Promise<IMessageItem[]> {
-  return apiJson(`/messages/conversations/${conversationId}/messages`);
+  page: number = 0,
+): Promise<IMessagePage> {
+  const data = await apiJson<unknown>(
+    `/messages/conversations/${conversationId}/messages?page=${page}&size=10`,
+  );
+  if (Array.isArray(data)) {
+    return {
+      content: data as IMessageItem[],
+      totalElements: (data as IMessageItem[]).length,
+      size: 10,
+      number: page,
+    };
+  }
+  if (data && typeof data === "object") {
+    const pageData = data as Partial<IMessagePage>;
+    return {
+      content: Array.isArray(pageData.content) ? pageData.content : [],
+      totalElements:
+        typeof pageData.totalElements === "number"
+          ? pageData.totalElements
+          : Array.isArray(pageData.content)
+            ? pageData.content.length
+            : 0,
+      size: typeof pageData.size === "number" ? pageData.size : 10,
+      number: typeof pageData.number === "number" ? pageData.number : page,
+    };
+  }
+  return {
+    content: [],
+    totalElements: 0,
+    size: 10,
+    number: page,
+  };
 }
 
 export async function sendMessage(

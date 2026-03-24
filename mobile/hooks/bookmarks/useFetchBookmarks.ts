@@ -6,7 +6,9 @@ export default function useFetchBookmarks() {
     queryKey: ["bookmarks"],
     queryFn: ({ pageParam }) => fetchBookmarks(pageParam as number),
     initialPageParam: 0,
-    getNextPageParam: (lastPage, _, lastParam) =>
-      lastPage.length < 10 ? undefined : (lastParam as number) + 1,
+    getNextPageParam: (lastPage, _, lastParam) => {
+      const page = Array.isArray(lastPage) ? lastPage : [];
+      return page.length < 10 ? undefined : (lastParam as number) + 1;
+    },
   });
 }

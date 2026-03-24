@@ -4,6 +4,7 @@ import {
   StyleSheet,
   FlatList,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
@@ -11,13 +12,13 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/theme';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useDrawer } from '@/contexts/DrawerContext';
-import { useFetchConversations } from '@/hooks/messages/useFetchConversations';
 import { useFetchSelf } from '@/hooks/users/useFetchSelf';
 import { useFetchUsersByName } from '@/hooks/users/useFetchUsersByName';
 import { useCreateConversation } from '@/hooks/messages/useCreateConversation';
 import ConversationListItem from '@/components/messages/ConversationListItem';
 import { SearchBox } from '@/components/search/SearchBox';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import useFetchConversations from '@/hooks/messages/useFetchConversations';
 
 
 export default function MessagesScreen() {
@@ -34,7 +35,16 @@ export default function MessagesScreen() {
     return () => clearTimeout(t);
   }, [newUsername]);
 
-  const { data: conversations = [], isLoading: conversationsLoading } = useFetchConversations();
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+    refetch,
+    isRefetching } = useFetchConversations();
+
+  const conversations = data?.pages.flatMap((page) => page ?? []) ?? [];
   const { data: self, isLoading: selfLoading } = useFetchSelf();
   const { data: searchResults = [], isLoading: searchLoading } = useFetchUsersByName(debouncedQ);
   const { mutate: createConversation, isPending: isCreating } = useCreateConversation();
@@ -62,7 +72,7 @@ export default function MessagesScreen() {
       />
 
       {/* Conversations list */}
-      {conversationsLoading ? (
+      {status === 'pending' ? (
         <View style={styles.center}>
           <ActivityIndicator color="#1d9bf0" />
         </View>
@@ -80,6 +90,19 @@ export default function MessagesScreen() {
               </ThemedText>
             </ThemedView>
           }
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />
+          }
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          }}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.footer}>
+                <ActivityIndicator size="small" color={colors.tint} />
+              </View>
+            ) : null
+          }
         />
       )}
     </ThemedView>
@@ -92,4 +115,5 @@ const styles = StyleSheet.create({
   empty: { padding: 32, alignItems: 'center' },
   emptyText: { marginTop: 12 },
   emptySub: { marginTop: 4, fontSize: 14 },
+  footer: { padding: 16, alignItems: 'center' },
 });

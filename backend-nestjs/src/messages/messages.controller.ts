@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Query,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUsername } from '../common/decorators/current-user.decorator';
@@ -21,8 +22,15 @@ export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
   @Get('conversations')
-  async getMyConversations(@CurrentUsername() username: string) {
-    return this.messagesService.getConversationsForUser(username);
+  async getMyConversations(
+    @CurrentUsername() username: string,
+    @Query('page', ParseIntPipe) page: number = 0,
+    @Query('size', ParseIntPipe) size: number = 10,
+  ) {
+    return this.messagesService.getConversationsForUser(username, {
+      page,
+      size,
+    });
   }
 
   @Get('unread-count')
@@ -61,8 +69,10 @@ export class MessagesController {
   async getMessages(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUsername() username: string,
+    @Query('page', ParseIntPipe) page: number = 0,
+    @Query('size', ParseIntPipe) size: number = 10,
   ) {
-    return this.messagesService.getMessages(id, username);
+    return this.messagesService.getMessages(id, username, { page, size });
   }
 
   @Post('conversations/:id/messages')

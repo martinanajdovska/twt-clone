@@ -126,20 +126,36 @@ export class MessagesService {
 
   async getConversationsForUser(
     username: string,
-  ): Promise<ConversationListItemDto[]> {
+    pageable: { page: number; size: number },
+  ): Promise<{
+    content: ConversationListItemDto[];
+    totalElements: number;
+    size: number;
+    number: number;
+  }> {
     const user = await this.usersService.findByUsername(username);
-    if (!user) return [];
+    if (!user) throw new NotFoundException('User not found');
 
     const participants = await this.participantRepo.find({
       where: { user: { id: user.id }, archivedAt: IsNull() },
       relations: ['conversation'],
     });
+    const totalElements = participants.length;
+
     const conversationIds = participants.map((p) => p.conversation.id);
-    if (conversationIds.length === 0) return [];
+    if (conversationIds.length === 0)
+      return {
+        content: [],
+        totalElements: 0,
+        size: pageable.size,
+        number: pageable.page,
+      };
 
     const convs = await this.conversationRepo.find({
       where: { id: In(conversationIds) },
-      order: { lastMessageAt: 'DESC', createdAt: 'DESC' },
+      order: { lastMessageAt: 'DESC' },
+      skip: pageable.page * pageable.size,
+      take: pageable.size,
     });
 
     const result: ConversationListItemDto[] = [];
@@ -208,12 +224,20 @@ export class MessagesService {
         unreadCount: unreadCountVal,
       });
     }
-    return result;
+    return {
+      content: result,
+      totalElements: totalElements,
+      size: pageable.size,
+      number: pageable.page,
+    };
   }
 
   async getUnreadCount(username: string): Promise<number> {
-    const conversations = await this.getConversationsForUser(username);
-    return conversations.filter((c) => c.hasUnread).length;
+    const conversations = await this.getConversationsForUser(username, {
+      page: 0,
+      size: 30,
+    });
+    return conversations.content.filter((c) => c.hasUnread).length;
   }
 
   async markConversationAsRead(
@@ -277,25 +301,38 @@ export class MessagesService {
   async getMessages(
     conversationId: number,
     username: string,
-  ): Promise<MessageResponseDto[]> {
+    pageable: { page: number; size: number },
+  ): Promise<{
+    content: MessageResponseDto[];
+    totalElements: number;
+    size: number;
+    number: number;
+  }> {
     await this.ensureParticipant(conversationId, username);
 
-    const messages = await this.messageRepo.find({
+    const [messages, total] = await this.messageRepo.findAndCount({
       where: { conversation: { id: conversationId } },
-      order: { createdAt: 'ASC' },
+      order: { createdAt: 'DESC' },
       relations: ['sender'],
+      skip: pageable.page * pageable.size,
+      take: pageable.size,
     });
 
-    return messages.map((m) => ({
-      id: m.id,
-      content: m.content,
-      createdAt: m.createdAt,
-      senderUsername: (m.sender as { username: string }).username,
-      senderImageUrl:
-        (m.sender as { imageUrl: string | null }).imageUrl ?? null,
-      imageUrl: m.imageUrl ?? null,
-      gifUrl: m.gifUrl ?? null,
-    }));
+    return {
+      content: messages.map((m) => ({
+        id: m.id,
+        content: m.content,
+        createdAt: m.createdAt,
+        senderUsername: (m.sender as { username: string }).username,
+        senderImageUrl:
+          (m.sender as { imageUrl: string | null }).imageUrl ?? null,
+        imageUrl: m.imageUrl ?? null,
+        gifUrl: m.gifUrl ?? null,
+      })),
+      totalElements: total,
+      size: pageable.size,
+      number: pageable.page,
+    };
   }
 
   async sendMessage(
@@ -363,7 +400,12 @@ export class MessagesService {
     });
 
     const contentPreview =
-      saved.content?.trim() || (saved.imageUrl ? 'Sent an image' : saved.gifUrl ? 'Sent a GIF' : 'New message');
+      saved.content?.trim() ||
+      (saved.imageUrl
+        ? 'Sent an image'
+        : saved.gifUrl
+          ? 'Sent a GIF'
+          : 'New message');
     for (const recipient of recipientUsernames) {
       await this.notificationsService.sendMessagePush(
         recipient,

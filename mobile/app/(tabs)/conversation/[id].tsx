@@ -38,11 +38,19 @@ export default function ConversationScreen() {
 
   const keyboardHeight = useKeyboardHeight();
   const { data: conversation } = useFetchConversationById(conversationId);
-  const { data: messages, isLoading } = useFetchMessages(conversationId);
+  const {
+    data: messages,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useFetchMessages(conversationId);
 
   useConversationReadStatus(conversationId);
 
   const other = conversation?.otherParticipant;
+
+  const messageItems = messages?.pages.flatMap((page) => page.content ?? []) ?? [];
 
   if (isNaN(conversationId)) {
     return (
@@ -76,12 +84,23 @@ export default function ConversationScreen() {
         <View style={[styles.flex, { paddingBottom: keyboardHeight + 5 }]}>
           <FlatList
             ref={flatListRef}
-            data={[...(messages ?? [])].reverse()}
+            data={messageItems}
             inverted
             style={styles.list}
             keyExtractor={(item) => String(item.id)}
             contentContainerStyle={styles.messages}
             renderItem={({ item }) => <MessageBubble item={item} other={other ?? { username: '', imageUrl: null, displayName: null }} />}
+            onEndReachedThreshold={0.2}
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+            }}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={styles.empty}>
+                  <ActivityIndicator color={colors.tint} />
+                </View>
+              ) : null
+            }
             ListEmptyComponent={
               <ThemedView style={styles.empty}>
                 <ThemedText style={{ color: mutedColor }}>No messages yet. Say hello!</ThemedText>

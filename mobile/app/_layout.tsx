@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import React from 'react';
+import { Platform } from 'react-native';
 
 import { registerForPushNotificationsAsync } from '@/lib/pushNotifications';
 import { syncPushTokenToBackend } from '@/api/notifications';
@@ -66,13 +67,15 @@ function RootLayoutContent() {
     let responseSub: Notifications.EventSubscription | undefined;
 
     (async () => {
-      // Handle notification that opened the app from a killed state
-      const lastResponse = await Notifications.getLastNotificationResponse();
-      if (lastResponse?.notification?.request?.content?.data) {
-        const link = (lastResponse.notification.request.content.data as any)?.link as
-          | string
-          | undefined;
-        handleNotificationLink(link);
+      if (Platform.OS !== 'web') {
+        // Handle notification that opened the app from a killed state
+        const lastResponse = await Notifications.getLastNotificationResponse();
+        if (lastResponse?.notification?.request?.content?.data) {
+          const link = (lastResponse.notification.request.content.data as any)?.link as
+            | string
+            | undefined;
+          handleNotificationLink(link);
+        }
       }
 
       const token = await registerForPushNotificationsAsync();
@@ -80,16 +83,17 @@ function RootLayoutContent() {
         try {
           await syncPushTokenToBackend(token);
         } catch {
-          // Non-fatal: token can be synced later (e.g. after login)
         }
       }
 
-      responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content.data as any;
-        const link: string | undefined = data?.link;
+      if (Platform.OS !== 'web') {
+        responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
+          const data = response.notification.request.content.data as any;
+          const link: string | undefined = data?.link;
 
-        handleNotificationLink(link);
-      });
+          handleNotificationLink(link);
+        });
+      }
     })();
 
     return () => {
