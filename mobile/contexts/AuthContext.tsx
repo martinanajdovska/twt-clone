@@ -1,5 +1,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { getStoredToken, setStoredToken, clearStoredToken } from '@/lib/auth-store';
+import {
+  getStoredToken,
+  setStoredToken,
+  clearStoredToken,
+  onStoredTokenChange,
+} from '@/lib/auth-store';
 
 type AuthContextValue = {
   isAuthenticated: boolean;
@@ -22,19 +27,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }
     });
+
+    const unsubscribe = onStoredTokenChange((nextToken) => {
+      setTokenState(nextToken);
+    });
+
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, []);
 
   const setToken = useCallback(async (t: string) => {
     await setStoredToken(t);
-    setTokenState(t);
   }, []);
 
   const clearToken = useCallback(async () => {
     await clearStoredToken();
-    setTokenState(null);
   }, []);
 
   const value: AuthContextValue = {

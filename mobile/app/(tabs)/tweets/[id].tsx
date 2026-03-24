@@ -4,6 +4,8 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  View,
+  useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { ThemedText } from '@/components/ui/themed-text';
@@ -19,7 +21,6 @@ import { TweetCardDetailView } from '../../../components/tweets/TweetCardDetailV
 import { useFetchTweetDetails } from '@/hooks/tweets/useFetchTweetDetails';
 import { useFetchSelf } from '@/hooks/users/useFetchSelf';
 
-
 const REPLY_BAR_HEIGHT = 56;
 
 export default function TweetDetailScreen() {
@@ -27,11 +28,15 @@ export default function TweetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const tweetId = id ? parseInt(id, 10) : NaN;
   const insets = useSafeAreaInsets();
-  const [hasScrolled, setHasScrolled] = useState(false);
+  const { height: windowHeight } = useWindowDimensions();
+  const [isReady, setIsReady] = useState(false);
+  const [footerLaidOut, setFooterLaidOut] = useState(false);
+  const itemLayouts = useRef<{ [key: number]: number }>({});
+  const [headerHeight, setHeaderHeight] = useState(0);
+
 
   const { colorScheme, isDark } = useTheme();
   const colors = Colors[colorScheme];
-
 
   const { data: self } = useFetchSelf();
   const { data, isLoading, refetch, isRefetching } = useFetchTweetDetails(tweetId);
@@ -46,21 +51,58 @@ export default function TweetDetailScreen() {
   const list: ITweet[] = [...ancestors, tweet ?? {} as ITweet, ...replies];
   const mainTweetIndex = ancestors.length;
 
-  // Scroll to main tweet after layout
+  const onLayout = (index: number, height: number) => {
+    itemLayouts.current[index] = height;
+  };
+
+  const getFooterSpacerHeight = () => {
+    let repliesHeight = 0;
+    for (let i = mainTweetIndex + 1; i < list.length; i++) {
+      repliesHeight += itemLayouts.current[i] || 0;
+    }
+
+    const availableHeight = windowHeight - headerHeight - REPLY_BAR_HEIGHT - insets.bottom - insets.top - 175;
+
+    const spacerHeight = Math.max(0, availableHeight - repliesHeight);
+    return spacerHeight;
+  };
+
   useEffect(() => {
-    if (!hasScrolled && mainTweetIndex > 0) {
-      // Small delay to ensure items are laid out
+    if (data && !isReady && footerLaidOut && mainTweetIndex > 0) {
       const timer = setTimeout(() => {
-        listRef.current?.scrollToIndex({
-          index: mainTweetIndex,
-          animated: false,
-          viewPosition: 0 // Position at top of viewport
-        });
-        setHasScrolled(true);
-      }, 100);
+        let offset = 0;
+        for (let i = 0; i < mainTweetIndex; i++) {
+          offset += itemLayouts.current[i] || 0;
+        }
+
+        if (offset > 0) {
+          listRef.current?.scrollToOffset({
+            offset,
+            animated: false,
+          });
+        }
+        setIsReady(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    } else if (data && !isReady && footerLaidOut && mainTweetIndex === 0) {
+      setIsReady(true);
+    }
+  }, [data, isReady, footerLaidOut, mainTweetIndex]);
+
+  useEffect(() => {
+    if (data && !footerLaidOut) {
+      const timer = setTimeout(() => {
+        setFooterLaidOut(true);
+      }, 200);
       return () => clearTimeout(timer);
     }
-  }, [mainTweetIndex, hasScrolled]);
+  }, [data, footerLaidOut]);
+
+  useEffect(() => {
+    setIsReady(false);
+    setFooterLaidOut(false);
+    itemLayouts.current = {};
+  }, [tweetId]);
 
   if (isNaN(tweetId)) {
     return (
@@ -78,57 +120,67 @@ export default function TweetDetailScreen() {
     );
   }
 
-
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader
-        title="Tweet"
-        leftAction="back"
-      />
+      <View
+        onLayout={(e) => {
+          setHeaderHeight(e.nativeEvent.layout.height);
+        }}
+      >
+        <ScreenHeader title="Tweet" leftAction="back" />
+      </View>
 
-      {/* List of replies */}
+      {!isReady && (
+        <ThemedView style={styles.center}>
+          <ActivityIndicator size="large" color={colors.tint} />
+        </ThemedView>
+      )}
+
       <FlatList
         ref={listRef}
         data={list}
         keyExtractor={(item) => `tweet-${item.id}`}
-        onScrollToIndexFailed={({ index }) => {
-          setTimeout(() => {
-            listRef.current?.scrollToIndex({ index, animated: false });
-          }, 100);
-        }}
-        // Remove initialScrollIndex - we handle scroll in useEffect instead
-        // This allows all items to render first
-        maintainVisibleContentPosition={
-          hasScrolled
-            ? undefined
-            : {
-              minIndexForVisible: 0,
-            }
-        }
+        style={[styles.list, { opacity: isReady ? 1 : 0 }]}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => refetch()}
+          />
         }
         renderItem={({ item, index }) => {
-          const isMainTweet = index === ancestors.length && item.id === tweet?.id;
-          if (isMainTweet) {
-            return (
-              <TweetCardDetailView
-                tweet={item}
-                showPinnedLabel={false}
-                currentUsername={self?.username ?? ''}
-              />
-            );
-          }
+          const isMainTweet = index === mainTweetIndex && item.id === tweet?.id;
 
           return (
-            <TweetCard
-              tweet={item}
-              currentUsername={self?.username ?? ''}
-              showPinnedLabel={false}
-            />
+            <View
+              onLayout={(e) => {
+                const { height } = e.nativeEvent.layout;
+                onLayout(index, height);
+              }}
+            >
+              {isMainTweet ? (
+                <TweetCardDetailView
+                  tweet={item}
+                  showPinnedLabel={false}
+                  currentUsername={self?.username ?? ''}
+                />
+              ) : (
+                <TweetCard
+                  tweet={item}
+                  currentUsername={self?.username ?? ''}
+                  showPinnedLabel={false}
+                />
+              )}
+            </View>
           );
         }}
-        contentContainerStyle={[styles.list, { paddingBottom: REPLY_BAR_HEIGHT + insets.bottom }]}
+        ListFooterComponent={
+          footerLaidOut ? (
+            <View style={{ height: getFooterSpacerHeight() }} />
+          ) : null
+        }
+        contentContainerStyle={[
+          { paddingBottom: REPLY_BAR_HEIGHT + insets.bottom },
+        ]}
       />
 
       {self && tweet && <Reply self={self} tweet={tweet} />}
@@ -139,5 +191,5 @@ export default function TweetDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  list: { paddingBottom: 24 },
+  list: { flex: 1 },
 });

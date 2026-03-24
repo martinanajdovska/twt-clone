@@ -1,6 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TOKEN_KEY = 'twt_clone_token';
+type TokenListener = (token: string | null) => void;
+const tokenListeners = new Set<TokenListener>();
+
+function notifyTokenListeners(token: string | null) {
+  for (const listener of tokenListeners) {
+    listener(token);
+  }
+}
 
 export async function getStoredToken(): Promise<string | null> {
   try {
@@ -12,8 +20,17 @@ export async function getStoredToken(): Promise<string | null> {
 
 export async function setStoredToken(token: string): Promise<void> {
   await AsyncStorage.setItem(TOKEN_KEY, token);
+  notifyTokenListeners(token);
 }
 
 export async function clearStoredToken(): Promise<void> {
   await AsyncStorage.removeItem(TOKEN_KEY);
+  notifyTokenListeners(null);
+}
+
+export function onStoredTokenChange(listener: TokenListener): () => void {
+  tokenListeners.add(listener);
+  return () => {
+    tokenListeners.delete(listener);
+  };
 }
