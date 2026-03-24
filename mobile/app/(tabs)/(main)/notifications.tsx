@@ -5,6 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useCallback } from 'react';
 import { useRouter } from 'expo-router';
@@ -30,7 +31,16 @@ export default function NotificationsScreen() {
   const colors = Colors[colorScheme];
   const borderColor = isDark ? '#3d4146' : '#d8dde1';
 
-  const { data: notifications = [], isLoading, refetch } = useFetchNotifications();
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+    refetch,
+    isRefetching } = useFetchNotifications();
+
+  const notifications = data?.pages.flatMap((page) => page.content ?? []) ?? [];
   const { data: self, isLoading: selfLoading } = useFetchSelf();
   const { mutateAsync: readOne } = useReadNotification();
 
@@ -42,10 +52,10 @@ export default function NotificationsScreen() {
 
   const filtered =
     tab === 'mentions'
-      ? notifications.filter((n) => n.type === 'REPLY' || n.type === 'MENTION')
+      ? notifications.filter((n: INotificationItem) => n.type === 'REPLY' || n.type === 'MENTION')
       : notifications;
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = data?.pages[0]?.unreadCount ?? 0;
 
   const handlePress = async (n: INotificationItem) => {
     if (!n.isRead) await readOne(n.id);
@@ -61,8 +71,26 @@ export default function NotificationsScreen() {
     }
   };
 
-  const readAll = () => {
-    notifications.filter((n) => !n.isRead).forEach((n) => readOne(n.id));
+  const readAll = async () => {
+    const unreadIds = notifications.filter((n) => !n.isRead).map((n) => n.id);
+    await Promise.all(unreadIds.map((id) => readOne(id)));
+    // await refetch();
+  };
+
+  // Get unread background color based on theme
+  const getUnreadBackgroundColor = () => {
+    if (isDark) {
+      return '#1a2633'; // Darker blue tint for dark mode
+    }
+    return '#e8f5fe'; // Light blue tint for light mode
+  };
+
+  // Get unread border color based on theme
+  const getUnreadBorderColor = () => {
+    if (isDark) {
+      return '#1d9bf0'; // Bright blue border for dark mode
+    }
+    return '#1d9bf0'; // Blue border for light mode
   };
 
   return (
@@ -96,7 +124,7 @@ export default function NotificationsScreen() {
           </TouchableOpacity>
         ))}
       </View>
-      {isLoading ? (
+      {status === 'pending' ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.tint} />
         </View>
@@ -105,10 +133,24 @@ export default function NotificationsScreen() {
           data={filtered}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <NotificationRow
-              item={item}
-              onPress={() => handlePress(item)}
-            />
+            <View
+              style={[
+                styles.notificationWrapper,
+                !item.isRead && {
+                  backgroundColor: getUnreadBackgroundColor(),
+                  borderLeftWidth: 3,
+                  borderLeftColor: getUnreadBorderColor(),
+                },
+              ]}
+            >
+              <NotificationRow
+                item={item}
+                onPress={() => handlePress(item)}
+              />
+              {!item.isRead && (
+                <View style={[styles.unreadIndicator, { backgroundColor: getUnreadBorderColor() }]} />
+              )}
+            </View>
           )}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
@@ -117,6 +159,19 @@ export default function NotificationsScreen() {
                 {tab === 'mentions' ? 'No mentions yet.' : 'No notifications yet.'}
               </ThemedText>
             </ThemedView>
+          }
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />
+          }
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          }}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.footer}>
+                <ActivityIndicator size="small" color={colors.tint} />
+              </View>
+            ) : null
           }
         />
       )}
@@ -137,4 +192,17 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { paddingBottom: 24 },
   empty: { padding: 24, alignItems: 'center' },
+  footer: { padding: 16, alignItems: 'center' },
+  notificationWrapper: {
+    position: 'relative',
+  },
+  unreadIndicator: {
+    position: 'absolute',
+    top: '50%',
+    right: 16,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    transform: [{ translateY: -4 }],
+  },
 });

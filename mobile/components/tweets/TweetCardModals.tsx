@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { NoteCard } from "../community-notes/NoteCard";
-import type { IAllNoteItem } from "@/types/community-notes";
+import useFetchNotesForTweet from "@/hooks/community-notes/useFetchNotesForTweet";
 
 type TweetCardModalsProps = {
   retweetMenuVisible: boolean;
@@ -43,8 +43,6 @@ type TweetCardModalsProps = {
   keyboardHeight: number;
   viewNotesModalVisible: boolean;
   onCloseViewNotes: () => void;
-  allNotesLoading: boolean;
-  allNotes: IAllNoteItem[];
   tweetId: number;
   deleteConfirmVisible: boolean;
   onCloseDeleteConfirm: () => void;
@@ -81,14 +79,14 @@ export function TweetCardModals({
   keyboardHeight,
   viewNotesModalVisible,
   onCloseViewNotes,
-  allNotesLoading,
-  allNotes,
   tweetId,
   deleteConfirmVisible,
   onCloseDeleteConfirm,
   deletePending,
   onDeleteConfirm,
 }: TweetCardModalsProps) {
+  const { data: allNotes = [], isLoading: allNotesLoading } = useFetchNotesForTweet(tweetId);
+
   return (
     <>
       <Modal
@@ -274,7 +272,7 @@ export function TweetCardModals({
                 <View style={styles.viewNotesCenter}>
                   <ActivityIndicator size="large" color="#1d9bf0" />
                 </View>
-              ) : allNotes.length === 0 ? (
+              ) : (allNotes.length ?? 0) === 0 ? (
                 <View style={styles.viewNotesCenter}>
                   <Text style={[styles.viewNotesEmpty, { color: mutedColor }]}>
                     No community notes yet. Add one from the tweet menu.

@@ -36,8 +36,6 @@ export const useSendMessage = (conversationId: number) => {
     onSuccess: (newMessage) => {
       replaceTempMessageInCache(queryClient, conversationId, newMessage);
       updateConversationLastMessage(queryClient, conversationId, newMessage);
-      // queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
-      // queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: () => {
       queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });

@@ -1,24 +1,49 @@
 import { markNotificationRead } from "@/api/notifications";
-import { INotificationItem } from "@/types/notification";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { INotificationPage } from "@/types/notification";
+import {
+  InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 export const useReadNotification = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: markNotificationRead,
     onMutate: async (id) => {
-      queryClient.setQueryData<INotificationItem[]>(
+      queryClient.setQueryData<InfiniteData<INotificationPage>>(
         ["notifications"],
-        (old) =>
-          old?.map((n) => (n.id === id ? { ...n, isRead: true } : n)) ?? old,
+        (old) => {
+          if (!old) return old;
+
+          const wasUnread = old.pages.some((page) =>
+            page.content.some((n) => n.id === id && !n.isRead),
+          );
+          const pages = old.pages.map((page) => ({
+            ...page,
+            content: page.content.map((n) =>
+              n.id === id ? { ...n, isRead: true } : n,
+            ),
+          }));
+
+          if (pages[0]) {
+            pages[0] = {
+              ...pages[0],
+              unreadCount: wasUnread
+                ? Math.max(0, (pages[0].unreadCount ?? 0) - 1)
+                : pages[0].unreadCount ?? 0,
+            };
+          }
+
+          return {
+            ...old,
+            pages,
+          };
+        },
       );
     },
     onError: (_err, id) => {
-      queryClient.setQueryData<INotificationItem[]>(
-        ["notifications"],
-        (old) =>
-          old?.map((n) => (n.id === id ? { ...n, isRead: false } : n)) ?? old,
-      );
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 };

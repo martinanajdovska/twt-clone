@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useColorScheme } from '@/hooks/theme/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { useQueryClient } from '@tanstack/react-query';
 import type { ITweet } from '@/types/tweet';

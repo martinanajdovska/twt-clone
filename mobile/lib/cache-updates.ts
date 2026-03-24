@@ -1,10 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
-import type {
-  ITweet,
-  IVideoTweetsResponse,
-  ITweetDetailsResponse,
-} from "@/types/tweet";
+import type { ITweet, IVideoTweetsResponse } from "@/types/tweet";
 import type {
   IConversationListItem,
   IMessageItem,

@@ -11,7 +11,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ui/themed-view';
 import { ThemedText } from '@/components/ui/themed-text';
 import { TweetForm } from '@/components/tweets/TweetForm';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useColorScheme } from '@/hooks/theme/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useFetchSelf } from '@/hooks/users/useFetchSelf';

@@ -1,5 +1,12 @@
 import { Alert } from "react-native";
 import type { ITweet } from "@/types/tweet";
+import { useDeleteTweet } from "@/hooks/tweets/useDeleteTweet";
+import { useToggleBookmark } from "@/hooks/bookmarks/useToggleBookmark";
+import { useSubmitNote } from "@/hooks/community-notes/useSubmitNote";
+import { useVotePoll } from "@/hooks/polls/useVotePoll";
+import { usePinTweet } from "@/hooks/tweets/usePinTweet";
+import { useToggleLike } from "@/hooks/tweets/useToggleLike";
+import { useToggleRetweet } from "@/hooks/tweets/useToggleRetweet";
 
 type StopEvent = { stopPropagation?: () => void };
 
@@ -45,42 +52,35 @@ type SubmitNoteMutation = (args: {
 type CreateTweetCardHandlersParams = {
   tweet: ITweet;
   addNoteContent: string;
-  addNotePending: boolean;
-  deletePending: boolean;
   setRetweetMenuVisible: (v: boolean) => void;
   setOptionsMenuVisible: (v: boolean) => void;
   setAddNoteContent: (v: string) => void;
   setAddNoteModalVisible: (v: boolean) => void;
   setDeleteConfirmVisible: (v: boolean) => void;
   onNavigateToComposeQuote: (tweetId: number) => void;
-  toggleLikeMutation: ToggleLikeMutation;
-  toggleRetweetMutation: ToggleRetweetMutation;
-  toggleBookmarkMutation: ToggleBookmarkMutation;
-  votePollMutation: VotePollMutation;
-  togglePinMutation: TogglePinMutation;
-  submitNoteMutation: SubmitNoteMutation;
-  deleteTweetMutation: DeleteTweetMutation;
 };
 
-export function createTweetCardHandlers({
+export function useTweetCardHandlers({
   tweet,
   addNoteContent,
-  addNotePending,
-  deletePending,
   setRetweetMenuVisible,
   setOptionsMenuVisible,
   setAddNoteContent,
   setAddNoteModalVisible,
   setDeleteConfirmVisible,
   onNavigateToComposeQuote,
-  toggleLikeMutation,
-  toggleRetweetMutation,
-  toggleBookmarkMutation,
-  votePollMutation,
-  togglePinMutation,
-  submitNoteMutation,
-  deleteTweetMutation,
 }: CreateTweetCardHandlersParams) {
+  const { mutateAsync: toggleLikeMutation } = useToggleLike();
+  const { mutateAsync: toggleRetweetMutation } = useToggleRetweet();
+  const { mutateAsync: toggleBookmarkMutation } = useToggleBookmark();
+  const { mutateAsync: votePollMutation } = useVotePoll();
+  const { mutateAsync: togglePinMutation, isPending: pinPending } =
+    usePinTweet();
+  const { mutateAsync: submitNoteMutation, isPending: addNotePending } =
+    useSubmitNote();
+  const { mutateAsync: deleteTweetMutation, isPending: deletePending } =
+    useDeleteTweet();
+
   const handleLike = async (e: StopEvent) => {
     e.stopPropagation?.();
     try {
@@ -196,5 +196,8 @@ export function createTweetCardHandlers({
     handleAddNoteSubmit,
     handleDeleteConfirm,
     handleDeletePress,
+    addNotePending,
+    deletePending,
+    pinPending,
   };
 }

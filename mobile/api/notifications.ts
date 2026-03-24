@@ -1,13 +1,47 @@
 import { apiFetch, apiJson } from "@/lib/api";
-import type { INotificationItem } from "@/types/notification";
+import type {
+  INotificationItem,
+  INotificationPage,
+} from "@/types/notification";
 
-export async function fetchNotifications(): Promise<INotificationItem[]> {
+export async function fetchNotifications(
+  page: number = 0,
+): Promise<INotificationPage> {
   const data = await apiJson<
     INotificationItem[] | { content?: INotificationItem[] }
-  >("/notifications");
-  return Array.isArray(data)
-    ? data
-    : ((data as { content?: INotificationItem[] }).content ?? []);
+  >(`/notifications?page=${page}&size=10`);
+  if (Array.isArray(data)) {
+    return {
+      content: data as INotificationItem[],
+      totalElements: (data as INotificationItem[]).length,
+      size: 10,
+      number: page,
+      unreadCount: 0,
+    };
+  }
+  if (data && typeof data === "object") {
+    const pageData = data as Partial<INotificationPage>;
+    return {
+      content: Array.isArray(pageData.content) ? pageData.content : [],
+      totalElements:
+        typeof pageData.totalElements === "number"
+          ? pageData.totalElements
+          : Array.isArray(pageData.content)
+            ? pageData.content.length
+            : 0,
+      size: typeof pageData.size === "number" ? pageData.size : 10,
+      number: typeof pageData.number === "number" ? pageData.number : page,
+      unreadCount:
+        typeof pageData.unreadCount === "number" ? pageData.unreadCount : 0,
+    };
+  }
+  return {
+    content: [],
+    totalElements: 0,
+    size: 10,
+    number: page,
+    unreadCount: 0,
+  };
 }
 
 export async function markNotificationRead(id: number): Promise<void> {

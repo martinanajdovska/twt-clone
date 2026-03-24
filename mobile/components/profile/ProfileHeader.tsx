@@ -5,7 +5,7 @@ import { Image } from 'expo-image';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
 import type { IProfileHeader as ProfileHeaderType } from '@/types/profile';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useColorScheme } from '@/hooks/theme/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { useToggleFollow } from '@/hooks/users/useToggleFollow';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';

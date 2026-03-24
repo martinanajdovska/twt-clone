@@ -7,3 +7,11 @@ export interface INotificationItem {
   createdAt: string;
   type: string;
 }
+
+export interface INotificationPage {
+  content: INotificationItem[];
+  totalElements: number;
+  size: number;
+  number: number;
+  unreadCount: number;
+}

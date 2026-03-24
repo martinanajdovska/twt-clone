@@ -35,3 +35,9 @@ export async function fetchAllNotesForTweet(
 ): Promise<IAllNoteItem[]> {
   return apiJson<IAllNoteItem[]>(`/community-notes/tweet/${tweetId}/all`);
 }
+
+export async function fetchMostHelpfulNoteWithRating(
+  tweetId: number,
+): Promise<ICommunityNoteDisplay> {
+  return apiJson<ICommunityNoteDisplay>(`/community-notes/tweet/${tweetId}`);
+}

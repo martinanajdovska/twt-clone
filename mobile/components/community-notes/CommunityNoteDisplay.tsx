@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useColorScheme } from '@/hooks/theme/use-color-scheme';
 import { ICommunityNoteDisplay } from '@/types/community-notes';
 import { useRateNote } from '@/hooks/community-notes/useRateNote';
 

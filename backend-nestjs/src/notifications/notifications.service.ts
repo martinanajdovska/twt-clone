@@ -81,11 +81,33 @@ export class NotificationsService {
     }
   }
 
-  async findAllByRecipient(username: string): Promise<Notification[]> {
-    return this.notificationRepo.find({
+  async findAllByRecipient(
+    username: string,
+    pageable: { page: number; size: number },
+  ): Promise<{
+    content: Notification[];
+    totalElements: number;
+    size: number;
+    number: number;
+    unreadCount: number;
+  }> {
+    const [notifications, total] = await this.notificationRepo.findAndCount({
       where: { recipient: username },
       order: { createdAt: 'DESC' },
+      skip: pageable.page * pageable.size,
+      take: pageable.size,
     });
+    const unreadCount = await this.notificationRepo.count({
+      where: { recipient: username, isRead: false },
+      order: { createdAt: 'DESC' },
+    });
+    return {
+      content: notifications,
+      totalElements: total,
+      size: pageable.size,
+      number: pageable.page,
+      unreadCount,
+    };
   }
 
   async markAsRead(id: number, username: string): Promise<void> {

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ui/themed-view';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useColorScheme } from '@/hooks/theme/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { useFetchSelf } from '@/hooks/users/useFetchSelf';
 

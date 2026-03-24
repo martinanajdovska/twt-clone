@@ -16,19 +16,12 @@ import { CommunityNoteDisplay } from '../community-notes/CommunityNoteDisplay';
 import { TweetContent } from './TweetContent';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useToggleLike } from '@/hooks/tweets/useToggleLike';
-import { useToggleRetweet } from '@/hooks/tweets/useToggleRetweet';
-import { useToggleBookmark } from '@/hooks/bookmarks/useToggleBookmark';
-import { useVotePoll } from '@/hooks/polls/useVotePoll';
-import { usePinTweet } from '@/hooks/tweets/usePinTweet';
-import { useDeleteTweet } from '@/hooks/tweets/useDeleteTweet';
-import { useSubmitNote } from '@/hooks/community-notes/useSubmitNote';
-import useFetchNotesForTweet from '@/hooks/community-notes/useFetchNotesForTweet';
 import { TweetCardModals } from './TweetCardModals';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { TweetQuotedCard } from './TweetQuotedCard';
 import { TweetActions } from './TweetActions';
-import { createTweetCardHandlers } from '../../handlers/tweetCardHandlers';
+import { useTweetCardHandlers } from '../../hooks/useTweetCardHandlers';
+import { useFetchMostHelpfulNote } from '@/hooks/community-notes/useFetchMostHelpfulNote';
 
 export function TweetCard({
   tweet,
@@ -43,15 +36,7 @@ export function TweetCard({
   const { colorScheme, isDark } = useTheme();
   const colors = Colors[colorScheme];
   const insets = useSafeAreaInsets();
-  const { mutateAsync: toggleLikeMutation } = useToggleLike();
-  const { mutateAsync: toggleRetweetMutation } = useToggleRetweet();
-  const { mutateAsync: toggleBookmarkMutation } = useToggleBookmark();
-  const { mutateAsync: votePollMutation } = useVotePoll();
-  const { mutateAsync: togglePinMutation, isPending: pinPending } = usePinTweet();
-  const { mutateAsync: deleteTweetMutation, isPending: deletePending } =
-    useDeleteTweet();
-  const { mutateAsync: submitNoteMutation, isPending: addNotePending } =
-    useSubmitNote();
+
   const [retweetMenuVisible, setRetweetMenuVisible] = useState(false);
   const [optionsMenuVisible, setOptionsMenuVisible] = useState(false);
   const [addNoteModalVisible, setAddNoteModalVisible] = useState(false);
@@ -70,7 +55,8 @@ export function TweetCard({
   const quotedBg = isDark ? colors.background : '#f7f9f9';
   const menuBg = colors.background;
 
-  const { data: allNotes = [], isLoading: allNotesLoading } = useFetchNotesForTweet(tweet.id);
+  const { data: mostHelpfulNote = undefined } = useFetchMostHelpfulNote(tweet.id);
+
   const {
     handleLike,
     handleRetweetPress,
@@ -82,11 +68,12 @@ export function TweetCard({
     handleAddNoteSubmit,
     handleDeleteConfirm,
     handleDeletePress,
-  } = createTweetCardHandlers({
-    tweet,
-    addNoteContent,
     addNotePending,
     deletePending,
+    pinPending,
+  } = useTweetCardHandlers({
+    tweet,
+    addNoteContent,
     setRetweetMenuVisible,
     setOptionsMenuVisible,
     setAddNoteContent,
@@ -97,13 +84,6 @@ export function TweetCard({
         pathname: '/(tabs)/compose',
         params: { quotedTweetId: String(tweetId) },
       } as any),
-    toggleLikeMutation,
-    toggleRetweetMutation,
-    toggleBookmarkMutation,
-    votePollMutation,
-    togglePinMutation,
-    submitNoteMutation,
-    deleteTweetMutation,
   });
 
 
@@ -145,8 +125,6 @@ export function TweetCard({
         keyboardHeight={keyboardHeight}
         viewNotesModalVisible={viewNotesModalVisible}
         onCloseViewNotes={() => setViewNotesModalVisible(false)}
-        allNotesLoading={allNotesLoading}
-        allNotes={allNotes}
         tweetId={tweet.id}
         deleteConfirmVisible={deleteConfirmVisible}
         onCloseDeleteConfirm={() => setDeleteConfirmVisible(false)}
@@ -283,8 +261,8 @@ export function TweetCard({
               showCounts
             />
 
-            {tweet.communityNote && (
-              <CommunityNoteDisplay note={tweet.communityNote} tweetId={tweet.id} />
+            {mostHelpfulNote && (
+              <CommunityNoteDisplay note={mostHelpfulNote} tweetId={tweet.id} />
             )}
           </View>
         </View>
