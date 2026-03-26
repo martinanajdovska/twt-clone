@@ -78,7 +78,12 @@ function RootLayoutContent() {
         }
       }
 
-      const token = await registerForPushNotificationsAsync();
+      let token: string | null = null;
+      try {
+        token = await registerForPushNotificationsAsync();
+      } catch {
+        token = null;
+      }
       if (token && !isLoading && isAuthenticated) {
         try {
           await syncPushTokenToBackend(token);

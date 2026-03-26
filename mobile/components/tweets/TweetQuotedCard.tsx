@@ -10,8 +10,14 @@ type Props = {
   quotedBg: string;
   textColor: string;
   mutedColor: string;
+  disableAnimatedMedia?: boolean;
   onPress: () => void;
 };
+
+function isGifLikeUrl(url: string | null | undefined) {
+  if (!url) return false;
+  return /\.gif($|\?)/i.test(url);
+}
 
 export function TweetQuotedCard({
   quotedTweet,
@@ -19,6 +25,7 @@ export function TweetQuotedCard({
   quotedBg,
   textColor,
   mutedColor,
+  disableAnimatedMedia = false,
   onPress,
 }: Props) {
   return (
@@ -42,11 +49,19 @@ export function TweetQuotedCard({
       ) : null}
 
       {quotedTweet!.imageUrl && (
-        <Image source={{ uri: quotedTweet!.imageUrl }} style={styles.quotedImage} />
+        <Image
+          source={{ uri: quotedTweet!.imageUrl }}
+          style={styles.quotedImage}
+          autoplay={!(disableAnimatedMedia && isGifLikeUrl(quotedTweet!.imageUrl))}
+        />
       )}
 
       {quotedTweet!.gifUrl && !quotedTweet!.imageUrl && (
-        <Image source={{ uri: quotedTweet!.gifUrl }} style={styles.quotedImage} />
+        <Image
+          source={{ uri: quotedTweet!.gifUrl }}
+          style={styles.quotedImage}
+          autoplay={!disableAnimatedMedia}
+        />
       )}
 
       {quotedTweet!.videoUrl && !quotedTweet!.imageUrl && !quotedTweet!.gifUrl && (

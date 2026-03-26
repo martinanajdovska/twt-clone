@@ -1,6 +1,7 @@
 import { formatRelativeTime } from "@/lib/relativeTime";
 import { IMessageItem } from "@/types/message";
-import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
+import { Image } from "expo-image";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { Colors } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 

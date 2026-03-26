@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
     StyleSheet,
     TouchableOpacity,
@@ -9,6 +9,7 @@ import {
     Text,
     View,
     useWindowDimensions,
+    BackHandler,
 } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 import { TweetForm, QuotedTweetPreview } from '@/components/tweets/TweetForm';
@@ -60,6 +61,15 @@ export function ComposeBottomSheet({
         bottomSheetRef.current?.close();
         onClose();
     }, [onClose]);
+
+    useEffect(() => {
+        if (!isVisible || Platform.OS !== 'android') return;
+        const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+            handleClose();
+            return true;
+        });
+        return () => sub.remove();
+    }, [isVisible, handleClose]);
 
     const handleSuccess = useCallback(() => {
         handleClose();
@@ -178,6 +188,7 @@ const styles = StyleSheet.create({
     sheet: {
         borderTopLeftRadius: 0,
         borderTopRightRadius: 0,
+        paddingTop: 10,
     },
     contentContainer: {
         flex: 1,

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -20,17 +20,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToggleLike } from "@/hooks/tweets/useToggleLike";
 import { useToggleRetweet } from "@/hooks/tweets/useToggleRetweet";
 import { useToggleBookmark } from "@/hooks/bookmarks/useToggleBookmark";
+import { ReelRepliesBottomSheet } from "./ReelRepliesBottomSheet";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const reelThumbnailCache = new Map<number, string>();
 
 export function ReelItem({
   tweet,
   isActive,
   shouldMountVideo,
+  shouldGenerateThumbnail,
 }: {
   tweet: ITweet;
   isActive: boolean;
   shouldMountVideo: boolean;
+  shouldGenerateThumbnail: boolean;
 }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -38,6 +42,8 @@ export function ReelItem({
   const colors = Colors[colorScheme];
   const textColor = colors.text;
   const mutedColor = colors.icon;
+  const [isRepliesSheetOpen, setIsRepliesSheetOpen] = useState(false);
+  const videoHeight = isRepliesSheetOpen ? SCREEN_HEIGHT * 0.4 : SCREEN_HEIGHT;
 
   const { mutate: toggleLikeMutation, isPending: isLikePending } = useToggleLike();
   const { mutate: toggleRetweetMutation, isPending: isRetweetPending } =
@@ -48,11 +54,13 @@ export function ReelItem({
     () => tweet.imageUrl ?? tweet.gifUrl ?? null,
     [tweet.imageUrl, tweet.gifUrl]
   );
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(fallbackPreviewUrl);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(
+    reelThumbnailCache.get(tweet.id) ?? fallbackPreviewUrl
+  );
   const [isThumbnailLoading, setIsThumbnailLoading] = useState(false);
 
   useEffect(() => {
-    setThumbnailUrl(fallbackPreviewUrl);
+    setThumbnailUrl(reelThumbnailCache.get(tweet.id) ?? fallbackPreviewUrl);
   }, [fallbackPreviewUrl, tweet.id]);
 
   useEffect(() => {
@@ -60,6 +68,7 @@ export function ReelItem({
 
     async function generateVideoPreview() {
       if (!tweet.videoUrl) return;
+      if (!shouldGenerateThumbnail) return;
       if (thumbnailUrl) return;
 
       try {
@@ -68,10 +77,11 @@ export function ReelItem({
           time: 1200,
         });
         if (!isCancelled) {
+          reelThumbnailCache.set(tweet.id, result.uri);
           setThumbnailUrl(result.uri);
         }
       } catch {
-        // Keep fallback placeholder if thumbnail generation fails.
+
       } finally {
         if (!isCancelled) {
           setIsThumbnailLoading(false);
@@ -84,7 +94,7 @@ export function ReelItem({
     return () => {
       isCancelled = true;
     };
-  }, [tweet.videoUrl, thumbnailUrl]);
+  }, [tweet.videoUrl, thumbnailUrl, shouldGenerateThumbnail]);
 
   const handleLike = () => {
     toggleLikeMutation({
@@ -120,98 +130,118 @@ export function ReelItem({
 
   return (
     <View style={styles.container}>
-      {Platform.OS === "web" ? (
-        <View style={[styles.placeholder, { backgroundColor: "#000" }]}>
-          <MaterialIcons name="videocam-off" size={48} color={mutedColor} />
-          <Text style={{ color: mutedColor, marginTop: 8 }}>Video plays in native app</Text>
+      <View style={[styles.videoArea, { height: videoHeight }]}>
+        <View style={styles.videoLayer}>
+          {Platform.OS === "web" ? (
+            <View style={[styles.placeholder, { backgroundColor: "#000" }]}>
+              <MaterialIcons name="videocam-off" size={48} color={mutedColor} />
+              <Text style={{ color: mutedColor, marginTop: 8 }}>
+                Video plays in native app
+              </Text>
+            </View>
+          ) : !shouldMountVideo ? (
+            <VideoPreview
+              previewUrl={thumbnailUrl}
+              showSpinner={isThumbnailLoading}
+              iconColor="rgba(255,255,255,0.85)"
+            />
+          ) : (
+            <ActiveVideo
+              videoUrl={tweet.videoUrl}
+              isActive={isActive}
+              previewUrl={thumbnailUrl}
+              showSpinner={isThumbnailLoading}
+            />
+          )}
         </View>
-      ) : !shouldMountVideo ? (
-        <VideoPreview
-          previewUrl={thumbnailUrl}
-          showSpinner={isThumbnailLoading}
-          iconColor="rgba(255,255,255,0.85)"
-        />
-      ) : (
-        <ActiveVideo
-          videoUrl={tweet.videoUrl}
-          isActive={isActive}
-          previewUrl={thumbnailUrl}
-          showSpinner={isThumbnailLoading}
-        />
-      )}
 
-      {/* overlay: user + content + actions */}
-      <View style={[styles.overlay, { paddingBottom: insets.bottom + 16 }]}>
-        <View style={styles.bottomRow}>
-          <View style={styles.leftCol}>
-            <TouchableOpacity
-              onPress={() => router.push(`/(tabs)/users/${tweet.username}`)}
-              style={styles.userRow}
-            >
-              <Text style={[styles.handle, { color: textColor }]} numberOfLines={1}>
-                @{tweet.username}
-              </Text>
-            </TouchableOpacity>
-            {tweet.content ? (
-              <Text
-                style={[styles.content, { color: textColor }]}
-                numberOfLines={2}
+        {/* overlay: user + content + actions (stays on the video area) */}
+        <View
+          style={[
+            styles.overlay,
+            { paddingBottom: isRepliesSheetOpen ? 16 : insets.bottom + 16 },
+          ]}
+        >
+          <View style={styles.bottomRow}>
+            <View style={styles.leftCol}>
+              <TouchableOpacity
+                onPress={() => router.push(`/(tabs)/users/${tweet.username}`)}
+                style={styles.userRow}
               >
-                {tweet.content}
-              </Text>
-            ) : null}
-          </View>
+                <Text style={[styles.handle, { color: textColor }]} numberOfLines={1}>
+                  @{tweet.username}
+                </Text>
+              </TouchableOpacity>
+              {tweet.content ? (
+                <Text
+                  style={[styles.content, { color: textColor }]}
+                  numberOfLines={2}
+                >
+                  {tweet.content}
+                </Text>
+              ) : null}
+            </View>
 
-          <View style={styles.actionsCol}>
-            <TouchableOpacity
-              onPress={handleLike}
-              style={styles.actionBtn}
-              disabled={isLikePending}
-            >
-              <MaterialIcons
-                name={tweet.isLiked ? "favorite" : "favorite-border"}
-                size={28}
-                color={tweet.isLiked ? "#f91880" : "#fff"}
-              />
-              <Text style={styles.actionCount}>
-                {tweet.likesCount > 0 ? tweet.likesCount : ""}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push(`/(tabs)/tweets/${tweet.id}`)}
-              style={styles.actionBtn}
-            >
-              <MaterialIcons name="chat-bubble-outline" size={26} color="#fff" />
-              <Text style={styles.actionCount}>{tweet.repliesCount > 0 ? tweet.repliesCount : ""}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleRetweet}
-              style={styles.actionBtn}
-              disabled={isRetweetPending}
-            >
-              <MaterialIcons
-                name="repeat"
-                size={26}
-                color={tweet.isRetweeted ? "#00ba7c" : "#fff"}
-              />
-              <Text style={styles.actionCount}>
-                {tweet.retweetsCount > 0 ? tweet.retweetsCount : ""}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleBookmark}
-              style={styles.actionBtn}
-              disabled={isBookmarkPending}
-            >
-              <MaterialIcons
-                name={tweet.isBookmarked ? "bookmark" : "bookmark-border"}
-                size={26}
-                color={tweet.isBookmarked ? "#1d9bf0" : "#fff"}
-              />
-            </TouchableOpacity>
+            <View style={styles.actionsCol}>
+              <TouchableOpacity
+                onPress={handleLike}
+                style={styles.actionBtn}
+                disabled={isLikePending}
+              >
+                <MaterialIcons
+                  name={tweet.isLiked ? "favorite" : "favorite-border"}
+                  size={28}
+                  color={tweet.isLiked ? "#f91880" : "#fff"}
+                />
+                <Text style={styles.actionCount}>
+                  {tweet.likesCount > 0 ? tweet.likesCount : ""}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setIsRepliesSheetOpen((v) => !v)}
+                style={styles.actionBtn}
+              >
+                <MaterialIcons name="chat-bubble-outline" size={26} color="#fff" />
+                <Text style={styles.actionCount}>
+                  {tweet.repliesCount > 0 ? tweet.repliesCount : ""}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleRetweet}
+                style={styles.actionBtn}
+                disabled={isRetweetPending}
+              >
+                <MaterialIcons
+                  name="repeat"
+                  size={26}
+                  color={tweet.isRetweeted ? "#00ba7c" : "#fff"}
+                />
+                <Text style={styles.actionCount}>
+                  {tweet.retweetsCount > 0 ? tweet.retweetsCount : ""}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleBookmark}
+                style={styles.actionBtn}
+                disabled={isBookmarkPending}
+              >
+                <MaterialIcons
+                  name={tweet.isBookmarked ? "bookmark" : "bookmark-border"}
+                  size={26}
+                  color={tweet.isBookmarked ? "#1d9bf0" : "#fff"}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
+
+      <ReelRepliesBottomSheet
+        isVisible={isRepliesSheetOpen}
+        onClose={() => setIsRepliesSheetOpen(false)}
+        tweetId={tweet.id}
+      />
+
     </View>
   );
 }
@@ -232,29 +262,51 @@ function ActiveVideo({
     p.muted = true;
   });
   const [showPreviewOverlay, setShowPreviewOverlay] = useState(true);
+  const [isFirstFrameRendered, setIsFirstFrameRendered] = useState(false);
+  const hasRenderedFirstFrameRef = useRef(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!videoUrl) return;
     if (isActive) {
-      setShowPreviewOverlay(true);
-      player.play();
-      const timer = setTimeout(() => {
+      if (hasRenderedFirstFrameRef.current) {
         setShowPreviewOverlay(false);
-      }, 700);
-      return () => clearTimeout(timer);
+      } else {
+        setShowPreviewOverlay(true);
+        setIsFirstFrameRendered(false);
+      }
+      player.play();
+      return;
     }
 
-    setShowPreviewOverlay(true);
+
+    setShowPreviewOverlay(Boolean(previewUrl));
     player.pause();
-  }, [isActive, videoUrl, player]);
+  }, [isActive, videoUrl, player, previewUrl]);
+
+  useEffect(() => {
+    hasRenderedFirstFrameRef.current = false;
+    setIsFirstFrameRendered(false);
+    setShowPreviewOverlay(true);
+  }, [videoUrl]);
 
   return (
     <View style={StyleSheet.absoluteFill}>
       <VideoView
         player={player}
-        style={StyleSheet.absoluteFill}
+        style={[
+          StyleSheet.absoluteFill,
+          { opacity: isFirstFrameRendered ? 1 : 0 },
+        ]}
         contentFit="cover"
         nativeControls={false}
+        surfaceType="textureView"
+        useExoShutter={false}
+        onFirstFrameRender={() => {
+          if (!isActive) return;
+          hasRenderedFirstFrameRef.current = true;
+          setIsFirstFrameRendered(true);
+          setShowPreviewOverlay(false);
+        }}
       />
       {showPreviewOverlay ? (
         <VideoPreview
@@ -295,6 +347,15 @@ const styles = StyleSheet.create({
   container: {
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
+    backgroundColor: "#000",
+  },
+  videoLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  videoArea: {
+    position: "relative",
+    overflow: "hidden",
+    width: SCREEN_WIDTH,
     backgroundColor: "#000",
   },
   placeholder: {

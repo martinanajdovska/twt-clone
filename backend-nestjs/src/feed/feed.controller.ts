@@ -69,7 +69,7 @@ export class FeedController {
   async getDetails(
     @Param('id', ParseIntPipe) id: number,
     @Query('page') page = '0',
-    @Query('size') size = '5',
+    @Query('size') size = '10',
     @CurrentUsername() username: string,
   ) {
     const pageNum = Math.max(0, parseInt(page, 10));

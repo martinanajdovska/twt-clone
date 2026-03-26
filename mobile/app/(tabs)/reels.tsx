@@ -82,9 +82,11 @@ export default function ReelsScreen() {
         height={SCREEN_HEIGHT}
         data={tweets}
         defaultIndex={initialIndex}
+        loop={true}
+        windowSize={3}
         onSnapToItem={(index) => {
           setActiveIndex(index);
-          const shouldPrefetchMore = index >= tweets.length - 2;
+          const shouldPrefetchMore = index >= tweets.length - 1;
           if (shouldPrefetchMore && hasNextPage && !isFetchingNextPage) {
             fetchNextPage();
           }
@@ -93,7 +95,8 @@ export default function ReelsScreen() {
           <ReelItem
             tweet={item}
             isActive={index === activeIndex}
-            shouldMountVideo={Math.abs(index - activeIndex) <= 1}
+            shouldMountVideo={index === activeIndex}
+            shouldGenerateThumbnail={Math.abs(index - activeIndex) <= 1}
           />
         )}
         style={styles.carousel}

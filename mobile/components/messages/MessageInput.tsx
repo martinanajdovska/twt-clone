@@ -1,7 +1,7 @@
 import { Colors } from "@/constants/theme";
 import { useKeyboardHeight } from "@/hooks/useKeyboard";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { ActivityIndicator, Platform, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState } from "react";
@@ -18,20 +18,26 @@ export default function MessageInput({ setGifPickerVisible, gifUrl, setGifUrl, i
     const mutedColor = colors.icon;
 
     const [input, setInput] = useState('');
+    const [pickedImageMime, setPickedImageMime] = useState<string | null>(null);
 
     const insets = useSafeAreaInsets();
 
     useKeyboardHeight();
-    const { mutateAsync: sendMessage, isPending } = useSendMessage(conversationId);
+    const { mutate: sendMessage } = useSendMessage(conversationId);
 
     const handleSend = () => {
         const t = input.trim();
         if (!t && !imageUrl && !gifUrl) return;
-        if (isPending) return;
-        const payload = { content: t, imageUrl, gifUrl };
+        const payload = {
+            content: t,
+            imageUrl,
+            imageMimeType: pickedImageMime,
+            gifUrl,
+        };
         setInput('');
         setImageUrl(null);
         setGifUrl(null);
+        setPickedImageMime(null);
         sendMessage(payload);
     };
 
@@ -42,7 +48,7 @@ export default function MessageInput({ setGifPickerVisible, gifUrl, setGifUrl, i
                     {imageUrl && (
                         <View style={styles.previewWrap}>
                             <Image source={{ uri: imageUrl }} style={styles.previewImage} />
-                            <TouchableOpacity style={styles.previewRemove} onPress={() => setImageUrl(null)}>
+                            <TouchableOpacity style={styles.previewRemove} onPress={() => { setImageUrl(null); setPickedImageMime(null); }}>
                                 <MaterialIcons name="close" size={16} color="#fff" />
                             </TouchableOpacity>
                         </View>
@@ -72,12 +78,13 @@ export default function MessageInput({ setGifPickerVisible, gifUrl, setGifUrl, i
                             quality: 0.8,
                         });
                         if (!result.canceled && result.assets[0]) {
+                            const asset = result.assets[0];
                             setGifUrl(null);
-                            setImageUrl(result.assets[0].uri);
+                            setImageUrl(asset.uri);
+                            setPickedImageMime(asset.mimeType ?? null);
                         }
                     }}
                     hitSlop={8}
-                    disabled={isPending}
                 >
                     <MaterialIcons name="image" size={22} color="#1d9bf0" />
                 </TouchableOpacity>
@@ -85,7 +92,6 @@ export default function MessageInput({ setGifPickerVisible, gifUrl, setGifUrl, i
                     style={styles.mediaBtn}
                     onPress={() => setGifPickerVisible(true)}
                     hitSlop={8}
-                    disabled={isPending}
                 >
                     <MaterialIcons name="gif" size={26} color="#1d9bf0" />
                 </TouchableOpacity>
@@ -97,26 +103,21 @@ export default function MessageInput({ setGifPickerVisible, gifUrl, setGifUrl, i
                     onChangeText={setInput}
                     multiline
                     maxLength={10000}
-                    editable={!isPending}
                 />
                 <TouchableOpacity
                     style={[
                         styles.sendBtn,
                         {
                             backgroundColor:
-                                (!input.trim() && !imageUrl && !gifUrl) || isPending
+                                !input.trim() && !imageUrl && !gifUrl
                                     ? mutedColor + '40'
                                     : '#1d9bf0',
                         },
                     ]}
                     onPress={handleSend}
-                    disabled={(!input.trim() && !imageUrl && !gifUrl) || isPending}
+                    disabled={!input.trim() && !imageUrl && !gifUrl}
                 >
-                    {isPending ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                        <MaterialIcons name="send" size={22} color="#fff" />
-                    )}
+                    <MaterialIcons name="send" size={22} color="#fff" />
                 </TouchableOpacity>
             </View>
         </View>

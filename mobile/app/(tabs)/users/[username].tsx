@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
@@ -18,7 +19,6 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
-  useAnimatedScrollHandler,
   useAnimatedStyle,
   interpolate,
   Extrapolation,
@@ -27,6 +27,8 @@ import { useFetchProfileFeed } from '@/hooks/users/useFetchProfileFeed';
 import { useFetchSelf } from '@/hooks/users/useFetchSelf';
 import { useFetchProfileHeader } from '@/hooks/users/useFetchProfileHeader';
 import { useCompose } from '@/contexts/ComposeContext';
+import { useCenteredVideoAutoplay } from '@/hooks/useCenteredVideoAutoplay';
+import { warmVideoTweetIdsForProfileList } from '@/lib/warmVideoTweetIds';
 
 
 const TABS = ['tweets', 'replies', 'likes', 'media'] as const;
@@ -44,6 +46,7 @@ export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const router = useRouter();
   const { openCompose } = useCompose();
+  const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
 
   const { colorScheme, isDark } = useTheme();
@@ -60,6 +63,21 @@ export default function UserProfileScreen() {
   const [profileHeaderHeight, setProfileHeaderHeight] = useState(0);
   const scrollY = useSharedValue(0);
 
+  const extractVideoTweetId = useCallback((item: ListItem) => {
+    if (item.type === 'tweet' && item.data.videoUrl) {
+      return item.data.id;
+    }
+    return null;
+  }, []);
+
+  const {
+    activeVideoTweetId,
+    viewportRef,
+    setRowRef,
+    scheduleRecompute,
+    onViewableItemsChanged,
+  } = useCenteredVideoAutoplay<ListItem>(extractVideoTweetId);
+
   const { data: self } = useFetchSelf();
   const { data: profile, isLoading } = useFetchProfileHeader(username);
   const {
@@ -74,14 +92,6 @@ export default function UserProfileScreen() {
   const tweets = feedData?.pages.flat() ?? [];
   const isSelf = self?.username === username;
   const stickyHeaderHeight = insets.top + 12 + 22 + 10 + 10;
-
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-    },
-  });
-
   const stickyHeaderStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       scrollY.value,
@@ -131,6 +141,11 @@ export default function UserProfileScreen() {
       fetchNextPage();
     }
   };
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 10,
+    minimumViewTime: 0,
+  });
 
   const renderProfileHeader = () => (
     <View
@@ -182,12 +197,42 @@ export default function UserProfileScreen() {
     </Animated.View>
   );
 
+  const listData: ListItem[] = useMemo(
+    () => [
+      { type: 'header', id: 'profile-header' },
+      { type: 'tabs', id: 'tabs' },
+      ...tweets.map((tweet, index) => ({
+        type: 'tweet' as const,
+        id: `tweet-${tweet.id}-${index}`,
+        data: tweet,
+      })),
+    ],
+    [tweets]
+  );
+
+  const warmVideoTweetIds = useMemo(
+    () => warmVideoTweetIdsForProfileList(listData, activeVideoTweetId),
+    [listData, activeVideoTweetId]
+  );
+
+
   const renderTweetItem = (tweet: ITweet) => (
-    <TweetCard
-      tweet={tweet}
-      currentUsername={self?.username ?? ''}
-      showPinnedLabel={isSelf}
-    />
+    <View
+      ref={(node) => {
+        if (tweet.videoUrl) {
+          setRowRef(tweet.id, node);
+        }
+      }}
+      collapsable={false}
+    >
+      <TweetCard
+        tweet={tweet}
+        currentUsername={self?.username ?? ''}
+        showPinnedLabel={isSelf}
+        isVideoActive={isFocused && activeVideoTweetId === tweet.id}
+        keepVideoPlayerWarm={isFocused && warmVideoTweetIds.has(tweet.id)}
+      />
+    </View>
   );
 
   const renderListItem = ({ item }: { item: ListItem }) => {
@@ -227,16 +272,6 @@ export default function UserProfileScreen() {
     );
   }
 
-
-  const listData: ListItem[] = [
-    { type: 'header', id: 'profile-header' },
-    { type: 'tabs', id: 'tabs' },
-    ...tweets.map((tweet, index) => ({
-      type: 'tweet' as const,
-      id: `tweet-${tweet.id}-${index}`,
-      data: tweet,
-    })),
-  ];
 
   return (
     <ThemedView style={[styles.container, { paddingBottom: insets.bottom }]}>
@@ -289,22 +324,33 @@ export default function UserProfileScreen() {
       </Animated.View>
 
       {/* Main content list */}
-      <Animated.FlatList
-        data={listData}
-        keyExtractor={(item) => item.id}
-        stickyHeaderIndices={[1]}
-        renderItem={renderListItem}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.3}
-        onScroll={scrollHandler}
-        scrollEventThrottle={1}
-        ListEmptyComponent={renderEmptyState()}
-        ListFooterComponent={renderFooter()}
-      />
+      <View ref={viewportRef} style={styles.listViewport}>
+        <Animated.FlatList
+          onLayout={() => {
+            scheduleRecompute();
+          }}
+          data={listData}
+          keyExtractor={(item) => item.id}
+          stickyHeaderIndices={[1]}
+          renderItem={renderListItem}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.3}
+          onScroll={(e) => {
+            scrollY.value = e.nativeEvent.contentOffset.y;
+            scheduleRecompute();
+          }}
+          scrollEventThrottle={1}
+          onViewableItemsChanged={onViewableItemsChanged.current}
+          viewabilityConfig={viewabilityConfig.current}
+          extraData={activeVideoTweetId}
+          ListEmptyComponent={renderEmptyState()}
+          ListFooterComponent={renderFooter()}
+        />
+      </View>
 
       {/* Floating Action Button */}
       {isSelf && (
@@ -321,6 +367,9 @@ export default function UserProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  listViewport: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },

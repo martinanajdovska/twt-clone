@@ -1,4 +1,5 @@
 import { createTweet } from "@/api/tweets";
+import { prepareImageForUpload } from "@/lib/prepareImageForUpload";
 import { pollDurationToMinutes } from "@/components/polls/PollDurationPicker";
 import {
   prependReplyToTweetDetail,
@@ -73,6 +74,7 @@ export const useSubmitTweet = ({
     (): ITweet => ({
       id: -Date.now(),
       username,
+      displayName: null,
       profilePictureUrl: profilePictureUrl ?? null,
       parentId: null,
       content: content.trim(),
@@ -119,11 +121,15 @@ export const useSubmitTweet = ({
     if (quotedTweetId != null)
       formData.append("quoteId", String(quotedTweetId));
 
+    let imageUriForUpload = imageUrl;
     if (imageUrl) {
-      const name = imageUrl.split("/").pop() || "image.jpg";
+      imageUriForUpload = await prepareImageForUpload(imageUrl);
+    }
+
+    if (imageUriForUpload) {
       formData.append("image", {
-        uri: imageUrl,
-        name,
+        uri: imageUriForUpload,
+        name: "photo.jpg",
         type: "image/jpeg",
       } as unknown as Blob);
     }
@@ -157,9 +163,11 @@ export const useSubmitTweet = ({
     if (parentId == null) {
       const optimistic = buildOptimisticTweet();
       prependTweetToFeedAndProfile(queryClient, username, optimistic);
+      resetForm();
+      onSuccess?.();
+    } else {
+      resetForm();
     }
-
-    resetForm();
 
     try {
       const newTweet = await createTweet(formData);
@@ -181,7 +189,9 @@ export const useSubmitTweet = ({
         }));
       }
 
-      onSuccess?.();
+      if (parentId != null) {
+        onSuccess?.();
+      }
     } catch (e) {
       if (parentId == null) {
         queryClient.invalidateQueries({ queryKey: ["feed"] });

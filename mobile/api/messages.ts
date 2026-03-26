@@ -80,7 +80,11 @@ export async function fetchMessages(
 export async function sendMessage(
   conversationId: number,
   content: string,
-  options?: { imageUrl?: string | null; gifUrl?: string | null },
+  options?: {
+    imageUrl?: string | null;
+    imageMimeType?: string | null;
+    gifUrl?: string | null;
+  },
 ): Promise<IMessageItem> {
   const formData = new FormData();
   formData.append("content", content);
@@ -89,17 +93,19 @@ export async function sendMessage(
   }
   if (options?.imageUrl) {
     const name = options.imageUrl.split("/").pop() || "image.jpg";
+    const type = options.imageMimeType?.trim() || "image/jpeg";
     formData.append("image", {
       uri: options.imageUrl,
       name,
-      type: "image/jpeg",
+      type,
     } as unknown as Blob);
   }
+
   const res = await apiFetch(
     `/messages/conversations/${conversationId}/messages`,
     {
-      method: "POST",
       body: formData,
+      method: "POST",
     },
   );
   if (!res.ok) {
@@ -143,7 +149,9 @@ export async function searchConversationMessages(
     page: String(page),
     size: String(size),
   });
-  return apiJson<IMessageSearchResult[]>(`/messages/search?${query.toString()}`);
+  return apiJson<IMessageSearchResult[]>(
+    `/messages/search?${query.toString()}`,
+  );
 }
 
 export async function fetchMessageContext(
@@ -156,7 +164,9 @@ export async function fetchMessageContext(
   );
 }
 
-export async function archiveConversation(conversationId: number): Promise<void> {
+export async function archiveConversation(
+  conversationId: number,
+): Promise<void> {
   const res = await apiFetch(`/messages/conversations/${conversationId}`, {
     method: "PATCH",
   });

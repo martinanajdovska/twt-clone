@@ -1,6 +1,9 @@
 import { apiFetch, apiJson } from "@/lib/api";
-import type { ITweet, ITweetDetailsResponse, IVideoTweetsResponse } from "@/types/tweet";
-
+import type {
+  ITweet,
+  ITweetDetailsResponse,
+  IVideoTweetsResponse,
+} from "@/types/tweet";
 
 export async function fetchTweets(page: number): Promise<ITweet[]> {
   const data = await apiJson<{ content: ITweet[] }>(`/tweets?page=${page}`);
@@ -10,8 +13,13 @@ export async function fetchTweets(page: number): Promise<ITweet[]> {
 export async function fetchTweetDetails(
   id: number,
   page: number = 0,
+  pageSize: number = 10,
 ): Promise<ITweetDetailsResponse> {
-  return apiJson(`/tweets/${id}/details?page=${page}`);
+  let url = `/tweets/${id}/details?page=${page}`;
+  if (typeof pageSize === "number") {
+    url += `&size=${pageSize}`;
+  }
+  return apiJson(url);
 }
 
 export async function fetchTweetsBySearch(q: string): Promise<ITweet[]> {
@@ -25,13 +33,12 @@ export async function fetchTweetsBySearch(q: string): Promise<ITweet[]> {
 
 export async function createTweet(formData: FormData): Promise<ITweet> {
   const { getStoredToken } = await import("@/lib/auth-store");
-  const { API_URL } = await import("@/lib/constants");
   const token = await getStoredToken();
   if (!token) throw new Error("Not authenticated");
-  const res = await fetch(`${API_URL}/api/tweets`, {
+  const res = await apiFetch("/tweets", {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
     body: formData,
+    networkRetries: 2,
   });
   if (!res.ok) throw new Error((await res.text()) || "Failed to create tweet");
   return res.json();

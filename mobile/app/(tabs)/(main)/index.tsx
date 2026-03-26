@@ -10,7 +10,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useDrawer } from '@/contexts/DrawerContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useFetchSelf } from '@/hooks/users/useFetchSelf';
 import { useHeaderAndTabFade } from '@/hooks/useHeaderAndTabFade';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -28,6 +28,7 @@ export default function HomeScreen() {
 
   const { data: self, isLoading: selfLoading } = useFetchSelf();
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
   const { headerOpacity, headerHeight, handleScroll } = useHeaderAndTabFade({
     navigation,
     headerMaxHeight: HEADER_MAX_HEIGHT,
@@ -60,11 +61,12 @@ export default function HomeScreen() {
           mode="home"
           currentUsername={self.username}
           onScroll={handleScroll}
+          autoplayEnabled={isFocused}
         />
 
         <TouchableOpacity
           style={[styles.fab, { bottom: 15 }]}
-          onPress={() => openCompose({ topOffset: insets.top + HEADER_MAX_HEIGHT })}
+          onPress={() => openCompose()}
           activeOpacity={0.85}
         >
           <MaterialIcons name="edit" size={24} color="#fff" />

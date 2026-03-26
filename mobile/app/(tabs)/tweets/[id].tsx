@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
   StyleSheet,
   ActivityIndicator,
@@ -6,6 +6,7 @@ import {
   RefreshControl,
   View,
   useWindowDimensions,
+  ViewToken,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { ThemedText } from '@/components/ui/themed-text';
@@ -20,6 +21,7 @@ import Reply from '@/components/tweets/Reply';
 import { TweetCardDetailView } from '../../../components/tweets/TweetCardDetailView';
 import { useFetchTweetDetails } from '@/hooks/tweets/useFetchTweetDetails';
 import { useFetchSelf } from '@/hooks/users/useFetchSelf';
+import { usePaginatedTweetReplies } from '@/hooks/tweets/usePaginatedTweetReplies';
 
 const REPLY_BAR_HEIGHT = 56;
 
@@ -33,10 +35,37 @@ export default function TweetDetailScreen() {
   const [footerLaidOut, setFooterLaidOut] = useState(false);
   const itemLayouts = useRef<{ [key: number]: number }>({});
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [visibleTweetIds, setVisibleTweetIds] = useState<Set<number>>(new Set());
 
 
   const { colorScheme, isDark } = useTheme();
   const colors = Colors[colorScheme];
+
+  const viewabilityConfig = useMemo(
+    () => ({
+      itemVisiblePercentThreshold: 35,
+      minimumViewTime: 80,
+    }),
+    []
+  );
+
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const sortedItems = [...viewableItems].sort(
+        (a, b) => (a.index ?? Number.MAX_SAFE_INTEGER) - (b.index ?? Number.MAX_SAFE_INTEGER)
+      );
+      const topVisibleVideo = sortedItems.find((viewableItem) => {
+        const tweet = viewableItem.item as ITweet | undefined;
+        return Boolean(tweet?.id != null && tweet.videoUrl);
+      });
+      const nextIds = new Set<number>();
+      const tweet = topVisibleVideo?.item as ITweet | undefined;
+      if (tweet?.id != null) {
+        nextIds.add(tweet.id);
+      }
+      setVisibleTweetIds(nextIds);
+    }
+  );
 
   const { data: self } = useFetchSelf();
   const { data, isLoading, refetch, isRefetching } = useFetchTweetDetails(tweetId);
@@ -104,6 +133,16 @@ export default function TweetDetailScreen() {
     itemLayouts.current = {};
   }, [tweetId]);
 
+  const {
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    resetPagination,
+  } = usePaginatedTweetReplies({
+    tweetId,
+    initialRepliesCount: data?.replies?.length,
+  });
+
   if (isNaN(tweetId)) {
     return (
       <ThemedView style={styles.center}>
@@ -141,14 +180,24 @@ export default function TweetDetailScreen() {
         data={list}
         keyExtractor={(item) => `tweet-${item.id}`}
         style={[styles.list, { opacity: isReady ? 1 : 0 }]}
+        onEndReached={() => {
+          if (!isFetchingNextPage && hasNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.3}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
-            onRefresh={() => refetch()}
+            onRefresh={() => {
+              resetPagination();
+              refetch();
+            }}
           />
         }
         renderItem={({ item, index }) => {
           const isMainTweet = index === mainTweetIndex && item.id === tweet?.id;
+          const isVideoActive = visibleTweetIds.has(item.id);
 
           return (
             <View
@@ -162,21 +211,31 @@ export default function TweetDetailScreen() {
                   tweet={item}
                   showPinnedLabel={false}
                   currentUsername={self?.username ?? ''}
+                  isVideoActive={isVideoActive}
                 />
               ) : (
                 <TweetCard
                   tweet={item}
                   currentUsername={self?.username ?? ''}
                   showPinnedLabel={false}
+                  isVideoActive={isVideoActive}
                 />
               )}
             </View>
           );
         }}
+        onViewableItemsChanged={onViewableItemsChanged.current}
+        viewabilityConfig={viewabilityConfig}
+        extraData={visibleTweetIds}
         ListFooterComponent={
-          footerLaidOut ? (
-            <View style={{ height: getFooterSpacerHeight() }} />
-          ) : null
+          <View>
+            {isFetchingNextPage ? (
+              <View style={styles.repliesLoadingFooter}>
+                <ActivityIndicator size="small" color={colors.tint} />
+              </View>
+            ) : null}
+            {footerLaidOut ? <View style={{ height: getFooterSpacerHeight() }} /> : null}
+          </View>
         }
         contentContainerStyle={[
           { paddingBottom: REPLY_BAR_HEIGHT + insets.bottom },
@@ -192,4 +251,5 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { flex: 1 },
+  repliesLoadingFooter: { paddingVertical: 16, alignItems: 'center' },
 });

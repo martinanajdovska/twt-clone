@@ -17,18 +17,21 @@ import { Colors } from "@/constants/theme";
 import { TweetCardModals } from "./TweetCardModals";
 import { useKeyboard } from "@/hooks/useKeyboard";
 import { useCompose } from "@/contexts/ComposeContext";
+import { TweetVideoMedia } from "./TweetVideoMedia";
 
 
 type Props = {
   tweet: ITweet;
   showPinnedLabel: boolean;
   currentUsername: string;
+  isVideoActive?: boolean;
 };
 
 export function TweetCardDetailView({
   tweet,
   showPinnedLabel,
   currentUsername,
+  isVideoActive = false,
 }: Props) {
   const { openCompose } = useCompose();
   const { colorScheme, isDark } = useTheme();
@@ -188,17 +191,20 @@ export function TweetCardDetailView({
           )}
 
           {tweet.videoUrl && !tweet.imageUrl && !tweet.gifUrl && (
-            <TouchableOpacity style={[styles.tweetVideoWrap, { borderColor }]} onPress={(e) => {
-              e.stopPropagation?.();
-              router.push({
-                pathname: '/(tabs)/reels',
-                params: { initialTweetId: String(tweet.id) },
-              } as any);
-            }} activeOpacity={0.9}>
-              <View style={styles.tweetVideoPlaceholder}>
-                <MaterialIcons name="play-circle-filled" size={56} color="rgba(255,255,255,0.9)" />
-              </View>
-            </TouchableOpacity>
+            <View onStartShouldSetResponder={() => true}>
+              <TweetVideoMedia
+                tweetId={tweet.id}
+                videoUrl={tweet.videoUrl}
+                borderColor={borderColor}
+                isActive={isVideoActive}
+                onOpenReels={() =>
+                  router.push({
+                    pathname: '/(tabs)/reels',
+                    params: { initialTweetId: String(tweet.id) },
+                  } as any)
+                }
+              />
+            </View>
           )}
 
           {tweet.poll && <PollDisplay poll={tweet.poll} onVote={handleVote} />}
@@ -294,22 +300,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 12,
     borderWidth: StyleSheet.hairlineWidth,
-  },
-  tweetVideoWrap: {
-    width: "100%",
-    height: 220,
-    borderRadius: 16,
-    marginTop: 8,
-    marginBottom: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: "hidden",
-  },
-  tweetVideoPlaceholder: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#000",
-    alignItems: "center",
-    justifyContent: "center",
   },
   exactTime: { fontSize: 15, marginTop: 4, marginBottom: 4 },
   detailStats: {

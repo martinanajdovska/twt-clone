@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 import type { ITweet, IVideoTweetsResponse } from "@/types/tweet";
+import type { ITweetDetailsResponse } from "@/types/tweet";
 import type {
   IConversationListItem,
   IMessageItem,
@@ -212,11 +213,16 @@ export function prependTweetToFeedAndProfile(
   tweet: ITweet,
 ): void {
   const prepend = (old: InfiniteData<ITweet[]> | undefined) => {
-    if (!old) return old;
+    if (!old) {
+      return {
+        pages: [[tweet]],
+        pageParams: [0],
+      } satisfies InfiniteData<ITweet[]>;
+    }
+    const [firstPage = [], ...restPages] = old.pages;
     return {
       ...old,
-      pages: [[tweet], ...old.pages],
-      pageParams: [0, ...old.pageParams],
+      pages: [[tweet, ...firstPage], ...restPages],
     };
   };
 
@@ -255,6 +261,94 @@ export function prependReplyToTweetDetail(
       };
     },
   );
+}
+
+export function replaceReplyInTweetDetailCaches(
+  queryClient: QueryClient,
+  parentId: number,
+  tempReplyId: number,
+  newReply: ITweet,
+): void {
+  const replaceInReplies = (old: TweetDetailData | undefined) => {
+    if (!old) return old;
+    if (!Array.isArray(old.replies)) return old;
+    return {
+      ...old,
+      replies: old.replies.map((r) => (r.id === tempReplyId ? newReply : r)),
+    };
+  };
+
+  queryClient.setQueryData<TweetDetailData>(
+    ["tweet", String(parentId)],
+    replaceInReplies,
+  );
+
+  queryClient.setQueriesData<TweetDetailData>(
+    { queryKey: ["tweet"] },
+    (old) => {
+      if (!old) return old;
+      if (old.tweet.id !== parentId) return old;
+      return replaceInReplies(old);
+    },
+  );
+}
+
+export function removeReplyFromTweetDetailCaches(
+  queryClient: QueryClient,
+  parentId: number,
+  replyId: number,
+): void {
+  const removeFromReplies = (old: TweetDetailData | undefined) => {
+    if (!old) return old;
+    if (!Array.isArray(old.replies)) return old;
+    return {
+      ...old,
+      replies: old.replies.filter((r) => r.id !== replyId),
+    };
+  };
+
+  queryClient.setQueryData<TweetDetailData>(
+    ["tweet", String(parentId)],
+    removeFromReplies,
+  );
+
+  queryClient.setQueriesData<TweetDetailData>(
+    { queryKey: ["tweet"] },
+    (old) => {
+      if (!old) return old;
+      if (old.tweet.id !== parentId) return old;
+      return removeFromReplies(old);
+    },
+  );
+}
+
+export function appendRepliesToTweetDetailCache(
+  queryClient: QueryClient,
+  tweetId: number,
+  details: ITweetDetailsResponse,
+): void {
+  const appendReplies = (old: TweetDetailData | undefined): TweetDetailData => {
+    if (!old) {
+      return {
+        tweet: details.tweet,
+        parentTweet: details.parentTweet ?? undefined,
+        parentChain: details.parentChain ?? [],
+        replies: details.replies ?? [],
+      };
+    }
+    const oldReplies: ITweet[] = Array.isArray(old.replies) ? old.replies : [];
+    const newReplies = details.replies ?? [];
+    const existingIds = new Set(oldReplies.map((t) => t.id));
+    return {
+      ...old,
+      tweet: old.tweet ?? details.tweet,
+      parentTweet: old.parentTweet ?? details.parentTweet ?? undefined,
+      parentChain: old.parentChain ?? details.parentChain ?? [],
+      replies: [...oldReplies, ...newReplies.filter((r) => !existingIds.has(r.id))],
+    };
+  };
+
+  queryClient.setQueryData<TweetDetailData>(["tweet", String(tweetId)], appendReplies);
 }
 
 export function replaceTempTweetInFeedAndProfile(
@@ -371,6 +465,7 @@ export function replaceTempMessageInCache(
   queryClient: QueryClient,
   conversationId: number,
   newMessage: IMessageItem,
+  tempId: number,
 ): void {
   queryClient.setQueryData<InfiniteData<IMessagePage>>(
     ["messages", conversationId],
@@ -388,25 +483,43 @@ export function replaceTempMessageInCache(
           pageParams: [0],
         };
       }
-      const pages = [...old.pages];
-      if (!pages.length) {
-        pages.push({
-          content: [],
-          totalElements: 0,
-          size: 10,
-          number: 0,
-        });
-      }
-      const first = pages[0];
-      const withoutTemp = first.content.filter((m) => m.id >= 0);
-      pages[0] = {
-        ...first,
-        content: [newMessage, ...withoutTemp],
-      };
+      const pages = old.pages.map((page, pageIndex) => {
+        if (pageIndex !== 0) return page;
+        const hasTemp = page.content.some((m) => m.id === tempId);
+        if (!hasTemp) return page;
+        return {
+          ...page,
+          content: page.content.map((m) => (m.id === tempId ? newMessage : m)),
+        };
+      });
       return {
         ...old,
         pages,
       };
+    },
+  );
+}
+
+export function removeTempMessageFromCache(
+  queryClient: QueryClient,
+  conversationId: number,
+  tempId: number,
+): void {
+  queryClient.setQueryData<InfiniteData<IMessagePage>>(
+    ["messages", conversationId],
+    (old) => {
+      if (!old) return old;
+      const pages = old.pages.map((page, pageIndex) => {
+        if (pageIndex !== 0) return page;
+        const had = page.content.some((m) => m.id === tempId);
+        if (!had) return page;
+        return {
+          ...page,
+          content: page.content.filter((m) => m.id !== tempId),
+          totalElements: Math.max(0, page.totalElements - 1),
+        };
+      });
+      return { ...old, pages };
     },
   );
 }

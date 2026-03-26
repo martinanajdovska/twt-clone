@@ -53,11 +53,17 @@ export async function registerForPushNotificationsAsync(): Promise<
     (Constants.expoConfig as any)?.ios?.bundleIdentifier ||
     (Constants.expoConfig as any)?.slug;
 
-  const token = (
-    await Notifications.getExpoPushTokenAsync({
-      applicationId,
-    })
-  ).data;
+  let token: string | null = null;
+  try {
+    token = (
+      await Notifications.getExpoPushTokenAsync({
+        applicationId,
+      })
+    ).data;
+  } catch (error) {
+    console.warn("Push token unavailable right now", error);
+    return null;
+  }
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {

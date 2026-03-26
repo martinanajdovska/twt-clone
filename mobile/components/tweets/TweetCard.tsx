@@ -22,15 +22,28 @@ import { TweetQuotedCard } from './TweetQuotedCard';
 import { TweetActions } from './TweetActions';
 import { useTweetCardHandlers } from '../../hooks/useTweetCardHandlers';
 import { useCompose } from '@/contexts/ComposeContext';
+import { TweetVideoMedia } from './TweetVideoMedia';
+
+function isGifLikeUrl(url: string | null | undefined) {
+  if (!url) return false;
+  return /\.gif($|\?)/i.test(url);
+}
 
 export function TweetCard({
   tweet,
   currentUsername,
   showPinnedLabel = false,
+  isVideoActive = false,
+  keepVideoPlayerWarm = false,
+  disableAnimatedMedia = false,
 }: {
   tweet: ITweet;
   currentUsername: string;
   showPinnedLabel?: boolean;
+  isVideoActive?: boolean;
+  /** Feed/profile: keep inline player for active ±1 rows when thumbnail exists. */
+  keepVideoPlayerWarm?: boolean;
+  disableAnimatedMedia?: boolean;
 }) {
   const router = useRouter();
   const { openCompose } = useCompose();
@@ -199,6 +212,7 @@ export function TweetCard({
               <Image
                 source={{ uri: tweet.imageUrl }}
                 style={[styles.tweetImage, { borderColor }]}
+                autoplay={!(disableAnimatedMedia && isGifLikeUrl(tweet.imageUrl))}
               />
             )}
 
@@ -206,25 +220,26 @@ export function TweetCard({
               <Image
                 source={{ uri: tweet.gifUrl }}
                 style={[styles.tweetImage, { borderColor }]}
+                autoplay={!disableAnimatedMedia}
               />
             )}
 
             {tweet.videoUrl && !tweet.imageUrl && !tweet.gifUrl && (
-              <TouchableOpacity
-                style={[styles.tweetVideoWrap, { borderColor }]}
-                onPress={(e) => {
-                  e.stopPropagation?.();
-                  router.push({
-                    pathname: '/(tabs)/reels',
-                    params: { initialTweetId: String(tweet.id) },
-                  } as any);
-                }}
-                activeOpacity={0.9}
-              >
-                <View style={styles.tweetVideoPlaceholder}>
-                  <MaterialIcons name="play-circle-filled" size={56} color="rgba(255,255,255,0.9)" />
-                </View>
-              </TouchableOpacity>
+              <View>
+                <TweetVideoMedia
+                  tweetId={tweet.id}
+                  videoUrl={tweet.videoUrl}
+                  borderColor={borderColor}
+                  isActive={isVideoActive}
+                  keepVideoPlayerWarm={keepVideoPlayerWarm}
+                  onOpenReels={() =>
+                    router.push({
+                      pathname: '/(tabs)/reels',
+                      params: { initialTweetId: String(tweet.id) },
+                    } as any)
+                  }
+                />
+              </View>
             )}
 
             {tweet.poll && (
@@ -241,6 +256,7 @@ export function TweetCard({
                 quotedBg={quotedBg}
                 textColor={textColor}
                 mutedColor={mutedColor}
+                disableAnimatedMedia={disableAnimatedMedia}
                 onPress={() => router.push(`/(tabs)/tweets/${tweet.quotedTweet!.id}`)}
               />
             )}
@@ -319,21 +335,5 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 12,
     borderWidth: StyleSheet.hairlineWidth,
-  },
-  tweetVideoWrap: {
-    width: '100%',
-    height: 220,
-    borderRadius: 16,
-    marginTop: 8,
-    marginBottom: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-  },
-  tweetVideoPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#000',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
