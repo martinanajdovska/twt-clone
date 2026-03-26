@@ -8,14 +8,19 @@ type UsePaginatedTweetRepliesParams = {
   tweetId: number;
   initialRepliesCount?: number;
   pageSize?: number;
+  enabled?: boolean;
+  startPage?: number;
 };
 
 export function usePaginatedTweetReplies({
   tweetId,
   initialRepliesCount,
+  pageSize = 10,
+  enabled = true,
+  startPage = 1,
 }: UsePaginatedTweetRepliesParams) {
   const queryClient = useQueryClient();
-  const effectiveRepliesPageSize = 10;
+  const effectiveRepliesPageSize = pageSize;
 
   const resetPagination = useCallback(() => {
     queryClient.removeQueries({
@@ -27,8 +32,8 @@ export function usePaginatedTweetReplies({
   const query = useInfiniteQuery<ITweetDetailsResponse>({
     queryKey: ["tweet-replies", tweetId],
     queryFn: ({ pageParam }) =>
-      fetchTweetDetails(tweetId, pageParam as number, 10),
-    initialPageParam: 1,
+      fetchTweetDetails(tweetId, pageParam as number, effectiveRepliesPageSize),
+    initialPageParam: startPage,
     getNextPageParam: (lastPage, _, lastParam) => {
       const page = Array.isArray(lastPage?.replies) ? lastPage.replies : [];
       if (page.length === 0 || page.length < effectiveRepliesPageSize) {
@@ -37,8 +42,13 @@ export function usePaginatedTweetReplies({
       return (lastParam as number) + 1;
     },
     enabled:
-      !Number.isNaN(tweetId) && Boolean(tweetId) && initialRepliesCount !== 0,
+      enabled &&
+      !Number.isNaN(tweetId) &&
+      Boolean(tweetId) &&
+      (startPage === 0 || initialRepliesCount !== 0),
   });
+
+  const replies = query.data?.pages.flatMap((page) => page.replies ?? []) ?? [];
 
   useEffect(() => {
     if (!query.data?.pages?.length) return;
@@ -55,8 +65,11 @@ export function usePaginatedTweetReplies({
   return {
     hasMoreReplies: Boolean(query.hasNextPage),
     isFetchingMoreReplies: query.isFetchingNextPage,
+    isLoadingReplies: query.isLoading,
+    replies,
     loadMoreReplies,
     resetPagination,
+    refetchRepliesPage: query.refetch,
     fetchNextPage: query.fetchNextPage,
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,

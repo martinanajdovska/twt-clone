@@ -21,7 +21,6 @@ import { useKeyboard } from "@/hooks/useKeyboard";
 import type { ITweet } from "@/types/tweet";
 import { TweetCard } from "@/components/tweets/TweetCard";
 import { useFetchSelf } from "@/hooks/users/useFetchSelf";
-import { useFetchTweetDetails } from "@/hooks/tweets/useFetchTweetDetails";
 import { usePaginatedTweetReplies } from "@/hooks/tweets/usePaginatedTweetReplies";
 import TweetReplyInput from "@/components/tweets/TweetReplyInput";
 
@@ -44,17 +43,18 @@ export function ReelRepliesBottomSheet({ isVisible, onClose, tweetId }: Props) {
   const colors = Colors[colorScheme];
   const { keyboardHeight } = useKeyboard();
   const { data: self } = useFetchSelf();
-  const { data, isLoading } = useFetchTweetDetails(tweetId, isVisible);
-  const replies: ITweet[] = data?.replies ?? [];
 
   const {
+    replies,
+    isLoadingReplies,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
     resetPagination,
   } = usePaginatedTweetReplies({
     tweetId,
-    initialRepliesCount: data?.replies?.length,
+    enabled: isVisible,
+    startPage: 0,
   });
 
   const handleSheetClose = useCallback(() => {
@@ -135,7 +135,7 @@ export function ReelRepliesBottomSheet({ isVisible, onClose, tweetId }: Props) {
       >
         <BottomSheetFlatList
           style={styles.list}
-          data={isLoading ? [] : replies}
+          data={isLoadingReplies ? [] : replies}
           enableFooterMarginAdjustment
           keyExtractor={(item: ITweet) => String(item.id)}
           contentContainerStyle={{
@@ -156,12 +156,13 @@ export function ReelRepliesBottomSheet({ isVisible, onClose, tweetId }: Props) {
             const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
             const remaining =
               contentSize.height - (layoutMeasurement.height + contentOffset.y);
-            if (remaining < 220 && hasNextPage && !isFetchingNextPage) {
+            const userHasScrolled = contentOffset.y > 0;
+            if (remaining < 220 && userHasScrolled && hasNextPage && !isFetchingNextPage) {
               fetchNextPage();
             }
           }}
           ListEmptyComponent={
-            isLoading ? (
+            isLoadingReplies ? (
               <View style={styles.center}>
                 <ActivityIndicator size="large" color={colors.tint} />
               </View>

@@ -33,6 +33,8 @@ export default function TweetDetailScreen() {
   const { height: windowHeight } = useWindowDimensions();
   const [isReady, setIsReady] = useState(false);
   const [footerLaidOut, setFooterLaidOut] = useState(false);
+  const [hasUserScrolled, setHasUserScrolled] = useState(false);
+  const [hasStartedPagination, setHasStartedPagination] = useState(false);
   const itemLayouts = useRef<{ [key: number]: number }>({});
   const [headerHeight, setHeaderHeight] = useState(0);
   const [visibleTweetIds, setVisibleTweetIds] = useState<Set<number>>(new Set());
@@ -70,14 +72,39 @@ export default function TweetDetailScreen() {
   const { data: self } = useFetchSelf();
   const { data, isLoading, refetch, isRefetching } = useFetchTweetDetails(tweetId);
 
-  const { tweet, parentTweet, parentChain = [], replies = [] } = data ?? {};
+  const { tweet, parentTweet, parentChain = [], replies: initialReplies = [] } = data ?? {};
   const ancestors: ITweet[] =
     parentChain.length > 0
       ? [...parentChain].reverse()
       : parentTweet
         ? [parentTweet]
         : [];
-  const list: ITweet[] = [...ancestors, tweet ?? {} as ITweet, ...replies];
+  const {
+    replies: paginatedReplies,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    refetchRepliesPage,
+    resetPagination,
+  } = usePaginatedTweetReplies({
+    tweetId,
+    initialRepliesCount: data?.replies?.length,
+    enabled: false,
+  });
+
+  const combinedReplies: ITweet[] = useMemo(() => {
+    const all = [...initialReplies, ...paginatedReplies];
+    const seen = new Set<number>();
+    const deduped: ITweet[] = [];
+    for (const r of all) {
+      if (seen.has(r.id)) continue;
+      seen.add(r.id);
+      deduped.push(r);
+    }
+    return deduped;
+  }, [initialReplies, paginatedReplies]);
+
+  const list: ITweet[] = [...ancestors, tweet ?? {} as ITweet, ...combinedReplies];
   const mainTweetIndex = ancestors.length;
 
   const onLayout = (index: number, height: number) => {
@@ -130,18 +157,10 @@ export default function TweetDetailScreen() {
   useEffect(() => {
     setIsReady(false);
     setFooterLaidOut(false);
+    setHasUserScrolled(false);
+    setHasStartedPagination(false);
     itemLayouts.current = {};
   }, [tweetId]);
-
-  const {
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-    resetPagination,
-  } = usePaginatedTweetReplies({
-    tweetId,
-    initialRepliesCount: data?.replies?.length,
-  });
 
   if (isNaN(tweetId)) {
     return (
@@ -181,16 +200,29 @@ export default function TweetDetailScreen() {
         keyExtractor={(item) => `tweet-${item.id}`}
         style={[styles.list, { opacity: isReady ? 1 : 0 }]}
         onEndReached={() => {
-          if (!isFetchingNextPage && hasNextPage) {
+          if (!hasUserScrolled || isFetchingNextPage) return;
+          if (!hasStartedPagination) {
+            setHasStartedPagination(true);
+            refetchRepliesPage();
+            return;
+          }
+          if (hasNextPage) {
             fetchNextPage();
           }
         }}
         onEndReachedThreshold={0.3}
+        onScroll={({ nativeEvent }) => {
+          if (nativeEvent.contentOffset.y > 0 && !hasUserScrolled) {
+            setHasUserScrolled(true);
+          }
+        }}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={() => {
               resetPagination();
+              setHasStartedPagination(false);
               refetch();
             }}
           />

@@ -13,8 +13,8 @@ export function useVideoTweetsForReels(initialTweetId?: string) {
       if (!content.length || content.length < size) {
         return undefined;
       }
-      const lastTweet = content[content.length - 1];
-      return lastTweet?.id;
+      const currentPage = typeof lastPage?.page === "number" ? lastPage.page : 0;
+      return currentPage + 1;
     },
   });
 
