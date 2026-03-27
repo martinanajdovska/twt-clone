@@ -25,14 +25,21 @@ export class MessagesController {
   async search(
     @Query('q') q: string,
     @Query('username') otherUsername: string,
+    @Query('conversationId', ParseIntPipe) conversationId: number,
     @CurrentUsername() currentUsername: string,
     @Query('page', ParseIntPipe) page: number = 0,
     @Query('size', ParseIntPipe) size: number = 10,
   ) {
-    return this.messagesService.search(q, currentUsername, otherUsername, {
-      page,
-      size,
-    });
+    return this.messagesService.search(
+      q,
+      currentUsername,
+      otherUsername,
+      conversationId,
+      {
+        page,
+        size,
+      },
+    );
   }
 
   @Get('conversations')

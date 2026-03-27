@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Text,
   TextInput,
@@ -13,17 +13,20 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import * as WebBrowser from 'expo-web-browser';
 import { getFirebaseAuth } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { apiFetch } from '@/lib/api';
-import { API_URL } from '@/lib/constants';
+import { API_URL, MOBILE_OAUTH_CALLBACK_URI } from '@/lib/constants';
 import { ThemedView } from '@/components/ui/themed-view';
 import { ThemedText } from '@/components/ui/themed-text';
 import { Colors } from '@/constants/theme';
 
 const AUTH_PRIMARY = '#1d9bf0';
 const INPUT_BG_LIGHT = '#f0f2f5';
+
+WebBrowser.maybeCompleteAuthSession();
 
 
 export default function LoginScreen() {
@@ -33,12 +36,85 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPending, setIsPending] = useState(false);
+  const [isGooglePending, setIsGooglePending] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const isAnyPending = isPending || isGooglePending;
 
   const borderColor = isDark ? '#3d4146' : '#d8dde1';
   const mutedColor = isDark ? '#71767b' : '#536471';
   const textColor = isDark ? '#e7e9ea' : '#0f1419';
   const inputBg = isDark ? '#16181c' : INPUT_BG_LIGHT;
+
+  const isWeb = Platform.OS === 'web';
+  const isGoogleAvailable = true;
+
+  useEffect(() => {
+    if (!isWeb || typeof window === 'undefined') return;
+
+    const current = new URL(window.location.href);
+    const accessToken = current.searchParams.get('access_token');
+    const oauthError = current.searchParams.get('error');
+    if (!accessToken && !oauthError) return;
+
+    (async () => {
+      if (oauthError) {
+        setFormError(decodeURIComponent(oauthError));
+      } else if (accessToken) {
+        await setToken(accessToken);
+        router.replace('/(tabs)/(main)');
+      }
+
+      current.searchParams.delete('access_token');
+      current.searchParams.delete('oauth');
+      current.searchParams.delete('error');
+      window.history.replaceState({}, '', current.toString());
+    })();
+  }, [isWeb, setToken]);
+
+  async function handleGoogleLogin() {
+    setFormError(null);
+    setIsGooglePending(true);
+    try {
+      if (isWeb && typeof window !== 'undefined') {
+        const returnTo = encodeURIComponent(window.location.href);
+        const authorizeUrl = `${API_URL}/api/auth/google/authorize?platform=web&returnTo=${returnTo}`;
+        window.location.assign(authorizeUrl);
+        return;
+      }
+
+      const authorizeUrl = `${API_URL}/api/auth/google/authorize?platform=native`;
+      const result = await WebBrowser.openAuthSessionAsync(
+        authorizeUrl,
+        MOBILE_OAUTH_CALLBACK_URI,
+      );
+
+      if (result.type !== 'success' || !result.url) {
+        if (result.type === 'cancel' || result.type === 'dismiss') {
+          return;
+        }
+        throw new Error('Google sign-in did not complete.');
+      }
+
+      const callbackUrl = new URL(result.url);
+      const accessToken = callbackUrl.searchParams.get('access_token');
+      const oauthError = callbackUrl.searchParams.get('error');
+
+      if (oauthError) {
+        throw new Error(decodeURIComponent(oauthError));
+      }
+      if (!accessToken) {
+        throw new Error('No access token returned from server.');
+      }
+
+      await setToken(accessToken);
+      router.replace('/(tabs)/(main)');
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Google sign-in failed.';
+      setFormError(message);
+    } finally {
+      setIsGooglePending(false);
+    }
+  }
 
   function handleLogin() {
     if (!email.trim() || !password) {
@@ -133,7 +209,7 @@ export default function LoginScreen() {
             autoCapitalize="none"
             keyboardType="email-address"
             autoComplete="email"
-            editable={!isPending}
+            editable={!isAnyPending}
           />
           <TextInput
             style={[styles.input, { borderColor: borderColor, color: textColor, backgroundColor: inputBg }]}
@@ -146,7 +222,7 @@ export default function LoginScreen() {
             }}
             secureTextEntry
             autoComplete="password"
-            editable={!isPending}
+            editable={!isAnyPending}
           />
 
           {!!formError && (
@@ -161,7 +237,7 @@ export default function LoginScreen() {
               { backgroundColor: AUTH_PRIMARY, opacity: pressed ? 0.85 : 1 },
             ]}
             onPress={handleLogin}
-            disabled={isPending}
+            disabled={isAnyPending}
             android_ripple={{ color: 'rgba(255,255,255,0.3)' }}>
             {isPending ? (
               <ActivityIndicator color="#fff" />
@@ -170,13 +246,30 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
+          <Pressable
+            style={({ pressed }) => [
+              styles.googleButton,
+              { opacity: pressed ? 0.85 : 1, borderColor },
+            ]}
+            onPress={handleGoogleLogin}
+            disabled={!isGoogleAvailable || isAnyPending}
+            android_ripple={{ color: 'rgba(29,155,240,0.12)' }}>
+            {isGooglePending ? (
+              <ActivityIndicator color={isDark ? '#e7e9ea' : '#0f1419'} />
+            ) : (
+              <Text style={[styles.googleButtonText, { color: isDark ? '#e7e9ea' : '#0f1419' }]}>
+                Continue with Google
+              </Text>
+            )}
+          </Pressable>
+
           <TouchableOpacity
             style={styles.link}
             onPress={() => router.push('/(auth)/register')}
-            disabled={isPending}>
+            disabled={isAnyPending}>
             <Text style={styles.linkText}>
               <Text style={{ color: colors.text, opacity: 0.9 }}>
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
               </Text>
               <Text style={{ color: AUTH_PRIMARY, fontWeight: '600' }}>
                 Sign up here!
@@ -213,6 +306,17 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  googleButton: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    minHeight: 52,
+    borderWidth: 1,
+  },
+  googleButtonText: { fontSize: 16, fontWeight: '600' },
   link: { marginTop: 16, alignItems: 'center' },
   linkText: { fontSize: 14, opacity: 0.9 },
   formError: { marginTop: -4, fontSize: 13 },

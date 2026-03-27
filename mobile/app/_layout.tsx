@@ -10,7 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import React from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { registerForPushNotificationsAsync } from '@/lib/pushNotifications';
 import { syncPushTokenToBackend } from '@/api/notifications';
@@ -30,6 +30,14 @@ function RootLayoutContent() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
   const qc = useQueryClient();
+
+  const refreshRealtimeLists = React.useCallback(() => {
+    // Refetch active screens immediately; keep inactive caches stale-aware.
+    void qc.refetchQueries({ queryKey: ['notifications'], type: 'active' });
+    void qc.refetchQueries({ queryKey: ['conversations'], type: 'active' });
+    qc.invalidateQueries({ queryKey: ['notifications'] });
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+  }, [qc]);
 
   const handleNotificationLink = React.useCallback(
     (link: string | undefined | null) => {
@@ -64,7 +72,17 @@ function RootLayoutContent() {
   );
 
   React.useEffect(() => {
+    let receivedSub: Notifications.EventSubscription | undefined;
     let responseSub: Notifications.EventSubscription | undefined;
+
+    const invalidateForLink = (link: string | undefined) => {
+      refreshRealtimeLists();
+      if (!link) return;
+      if (link.includes('/messages/')) {
+        void qc.refetchQueries({ queryKey: ['messages'], type: 'active' });
+        qc.invalidateQueries({ queryKey: ['conversations'] });
+      }
+    };
 
     (async () => {
       if (Platform.OS !== 'web') {
@@ -92,19 +110,28 @@ function RootLayoutContent() {
       }
 
       if (Platform.OS !== 'web') {
+        // Foreground push: refresh in-app caches immediately.
+        receivedSub = Notifications.addNotificationReceivedListener((notification) => {
+          const data = notification.request.content.data as any;
+          const link: string | undefined = data?.link;
+          invalidateForLink(link);
+        });
+
         responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
           const data = response.notification.request.content.data as any;
           const link: string | undefined = data?.link;
 
+          invalidateForLink(link);
           handleNotificationLink(link);
         });
       }
     })();
 
     return () => {
+      receivedSub?.remove();
       responseSub?.remove();
     };
-  }, [router, isAuthenticated, isLoading, handleNotificationLink]);
+  }, [router, isAuthenticated, isLoading, handleNotificationLink, qc, refreshRealtimeLists]);
 
   React.useEffect(() => {
     let active = true;
@@ -123,10 +150,12 @@ function RootLayoutContent() {
       socket.off('notification');
       socket.off('new_message');
       socket.on('notification', () => {
-        qc.invalidateQueries({ queryKey: ['notifications'] });
+        refreshRealtimeLists();
       });
       socket.on('new_message', (payload: { conversationId: number }) => {
+        void qc.refetchQueries({ queryKey: ['conversations'], type: 'active' });
         qc.invalidateQueries({ queryKey: ['conversations'] });
+        void qc.refetchQueries({ queryKey: ['messages'], type: 'active' });
         qc.invalidateQueries({ queryKey: ['messages', payload.conversationId] });
       });
     })();
@@ -136,7 +165,16 @@ function RootLayoutContent() {
       socket?.off('notification');
       socket?.off('new_message');
     };
-  }, [isAuthenticated, isLoading, qc]);
+  }, [isAuthenticated, isLoading, qc, refreshRealtimeLists]);
+
+  React.useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && isAuthenticated && !isLoading) {
+        refreshRealtimeLists();
+      }
+    });
+    return () => sub.remove();
+  }, [isAuthenticated, isLoading, refreshRealtimeLists]);
 
   return (
     <NavThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

@@ -139,12 +139,14 @@ export async function markConversationAsRead(
 
 export async function searchConversationMessages(
   q: string,
+  conversationId: number,
   otherUsername: string,
   page: number = 0,
   size: number = 20,
 ): Promise<IMessageSearchResult[]> {
   const query = new URLSearchParams({
     q,
+    conversationId: String(conversationId),
     username: otherUsername,
     page: String(page),
     size: String(size),

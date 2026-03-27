@@ -8,6 +8,7 @@ const extra = Constants.expoConfig?.extra as
       firebaseProjectId?: string;
       firebaseStorageBucket?: string;
       firebaseAppId?: string;
+      mobileOAuthCallbackUri?: string;
       gifsApiKey?: string;
     }
   | undefined;
@@ -30,3 +31,6 @@ export const firebaseConfig = extra
       appId: extra.firebaseAppId,
     }
   : null;
+
+export const MOBILE_OAUTH_CALLBACK_URI =
+  extra?.mobileOAuthCallbackUri || "mobile://auth/callback";

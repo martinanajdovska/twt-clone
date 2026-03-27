@@ -29,6 +29,19 @@ module.exports = {
       predictiveBackGestureEnabled: false,
       package: 'com.martinanajdovska.mobile',
       googleServicesFile: './google-services.json',
+      intentFilters: [
+        {
+          action: "VIEW",
+          data: [
+            {
+              scheme: "mobile",
+              host: "auth",
+              pathPrefix: "/callback",
+            }
+          ],
+          category: ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     web: {
       output: 'static',
@@ -65,6 +78,9 @@ module.exports = {
       firebaseProjectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
       firebaseStorageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
       firebaseAppId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+      mobileOAuthCallbackUri:
+        process.env.EXPO_PUBLIC_MOBILE_OAUTH_CALLBACK_URI ||
+        'mobile://auth/callback',
       gifsApiKey: process.env.GIFS_API_KEY,
     },
     owner: 'martinanajdovska',

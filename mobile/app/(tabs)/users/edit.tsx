@@ -40,6 +40,9 @@ export default function EditProfileScreen() {
   const { data: self } = useFetchSelf();
   const { data: profile, isLoading } = useFetchProfileHeader(self?.username || '');
 
+  const updateProfileImageMutation = useUpdateProfileImage();
+  const updateProfileMutation = useUpdateProfile();
+
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [location, setLocation] = useState('');
@@ -110,10 +113,11 @@ export default function EditProfileScreen() {
       return;
     }
     setError(null);
+    setIsPending(true);
 
     try {
       if (avatarUri) {
-        await useUpdateProfileImage().mutateAsync(avatarUri);
+        await updateProfileImageMutation.mutateAsync(avatarUri);
       }
 
       const formData = new FormData();
@@ -128,11 +132,13 @@ export default function EditProfileScreen() {
         formData.append('banner', { uri: bannerUri, name, type: 'image/jpeg' } as unknown as Blob);
       }
 
-      await useUpdateProfile().mutateAsync(formData);
+      await updateProfileMutation.mutateAsync(formData);
 
       router.back();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to update profile');
+    } finally {
+      setIsPending(false);
     }
   };
 

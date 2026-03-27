@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Body, Res, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Res,
+  Req,
+  Query,
+  BadRequestException,
+} from '@nestjs/common';
 import * as express from 'express';
 import { AuthService } from './auth.service';
 import { SessionDto } from './dto/session.dto';
@@ -47,5 +56,68 @@ export class AuthController {
     res.cookie('token', '', { httpOnly: true, path: '/', maxAge: 0 });
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
     res.redirect(`${frontendUrl}/login?session_expired=1`);
+  }
+
+  @Get('google/authorize')
+  googleAuthorize(
+    @Query('platform') platform: 'native' | 'web' = 'native',
+    @Query('returnTo') returnTo: string | undefined,
+    @Res() res: express.Response,
+  ) {
+    if (platform !== 'native' && platform !== 'web') {
+      throw new BadRequestException('platform must be native or web');
+    }
+    const authorizeUrl = this.authService.getGoogleAuthorizeUrl(
+      platform,
+      returnTo,
+    );
+    return res.redirect(authorizeUrl);
+  }
+
+  @Get('google/callback')
+  async googleCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Query('error') oauthError: string | undefined,
+    @Res({ passthrough: true }) res: express.Response,
+  ) {
+    let platform: 'native' | 'web' = 'native';
+    try {
+      if (oauthError) {
+        const target = this.authService.getOAuthErrorRedirect(oauthError);
+        return res.redirect(target);
+      }
+      if (!code || !state) {
+        throw new BadRequestException('Missing code or state.');
+      }
+
+      const session = await this.authService.createSessionFromGoogleCode(
+        code,
+        state,
+      );
+      platform = session.platform;
+
+      res.cookie('token', session.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: 86400 * 1000,
+        sameSite: 'lax',
+      });
+
+      const target = this.authService.getOAuthSuccessRedirect(
+        session.access_token,
+        session.platform,
+        session.returnTo,
+      );
+      return res.redirect(target);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'oauth_failed';
+      const target = this.authService.getOAuthErrorRedirect(
+        encodeURIComponent(message),
+        platform,
+      );
+      return res.redirect(target);
+    }
   }
 }

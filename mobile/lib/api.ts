@@ -38,6 +38,9 @@ export async function apiFetch(
   const baseHeaders: Record<string, string> = {
     ...((rest.headers as Record<string, string>) ?? {}),
   };
+  if (url.includes(".ngrok-free.")) {
+    baseHeaders["ngrok-skip-browser-warning"] = "true";
+  }
 
   if (!isFormData && baseHeaders["Content-Type"] == null) {
     baseHeaders["Content-Type"] = "application/json";
@@ -62,8 +65,7 @@ export async function apiFetch(
       return res;
     } catch (e) {
       lastError = e;
-      const canRetry =
-        attempt < maxAttempts - 1 && isRetryableNetworkError(e);
+      const canRetry = attempt < maxAttempts - 1 && isRetryableNetworkError(e);
       if (!canRetry) throw e;
       await delay(350 * 2 ** attempt);
     }

@@ -532,6 +532,7 @@ export class MessagesService {
     q: string,
     currentUsername: string,
     otherUsername: string,
+    conversationId: number,
     pageable: { page: number; size: number },
   ): Promise<
     {
@@ -543,8 +544,7 @@ export class MessagesService {
       createdAt: Date;
     }[]
   > {
-    const user = await this.usersService.findByUsername(otherUsername);
-    if (!user) throw new NotFoundException('User not found');
+    await this.ensureParticipant(conversationId, currentUsername);
 
     return this.messageRepo
       .createQueryBuilder('m')
@@ -555,7 +555,9 @@ export class MessagesService {
       .addSelect('s.imageUrl', 'imageUrl')
       .addSelect('m.createdAt', 'createdAt')
       .innerJoin('m.sender', 's')
-      .where('m.content ILIKE :q', { q: `${q}%` })
+      .innerJoin('m.conversation', 'c')
+      .where('c.id = :conversationId', { conversationId })
+      .andWhere('m.content ILIKE :q', { q: `${q}%` })
       .andWhere('s.username IN (:...usernames)', {
         usernames: [currentUsername, otherUsername],
       })

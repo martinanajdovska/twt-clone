@@ -98,14 +98,18 @@ export function ProfileHeader({
               style={[
                 styles.followBtn,
                 {
-                  borderColor: colors.text,
-                  backgroundColor: profile.isFollowed ? 'transparent' : colors.tint,
+                  borderColor: profile.isFollowed ? '#1d9bf0' : 'transparent',
+                  backgroundColor: profile.isFollowed ? 'transparent' : '#1d9bf0',
                   opacity: isTogglingFollow ? 0.6 : 1,
                 },
               ]}
               disabled={isTogglingFollow}
               onPress={handleFollow}>
-              <ThemedText style={[styles.followBtnText, profile.isFollowed ? {} : { color: '#fff' }]}>
+              <ThemedText
+                style={[
+                  styles.followBtnText,
+                  { color: profile.isFollowed ? '#1d9bf0' : '#fff' },
+                ]}>
                 {profile.isFollowed ? 'Unfollow' : 'Follow'}
               </ThemedText>
             </TouchableOpacity>

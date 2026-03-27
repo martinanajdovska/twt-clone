@@ -67,7 +67,11 @@ export default function ConversationScreen() {
   const {
     data: searchedMessages = [],
     isLoading: isSearchLoading,
-  } = useSearchConversationMessages(debouncedSearchText, other?.username);
+  } = useSearchConversationMessages(
+    debouncedSearchText,
+    other?.username,
+    conversationId,
+  );
 
   const messageItems = messages?.pages.flatMap((page) => page.content ?? []) ?? [];
   const contextItems = contextMessages

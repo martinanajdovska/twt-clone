@@ -10,15 +10,23 @@ async function bootstrap() {
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile app, Postman)
       if (!origin) return callback(null, true);
-      
+
       if (frontendUrl && origin === frontendUrl) return callback(null, true);
       if (origin === 'http://localhost:3000') return callback(null, true);
       if (origin === 'http://localhost:3001') return callback(null, true);
+      if (/^https?:\/\/localhost:\d+$/.test(origin))
+        return callback(null, true);
+      return callback(null, true);
       callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-client-type'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-client-type',
+      'ngrok-skip-browser-warning',
+    ],
   });
 
   const httpAdapter = app.getHttpAdapter();
