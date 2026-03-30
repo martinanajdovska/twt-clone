@@ -143,7 +143,7 @@ export function TweetCard({
 
       <TouchableOpacity
         activeOpacity={0.95}
-        onPress={() => router.push(`/(tabs)/tweets/${tweet.id}`)}
+        onPress={() => router.push(`/(main)/tweets/${tweet.id}`)}
         style={[styles.wrapper, { borderBottomColor: borderColor }]}
       >
         {showPinnedLabel && tweet.isPinned && (
@@ -165,7 +165,7 @@ export function TweetCard({
         <View style={styles.row}>
           <View style={styles.avatarCol}>
             <TouchableOpacity
-              onPress={(e) => { e.stopPropagation?.(); router.push(`/(tabs)/users/${tweet.username}`); }}
+              onPress={(e) => { e.stopPropagation?.(); router.push(`/(main)/users/${tweet.username}`); }}
             >
               {tweet.profilePictureUrl ? (
                 <Image source={{ uri: tweet.profilePictureUrl }} style={styles.avatar} />
@@ -183,7 +183,7 @@ export function TweetCard({
             <View style={styles.headerRow}>
               <View style={styles.usernameRow}>
                 <TouchableOpacity
-                  onPress={(e) => { e.stopPropagation?.(); router.push(`/(tabs)/users/${tweet.username}`); }}
+                  onPress={(e) => { e.stopPropagation?.(); router.push(`/(main)/users/${tweet.username}`); }}
                   style={styles.displayNameBtn}
                 >
                   <Text style={[styles.displayName, { color: textColor }]} numberOfLines={1}>
@@ -234,7 +234,7 @@ export function TweetCard({
                   keepVideoPlayerWarm={keepVideoPlayerWarm}
                   onOpenReels={() =>
                     router.push({
-                      pathname: '/(tabs)/reels',
+                      pathname: '/(main)/reels',
                       params: { initialTweetId: String(tweet.id) },
                     } as any)
                   }
@@ -257,7 +257,7 @@ export function TweetCard({
                 textColor={textColor}
                 mutedColor={mutedColor}
                 disableAnimatedMedia={disableAnimatedMedia}
-                onPress={() => router.push(`/(tabs)/tweets/${tweet.quotedTweet!.id}`)}
+                onPress={() => router.push(`/(main)/tweets/${tweet.quotedTweet!.id}`)}
               />
             )}
 

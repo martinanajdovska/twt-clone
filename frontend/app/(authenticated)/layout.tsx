@@ -19,7 +19,16 @@ export default async function AuthenticatedLayout({ children, }: { children: Rea
     const token = cookieStore.get("token")?.value;
 
     if (!token) {
-        redirect("/login");
+        return (
+            <div className="h-screen bg-background flex justify-between overflow-hidden">
+                <div className="md:hidden">
+                    <MobileTopBar />
+                </div>
+                <main className="w-full min-w-0 border-x border-border bg-background h-screen overflow-y-auto">
+                    <MainContentPadding>{children}</MainContentPadding>
+                </main>
+            </div>
+        );
     }
 
     let self;

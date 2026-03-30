@@ -90,7 +90,7 @@ export function ProfileHeader({
           {isSelf ? (
             <TouchableOpacity
               style={[styles.followBtn, { borderColor: colors.icon, backgroundColor: 'transparent' }]}
-              onPress={() => router.push('/(tabs)/users/edit' as any)}>
+              onPress={() => router.push('/(main)/users/edit' as any)}>
               <ThemedText style={[styles.followBtnText, { color: colors.text }]}>Edit profile</ThemedText>
             </TouchableOpacity>
           ) : (

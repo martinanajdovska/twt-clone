@@ -11,11 +11,11 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUsername } from '../common/decorators/current-user.decorator';
 
 @Controller('api/tweets')
-@UseGuards(JwtAuthGuard)
 export class FeedController {
   constructor(private readonly feedService: FeedService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async generateFeed(
     @Query('page') page = '0',
     @Query('size') size = '5',
@@ -30,6 +30,7 @@ export class FeedController {
   }
 
   @Get('videos')
+  @UseGuards(JwtAuthGuard)
   async getVideoTweets(
     @Query('page') page = '0',
     @Query('size') size = '5',
@@ -51,6 +52,7 @@ export class FeedController {
   }
 
   @Get(':id/quotes')
+  @UseGuards(JwtAuthGuard)
   async getQuotes(
     @Param('id', ParseIntPipe) id: number,
     @Query('page') page = '0',

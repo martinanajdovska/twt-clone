@@ -18,17 +18,17 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import Reply from '@/components/tweets/Reply';
-import { TweetCardDetailView } from '../../../components/tweets/TweetCardDetailView';
+import { TweetCardDetailView } from '@/components/tweets/TweetCardDetailView';
 import { useFetchTweetDetails } from '@/hooks/tweets/useFetchTweetDetails';
 import { useFetchSelf } from '@/hooks/users/useFetchSelf';
 import { usePaginatedTweetReplies } from '@/hooks/tweets/usePaginatedTweetReplies';
 
 const REPLY_BAR_HEIGHT = 56;
 
-export default function TweetDetailScreen() {
+export default function TweetDetailScreen({ tweetIdProp }: { tweetIdProp?: number | null }) {
   const listRef = useRef<FlatList<ITweet>>(null);
   const { id } = useLocalSearchParams<{ id: string }>();
-  const tweetId = id ? parseInt(id, 10) : NaN;
+  const tweetId = tweetIdProp ? tweetIdProp : id ? parseInt(id, 10) : NaN;
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const [isReady, setIsReady] = useState(false);

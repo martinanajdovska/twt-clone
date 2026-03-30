@@ -152,7 +152,7 @@ export default function ConversationScreen() {
             ? {
               url: other.imageUrl,
               fallbackText: other.username.charAt(0).toUpperCase(),
-              onPress: () => router.push(`/(tabs)/users/${other.username}`),
+              onPress: () => router.push(`/(main)/users/${other.username}`),
             }
             : undefined
         }

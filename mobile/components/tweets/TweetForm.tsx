@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
-  Platform,
   Text,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -13,7 +11,6 @@ import { useColorScheme } from '@/hooks/theme/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { useQueryClient } from '@tanstack/react-query';
 import type { ITweet } from '@/types/tweet';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { GifPicker } from '@/components/GifPicker';
 import { getMentionTrigger } from '@/lib/mentionUtils';
 import { MentionSuggestions } from '@/components/tweets/MentionSuggestions';
@@ -300,7 +297,7 @@ export function TweetForm({
                 quotedBg={quotedBg}
                 textColor={textColor}
                 mutedColor={mutedColor}
-                onPress={() => router.push(`/(tabs)/tweets/${quotedTweet!.id}`)}
+                onPress={() => router.push(`/(main)/tweets/${quotedTweet!.id}`)}
               />}
 
             <TweetFormToolbar

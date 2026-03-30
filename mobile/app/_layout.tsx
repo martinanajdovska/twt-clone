@@ -11,6 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import React from 'react';
 import { AppState, Platform } from 'react-native';
+import * as Linking from 'expo-linking';
 
 import { registerForPushNotificationsAsync } from '@/lib/pushNotifications';
 import { syncPushTokenToBackend } from '@/api/notifications';
@@ -39,21 +40,21 @@ function RootLayoutContent() {
     qc.invalidateQueries({ queryKey: ['conversations'] });
   }, [qc]);
 
-  const handleNotificationLink = React.useCallback(
+  const navigateFromLink = React.useCallback(
     (link: string | undefined | null) => {
       if (!link) return;
 
       const tweetMatch = link.match(/\/tweets\/(\d+)/);
       if (tweetMatch) {
         const id = tweetMatch[1];
-        router.push(`/(tabs)/tweets/${id}` as any);
+        router.push(`/(main)/tweets/${id}` as any);
         return;
       }
 
       if (link.includes('/users/')) {
         const u = link.split('/users/')[1]?.split('/')[0] || link.split('/').pop();
         if (u) {
-          router.push(`/(tabs)/users/${u}` as any);
+          router.push(`/(main)/users/${u}` as any);
           return;
         }
       }
@@ -61,15 +62,36 @@ function RootLayoutContent() {
       if (link.includes('/messages/')) {
         const id = link.split('/messages/')[1]?.split('/')[0];
         if (id) {
-          router.push(`/(tabs)/conversation/${id}` as any);
+          router.push(`/(main)/conversation/${id}` as any);
           return;
         }
       }
 
-      router.push('/(tabs)/(main)/notifications' as any);
+      router.push('/(main)/(tabs)/notifications' as any);
     },
     [router],
   );
+
+  React.useEffect(() => {
+    const handleIncomingUrl = (url: string | null | undefined) => {
+      if (!url) return;
+
+      navigateFromLink(url);
+    };
+
+    // Handle deep-link if the app was opened from a killed/background state.
+    void Linking.getInitialURL().then((url) => {
+      handleIncomingUrl(url);
+    });
+
+    const subscription = Linking.addEventListener('url', (event) => {
+      handleIncomingUrl(event.url);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [navigateFromLink]);
 
   React.useEffect(() => {
     let receivedSub: Notifications.EventSubscription | undefined;
@@ -92,7 +114,7 @@ function RootLayoutContent() {
           const link = (lastResponse.notification.request.content.data as any)?.link as
             | string
             | undefined;
-          handleNotificationLink(link);
+          navigateFromLink(link);
         }
       }
 
@@ -110,7 +132,6 @@ function RootLayoutContent() {
       }
 
       if (Platform.OS !== 'web') {
-        // Foreground push: refresh in-app caches immediately.
         receivedSub = Notifications.addNotificationReceivedListener((notification) => {
           const data = notification.request.content.data as any;
           const link: string | undefined = data?.link;
@@ -122,7 +143,7 @@ function RootLayoutContent() {
           const link: string | undefined = data?.link;
 
           invalidateForLink(link);
-          handleNotificationLink(link);
+          navigateFromLink(link);
         });
       }
     })();
@@ -131,7 +152,7 @@ function RootLayoutContent() {
       receivedSub?.remove();
       responseSub?.remove();
     };
-  }, [router, isAuthenticated, isLoading, handleNotificationLink, qc, refreshRealtimeLists]);
+  }, [isAuthenticated, isLoading, navigateFromLink, qc, refreshRealtimeLists]);
 
   React.useEffect(() => {
     let active = true;
@@ -181,7 +202,7 @@ function RootLayoutContent() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(main)" />
       </Stack>
       <StatusBar style="auto" />
     </NavThemeProvider>

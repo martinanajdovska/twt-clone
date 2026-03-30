@@ -55,12 +55,14 @@ const TweetDetails = ({ id, username, profilePicture }: { id: number; username: 
                     </div>
 
                     <div className="border-b border-border relative">
-                        <TweetForm
-                            username={username}
-                            parentId={tweet.id}
-                            profilePicture={profilePicture ?? undefined}
-                            onSuccess={() => { }}
-                        />
+                        {username ? (
+                            <TweetForm
+                                username={username}
+                                parentId={tweet.id}
+                                profilePicture={profilePicture ?? undefined}
+                                onSuccess={() => { }}
+                            />
+                        ) : null}
                     </div>
                 </div>
                 {data.pages.map((group, i) => (

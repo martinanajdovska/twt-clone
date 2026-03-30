@@ -1,26 +1,26 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-    const token = request.cookies.get('token')?.value;
-    const { pathname } = request.nextUrl;
+  const token = request.cookies.get("token")?.value;
+  const { pathname } = request.nextUrl;
 
+  const isTweetDetailPath = /^\/tweets\/\d+(?:\/details)?\/?$/.test(pathname);
 
-    const isPublicPath = pathname === '/login' || pathname === '/register';
+  const isAuthPage = pathname === "/login" || pathname === "/register";
+  const isPublicPath = isAuthPage || isTweetDetailPath;
 
-    if (!isPublicPath && !token) {
-        return NextResponse.redirect(new URL('/login', request.url));
-    }
+  if (!isPublicPath && !token) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
 
-    if (isPublicPath && token) {
-        return NextResponse.redirect(new URL('/', request.url));
-    }
+  if (isAuthPage && token) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 
-    return NextResponse.next();
+  return NextResponse.next();
 }
 
 export const config = {
-    matcher: [
-        '/((?!api|_next/static|_next/image|favicon.ico).*)',
-    ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

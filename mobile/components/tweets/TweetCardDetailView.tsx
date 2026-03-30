@@ -144,7 +144,7 @@ export function TweetCardDetailView({
         )}
 
         <View style={styles.detailHeaderRow}>
-          <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); router.push(`/(tabs)/users/${tweet.username}`); }}>
+          <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); router.push(`/(main)/users/${tweet.username}`); }}>
             {tweet.profilePictureUrl ? (
               <Image source={{ uri: tweet.profilePictureUrl }} style={styles.avatar} />
             ) : (
@@ -160,7 +160,7 @@ export function TweetCardDetailView({
               </View>
             )}
           </TouchableOpacity>
-          <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); router.push(`/(tabs)/users/${tweet.username}`); }} style={styles.detailHeaderUser}>
+          <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); router.push(`/(main)/users/${tweet.username}`); }} style={styles.detailHeaderUser}>
             <Text style={[styles.displayName, { color: textColor }]} numberOfLines={1}>
               {tweet.username}
             </Text>
@@ -199,7 +199,7 @@ export function TweetCardDetailView({
                 isActive={isVideoActive}
                 onOpenReels={() =>
                   router.push({
-                    pathname: '/(tabs)/reels',
+                    pathname: '/(main)/reels',
                     params: { initialTweetId: String(tweet.id) },
                   } as any)
                 }
@@ -216,7 +216,7 @@ export function TweetCardDetailView({
               quotedBg={quotedBg}
               textColor={textColor}
               mutedColor={mutedColor}
-              onPress={() => router.push(`/(tabs)/tweets/${tweet.quotedTweet!.id}`)}
+              onPress={() => router.push(`/(main)/tweets/${tweet.quotedTweet!.id}`)}
             />
           )}
 
@@ -229,7 +229,7 @@ export function TweetCardDetailView({
               <Text style={[styles.detailStatLabel, { color: mutedColor }]}> Retweets</Text>
             </View>
             <Text style={[styles.detailStatDot, { color: mutedColor }]}>·</Text>
-            <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); router.push(`/(tabs)/tweets/quotes/${tweet.id}`); }}>
+            <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); router.push(`/(main)/tweets/quotes/${tweet.id}`); }}>
               <View style={styles.detailStatItem}>
                 <Text style={[styles.detailStatBold, { color: textColor }]}>{tweet.quotesCount}</Text>
                 <Text style={[styles.detailStatLabel, { color: mutedColor }]}> Quotes</Text>

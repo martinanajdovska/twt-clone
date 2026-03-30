@@ -86,6 +86,7 @@ const Tweet = ({
 }) => {
     const router = useRouter()
     const isSelf = username === tweet.username
+    const canInteract = username.trim().length > 0
 
     const handleUserClick = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -157,27 +158,45 @@ const Tweet = ({
                                     @{tweet.username.toLowerCase()}
                                 </span>
                             </div>
-                            <DropdownMenu onOpenChange={onDropdownOpenChange}>
-                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                    <Button variant="outline" size="icon">
+                            {canInteract ? (
+                                <DropdownMenu onOpenChange={onDropdownOpenChange}>
+                                    <DropdownMenuTrigger
+                                        asChild
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <Button variant="outline" size="icon">
+                                            <MoreHorizontal size={18} />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                        align="end"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {isSelf && tweet.parentId == null && (
+                                            <PinTweet
+                                                username={username}
+                                                id={tweet.id}
+                                                isPinned={tweet.isPinned}
+                                            />
+                                        )}
+                                        <AddCommunityNote tweetId={tweet.id} />
+                                        <AllCommunityNotesDialog tweetId={tweet.id} />
+                                        {isSelf && (
+                                            <Delete
+                                                username={username}
+                                                id={tweet.id}
+                                                parentId={tweet.parentId ?? undefined}
+                                            />
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : (
+                                <div className="pointer-events-none">
+                                    <Button variant="outline" size="icon" aria-hidden>
                                         <MoreHorizontal size={18} />
                                     </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                    {isSelf && tweet.parentId == null && (
-                                        <PinTweet username={username} id={tweet.id} isPinned={tweet.isPinned} />
-                                    )}
-                                    <AddCommunityNote tweetId={tweet.id} />
-                                    <AllCommunityNotesDialog tweetId={tweet.id} />
-                                    {isSelf && (
-                                        <Delete
-                                            username={username}
-                                            id={tweet.id}
-                                            parentId={tweet.parentId ?? undefined}
-                                        />
-                                    )}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                </div>
+                            )}
                         </div>
 
                         <div className="mt-1 text-[15px] leading-normal text-foreground whitespace-pre-wrap break-words overflow-hidden">
@@ -293,30 +312,38 @@ const Tweet = ({
                         )}
 
                         <div className="flex items-center justify-between max-w-md mt-3 -ml-2 text-muted-foreground">
-                            <Reply
-                                tweet={tweet}
-                                username={username}
-                                repliesCount={tweet.repliesCount}
-                                hideCount={detailView}
-                            />
-                            <RetweetMenu
-                                tweet={tweet}
-                                username={username}
-                                retweetsCount={tweet.retweetsCount}
-                                isRetweeted={tweet.isRetweeted}
-                                hideCount={detailView}
-                            />
-                            <Like
-                                likesCount={tweet.likesCount}
-                                isLiked={tweet.isLiked}
-                                id={tweet.id}
-                                hideCount={detailView}
-                            />
-                            <Bookmark
-                                id={tweet.id}
-                                isBookmarked={tweet.isBookmarked}
-                                username={username}
-                            />
+                            <div className={canInteract ? undefined : "pointer-events-none opacity-50"}>
+                                <Reply
+                                    tweet={tweet}
+                                    username={username}
+                                    repliesCount={tweet.repliesCount}
+                                    hideCount={detailView}
+                                />
+                            </div>
+                            <div className={canInteract ? undefined : "pointer-events-none opacity-50"}>
+                                <RetweetMenu
+                                    tweet={tweet}
+                                    username={username}
+                                    retweetsCount={tweet.retweetsCount}
+                                    isRetweeted={tweet.isRetweeted}
+                                    hideCount={detailView}
+                                />
+                            </div>
+                            <div className={canInteract ? undefined : "pointer-events-none opacity-50"}>
+                                <Like
+                                    likesCount={tweet.likesCount}
+                                    isLiked={tweet.isLiked}
+                                    id={tweet.id}
+                                    hideCount={detailView}
+                                />
+                            </div>
+                            <div className={canInteract ? undefined : "pointer-events-none opacity-50"}>
+                                <Bookmark
+                                    id={tweet.id}
+                                    isBookmarked={tweet.isBookmarked}
+                                    username={username}
+                                />
+                            </div>
                             <span title={tweet.createdAt}>{formatRelativeTime(tweet.createdAt)}</span>
                         </div>
 

@@ -1,8 +1,11 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import type { ITweet } from "@/types/tweet";
 import { useCompose } from "@/contexts/ComposeContext";
+import { Share } from "react-native";
+import { FRONTEND_URL } from "@/lib/constants";
+
 
 type Props = {
   tweet: ITweet;
@@ -24,6 +27,18 @@ export function TweetActions({
   showCounts,
 }: Props) {
   const { openCompose } = useCompose();
+
+  const handleSharePress = async () => {
+    try {
+      const webTweetUrl = `${FRONTEND_URL}/tweets/${tweet.id}`;
+
+      await Share.share({
+        message: webTweetUrl,
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed to share tweet");
+    }
+  };
 
   return (
     <View style={styles.actions}>
@@ -77,6 +92,9 @@ export function TweetActions({
           size={18}
           color={tweet.isBookmarked ? "#1d9bf0" : iconColor}
         />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handleSharePress} style={styles.actionBtn} hitSlop={8}>
+        <MaterialIcons name="share" size={18} color={iconColor} />
       </TouchableOpacity>
     </View>
   );

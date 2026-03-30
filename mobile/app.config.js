@@ -41,6 +41,28 @@ module.exports = {
           ],
           category: ["BROWSABLE", "DEFAULT"]
         }
+        ,
+        {
+          action: "VIEW",
+          data: [
+            {
+              scheme: "mobile",
+              host: "tweets",
+              pathPrefix: "/",
+            }
+          ],
+          category: ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          action: "VIEW",
+          data: [
+            {
+              scheme: "mobile",
+              pathPrefix: "/tweets",
+            }
+          ],
+          category: ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     web: {

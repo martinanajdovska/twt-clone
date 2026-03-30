@@ -165,7 +165,7 @@ export function ReelItem({
           <View style={styles.bottomRow}>
             <View style={styles.leftCol}>
               <TouchableOpacity
-                onPress={() => router.push(`/(tabs)/users/${tweet.username}`)}
+                onPress={() => router.push(`/(main)/users/${tweet.username}`)}
                 style={styles.userRow}
               >
                 <Text style={[styles.handle, { color: textColor }]} numberOfLines={1}>

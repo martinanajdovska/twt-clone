@@ -25,7 +25,7 @@ export default function ConversationListItem({
 
 
     const openConversation = (id: number) => {
-        router.push(`/(tabs)/conversation/${id}` as any);
+        router.push(`/(main)/conversation/${id}` as any);
     };
 
     const confirmArchive = () => {

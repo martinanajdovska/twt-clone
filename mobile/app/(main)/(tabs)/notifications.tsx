@@ -62,11 +62,11 @@ export default function NotificationsScreen() {
 
     if (n.link) {
       const match = n.link.match(/\/tweets\/(\d+)/);
-      if (match) router.push(`/(tabs)/tweets/${match[1]}` as any);
+      if (match) router.push(`/(main)/tweets/${match[1]}` as any);
 
       else if (n.link.includes('/users/')) {
         const u = n.link.split('/users/')[1]?.split('/')[0] || n.link.split('/').pop();
-        if (u) router.push(`/(tabs)/users/${u}` as any);
+        if (u) router.push(`/(main)/users/${u}` as any);
       }
     }
   };

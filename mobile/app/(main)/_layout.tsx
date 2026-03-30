@@ -1,6 +1,5 @@
-import { Redirect, Stack } from 'expo-router';
-import React, { useEffect } from 'react';
-import { router } from 'expo-router';
+import { Redirect, Stack, usePathname } from 'expo-router';
+import React from 'react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { AppDrawer } from '@/components/AppDrawer';
@@ -8,6 +7,27 @@ import { DrawerProvider } from '@/contexts/DrawerContext';
 import { ComposeProvider, useCompose } from '@/contexts/ComposeContext';
 import { ComposeBottomSheet } from '@/components/tweets/ComposeBottomSheet';
 import { ActivityIndicator, View } from 'react-native';
+
+function PublicTweetsStack() {
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="tweets/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="tweets/quotes/[id]" options={{ headerShown: false }} />
+    </Stack>
+  );
+}
+
+function PublicTweetsWithCompose() {
+  return (
+    <ComposeProvider>
+      <PublicTweetsStack />
+    </ComposeProvider>
+  );
+}
 
 function TabsStack() {
   const { isVisible, closeCompose, parentId, quotedTweetId, topOffset } = useCompose();
@@ -18,9 +38,9 @@ function TabsStack() {
         screenOptions={{
           headerShown: false,
         }}
-        initialRouteName="(main)"
+        initialRouteName="(tabs)"
       >
-        <Stack.Screen name="(main)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="users/[username]" options={{ headerShown: false }} />
         <Stack.Screen name="tweets/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="tweets/quotes/[id]" options={{ headerShown: false }} />
@@ -41,20 +61,23 @@ function TabsStack() {
 
 export default function TabsLayout() {
   const { isAuthenticated, isLoading } = useAuth();
+  const pathname = usePathname();
+  const isPublicTweetPath = /^\/tweets\/\d+(?:\/quotes\/\d+)?\/?$/.test(pathname);
 
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/(auth)/login');
+  if (!isAuthenticated) {
+    if (isPublicTweetPath) {
+      return <PublicTweetsWithCompose />;
     }
-  }, [isAuthenticated, isLoading]);
-
-  if (isLoading) return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" />
-    </View>
-  );
-  if (!isAuthenticated) return <Redirect href="/(auth)/login" />;
+    return <Redirect href="/(auth)/login" />;
+  }
 
   return (
     <DrawerProvider>
@@ -63,6 +86,5 @@ export default function TabsLayout() {
         <TabsStack />
       </ComposeProvider>
     </DrawerProvider>
-
   );
 }

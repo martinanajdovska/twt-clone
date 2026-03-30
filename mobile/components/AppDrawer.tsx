@@ -59,7 +59,7 @@ export function AppDrawer() {
 
                 <TouchableOpacity
                     style={styles.drawerItem}
-                    onPress={() => closeDrawer(() => router.push(`/(tabs)/users/${self?.username}`))}
+                    onPress={() => closeDrawer(() => router.push(`/(main)/users/${self?.username}`))}
                 >
                     <MaterialIcons name="person-outline" size={24} color={textColor} />
                     <Text style={[styles.drawerItemText, { color: textColor }]}>Profile</Text>
@@ -67,7 +67,7 @@ export function AppDrawer() {
 
                 <TouchableOpacity
                     style={styles.drawerItem}
-                    onPress={() => closeDrawer(() => router.push('/(tabs)/bookmarks' as any))}
+                    onPress={() => closeDrawer(() => router.push('/(main)/bookmarks' as any))}
                 >
                     <MaterialIcons name="bookmark-outline" size={24} color={textColor} />
                     <Text style={[styles.drawerItemText, { color: textColor }]}>Bookmarks</Text>

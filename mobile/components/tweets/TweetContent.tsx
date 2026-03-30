@@ -10,9 +10,7 @@ type Props = {
   baseStyle?: object;
 };
 
-/**
- * Renders tweet/message content with @mentions as tappable links to user profiles.
- */
+
 export function TweetContent({ content, textStyle, baseStyle }: Props) {
   const router = useRouter();
 
@@ -35,7 +33,7 @@ export function TweetContent({ content, textStyle, baseStyle }: Props) {
         key={`m-${match.index}`}
         onPress={(e) => {
           e.stopPropagation?.();
-          router.push(`/(tabs)/users/${mentionUsername}` as any);
+          router.push(`/(main)/users/${mentionUsername}` as any);
         }}
         activeOpacity={0.7}
       >

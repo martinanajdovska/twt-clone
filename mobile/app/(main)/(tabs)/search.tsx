@@ -76,7 +76,7 @@ export default function SearchScreen() {
       topInset={insets.top}
       isLoading={isLoading}
       users={users}
-      onUserPress={(username) => router.push(`/(tabs)/users/${username}` as any)}
+      onUserPress={(username) => router.push(`/(main)/users/${username}` as any)}
       userSecondaryText="View profile"
       renderTweets={renderTweets()}
       emptyUsersText={

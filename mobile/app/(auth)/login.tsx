@@ -61,7 +61,7 @@ export default function LoginScreen() {
         setFormError(decodeURIComponent(oauthError));
       } else if (accessToken) {
         await setToken(accessToken);
-        router.replace('/(tabs)/(main)');
+        router.replace('/(main)/(tabs)');
       }
 
       current.searchParams.delete('access_token');
@@ -107,7 +107,7 @@ export default function LoginScreen() {
       }
 
       await setToken(accessToken);
-      router.replace('/(tabs)/(main)');
+      router.replace('/(main)/(tabs)');
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Google sign-in failed.';
       setFormError(message);
@@ -148,7 +148,7 @@ export default function LoginScreen() {
           throw new Error('No token returned from server');
         }
         await setToken(accessToken);
-        router.replace('/(tabs)/(main)');
+        router.replace('/(main)/(tabs)');
       } catch (e: unknown) {
         const message = e instanceof Error ? e.message : 'Sign in failed';
         const nestedMessage =

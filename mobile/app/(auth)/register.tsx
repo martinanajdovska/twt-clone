@@ -66,7 +66,7 @@ export default function RegisterScreen() {
         throw new Error('No token returned from server');
       }
       await setToken(accessToken);
-      router.replace('/(tabs)/(main)');
+      router.replace('/(main)/(tabs)');
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Registration failed';
       if (message.includes('email-already-in-use')) {

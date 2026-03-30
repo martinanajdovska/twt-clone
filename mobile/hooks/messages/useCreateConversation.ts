@@ -25,7 +25,7 @@ export const useCreateConversation = () => {
           return [newItem, ...without];
         },
       );
-      router.push(`/(tabs)/conversation/${data.id}` as any);
+      router.push(`/(main)/conversation/${data.id}` as any);
     },
     onError: (error) => {
       Alert.alert("Error", error.message);

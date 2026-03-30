@@ -3,7 +3,6 @@ import TweetDetails from "@/components/tweets/TweetDetails";
 import { fetchSelfUsernameAndProfilePicture } from "@/api-calls/users-api";
 import { cookies } from "next/headers";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { redirect } from "next/navigation";
 import { prefetchTweetDetails } from "@/hooks/tweets/prefetchTweetDetails";
 
 const TweetDetailsPage = async ({ params }: { params: Promise<{ id: number }> }) => {
@@ -12,18 +11,20 @@ const TweetDetailsPage = async ({ params }: { params: Promise<{ id: number }> })
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
 
-    if (!token) {
-        redirect("/login");
-    }
-
     const queryClient = await prefetchTweetDetails(id);
-    const self = await fetchSelfUsernameAndProfilePicture({ token });
-    const username = self.username;
+    let username = '';
+    let profilePicture: string | null = null;
+
+    if (token) {
+        const self = await fetchSelfUsernameAndProfilePicture({ token });
+        username = self.username;
+        profilePicture = self.profilePicture;
+    }
 
     return (
         <div>
             <HydrationBoundary state={dehydrate(queryClient)}>
-                <TweetDetails id={id} username={username} profilePicture={self.profilePicture} />
+                <TweetDetails id={id} username={username} profilePicture={profilePicture} />
             </HydrationBoundary>
         </div>
     )

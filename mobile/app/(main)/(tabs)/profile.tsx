@@ -15,7 +15,7 @@ export default function ProfileTabScreen() {
 
   useEffect(() => {
     if (self?.username) {
-      router.push(`/(tabs)/users/${self.username}` as any);
+      router.push(`/(main)/users/${self.username}` as any);
     }
   }, [self?.username]);
 
