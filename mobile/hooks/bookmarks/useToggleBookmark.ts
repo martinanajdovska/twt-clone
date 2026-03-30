@@ -13,9 +13,9 @@ export function useToggleBookmark() {
       tweetId: number;
       isBookmarked: boolean;
       bookmarksCount: number;
-    }) => toggleBookmark(tweetId, isBookmarked),
+    }) => toggleBookmark(tweetId, isBookmarked === true),
     onMutate: async ({ tweetId, isBookmarked, bookmarksCount }) => {
-      const next = !isBookmarked;
+      const next = !(isBookmarked === true);
       setTweetEngagementInAllCaches(queryClient, tweetId, {
         isBookmarked: next,
         bookmarksCount: Math.max(0, bookmarksCount + (next ? 1 : -1)),
@@ -23,7 +23,7 @@ export function useToggleBookmark() {
     },
     onError: (_err, { tweetId, isBookmarked, bookmarksCount }) => {
       setTweetEngagementInAllCaches(queryClient, tweetId, {
-        isBookmarked,
+        isBookmarked: isBookmarked === true,
         bookmarksCount,
       });
     },

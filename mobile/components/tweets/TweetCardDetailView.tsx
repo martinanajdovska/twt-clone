@@ -18,6 +18,7 @@ import { TweetCardModals } from "./TweetCardModals";
 import { useKeyboard } from "@/hooks/useKeyboard";
 import { useCompose } from "@/contexts/ComposeContext";
 import { TweetVideoMedia } from "./TweetVideoMedia";
+import { TweetImageViewer } from "./TweetImageViewer";
 
 
 type Props = {
@@ -81,51 +82,72 @@ export function TweetCardDetailView({
   });
 
   const { keyboardHeight } = useKeyboard();
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+
+  const handleImagePress = (e: any) => {
+    e.stopPropagation?.();
+    setImageViewerVisible(true);
+  };
 
   return (
     <>
-      <TweetCardModals
-        retweetMenuVisible={retweetMenuVisible}
-        onCloseRetweetMenu={() => setRetweetMenuVisible(false)}
-        onRetweet={handleRetweet}
-        onQuoteTweet={handleQuoteTweet}
-        isRetweeted={tweet.isRetweeted}
-        textColor={textColor}
-        borderColor={borderColor}
-        menuBg={menuBg}
-        mutedColor={mutedColor}
-        insetsBottom={insets.bottom}
-        optionsMenuVisible={optionsMenuVisible}
-        onCloseOptionsMenu={() => setOptionsMenuVisible(false)}
-        isSelf={isSelf}
-        onPin={handlePin}
-        pinPending={pinPending}
-        isPinned={tweet.isPinned}
-        onDeletePress={handleDeletePress}
-        onOpenAddNote={() => {
-          setOptionsMenuVisible(false);
-          setAddNoteContent('');
-          setAddNoteModalVisible(true);
-        }}
-        onOpenViewNotes={() => {
-          setOptionsMenuVisible(false);
-          setViewNotesModalVisible(true);
-        }}
-        addNoteModalVisible={addNoteModalVisible}
-        onCloseAddNoteModal={() => setAddNoteModalVisible(false)}
-        addNotePending={addNotePending}
-        addNoteContent={addNoteContent}
-        setAddNoteContent={setAddNoteContent}
-        onSubmitAddNote={handleAddNoteSubmit}
-        keyboardHeight={keyboardHeight}
-        viewNotesModalVisible={viewNotesModalVisible}
-        onCloseViewNotes={() => setViewNotesModalVisible(false)}
-        tweetId={tweet.id}
-        deleteConfirmVisible={deleteConfirmVisible}
-        onCloseDeleteConfirm={() => setDeleteConfirmVisible(false)}
-        deletePending={deletePending}
-        onDeleteConfirm={handleDeleteConfirm}
-      />
+      {(retweetMenuVisible || optionsMenuVisible || addNoteModalVisible || deleteConfirmVisible) && (
+        <TweetCardModals
+          retweetMenuVisible={retweetMenuVisible}
+          onCloseRetweetMenu={() => setRetweetMenuVisible(false)}
+          onRetweet={handleRetweet}
+          onQuoteTweet={handleQuoteTweet}
+          isRetweeted={tweet.isRetweeted}
+          textColor={textColor}
+          borderColor={borderColor}
+          menuBg={menuBg}
+          mutedColor={mutedColor}
+          insetsBottom={insets.bottom}
+          optionsMenuVisible={optionsMenuVisible}
+          onCloseOptionsMenu={() => setOptionsMenuVisible(false)}
+          isSelf={isSelf}
+          onPin={handlePin}
+          pinPending={pinPending}
+          isPinned={tweet.isPinned}
+          onDeletePress={handleDeletePress}
+          onOpenAddNote={() => {
+            setOptionsMenuVisible(false);
+            setAddNoteContent('');
+            setAddNoteModalVisible(true);
+          }}
+          onOpenViewNotes={() => {
+            setOptionsMenuVisible(false);
+            setViewNotesModalVisible(true);
+          }}
+          addNoteModalVisible={addNoteModalVisible}
+          onCloseAddNoteModal={() => setAddNoteModalVisible(false)}
+          addNotePending={addNotePending}
+          addNoteContent={addNoteContent}
+          setAddNoteContent={setAddNoteContent}
+          onSubmitAddNote={handleAddNoteSubmit}
+          keyboardHeight={keyboardHeight}
+          viewNotesModalVisible={viewNotesModalVisible}
+          onCloseViewNotes={() => setViewNotesModalVisible(false)}
+          tweetId={tweet.id}
+          deleteConfirmVisible={deleteConfirmVisible}
+          onCloseDeleteConfirm={() => setDeleteConfirmVisible(false)}
+          deletePending={deletePending}
+          onDeleteConfirm={handleDeleteConfirm}
+        />)}
+
+      {(tweet.imageUrl || tweet.gifUrl) && (imageViewerVisible && (
+        <TweetImageViewer
+          visible={imageViewerVisible}
+          imageUrl={tweet.imageUrl || tweet.gifUrl || ''}
+          tweet={tweet}
+          onClose={() => setImageViewerVisible(false)}
+          onLikePress={handleLike}
+          onBookmarkPress={handleBookmark}
+          handleRetweet={handleRetweet}
+          handleQuoteTweet={handleQuoteTweet}
+        />
+      ))}
+
       <View style={[styles.wrapper, { borderBottomColor: borderColor }]}>
         {showPinnedLabel && tweet.isPinned && (
           <View style={styles.metaRow}>
@@ -183,7 +205,9 @@ export function TweetCardDetailView({
           ) : null}
 
           {tweet.imageUrl && (
-            <Image source={{ uri: tweet.imageUrl }} style={[styles.tweetImage, { borderColor }]} />
+            <TouchableOpacity onPress={handleImagePress} activeOpacity={0.95}>
+              <Image source={{ uri: tweet.imageUrl }} style={[styles.tweetImage, { borderColor }]} />
+            </TouchableOpacity>
           )}
 
           {tweet.gifUrl && !tweet.imageUrl && (
@@ -216,7 +240,12 @@ export function TweetCardDetailView({
               quotedBg={quotedBg}
               textColor={textColor}
               mutedColor={mutedColor}
-              onPress={() => router.push(`/(main)/tweets/${tweet.quotedTweet!.id}`)}
+              onPress={() =>
+                router.push({
+                  pathname: '/tweets/[id]',
+                  params: { id: String(tweet.quotedTweet!.id) },
+                } as any)
+              }
             />
           )}
 

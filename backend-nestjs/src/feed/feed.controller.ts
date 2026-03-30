@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { FeedService } from './feed.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { CurrentUsername } from '../common/decorators/current-user.decorator';
 
 @Controller('api/tweets')
@@ -68,6 +69,7 @@ export class FeedController {
   }
 
   @Get(':id/details')
+  @UseGuards(OptionalJwtAuthGuard)
   async getDetails(
     @Param('id', ParseIntPipe) id: number,
     @Query('page') page = '0',

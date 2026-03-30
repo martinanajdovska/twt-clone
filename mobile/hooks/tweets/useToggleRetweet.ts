@@ -13,9 +13,9 @@ export function useToggleRetweet() {
       tweetId: number;
       isRetweeted: boolean;
       retweetsCount: number;
-    }) => toggleRetweet(tweetId, isRetweeted),
+    }) => toggleRetweet(tweetId, isRetweeted === true),
     onMutate: async ({ tweetId, isRetweeted, retweetsCount }) => {
-      const next = !isRetweeted;
+      const next = !(isRetweeted === true);
       setTweetEngagementInAllCaches(queryClient, tweetId, {
         isRetweeted: next,
         retweetsCount: Math.max(0, retweetsCount + (next ? 1 : -1)),
@@ -23,7 +23,7 @@ export function useToggleRetweet() {
     },
     onError: (_err, { tweetId, isRetweeted, retweetsCount }) => {
       setTweetEngagementInAllCaches(queryClient, tweetId, {
-        isRetweeted,
+        isRetweeted: isRetweeted === true,
         retweetsCount,
       });
     },

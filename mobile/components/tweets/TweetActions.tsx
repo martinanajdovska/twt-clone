@@ -15,6 +15,7 @@ type Props = {
   onLikePress: (e: { stopPropagation?: () => void }) => void;
   onBookmarkPress: (e: { stopPropagation?: () => void }) => void;
   showCounts: boolean;
+  onReplyPress?: () => void;
 };
 
 export function TweetActions({
@@ -25,6 +26,7 @@ export function TweetActions({
   onLikePress,
   onBookmarkPress,
   showCounts,
+  onReplyPress,
 }: Props) {
   const { openCompose } = useCompose();
 
@@ -42,9 +44,17 @@ export function TweetActions({
 
   return (
     <View style={styles.actions}>
-      <TouchableOpacity onPress={() =>
-        openCompose({ parentId: tweet.id })
-      } style={styles.actionBtn} hitSlop={8}>
+      <TouchableOpacity
+        onPress={() => {
+          if (onReplyPress) {
+            onReplyPress();
+          } else {
+            openCompose({ parentId: tweet.id });
+          }
+        }}
+        style={styles.actionBtn}
+        hitSlop={8}
+      >
         <MaterialIcons name="chat-bubble-outline" size={18} color={iconColor} />
         {showCounts && tweet.repliesCount > 0 && (
           <Text style={[styles.actionCount, { color: mutedColor }]}>

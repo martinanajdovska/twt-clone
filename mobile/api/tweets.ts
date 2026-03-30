@@ -1,4 +1,5 @@
 import { apiFetch, apiJson } from "@/lib/api";
+import { normalizeTweet } from "@/lib/normalizeTweet";
 import type {
   ITweet,
   ITweetDetailsResponse,
@@ -7,7 +8,7 @@ import type {
 
 export async function fetchTweets(page: number): Promise<ITweet[]> {
   const data = await apiJson<{ content: ITweet[] }>(`/tweets?page=${page}`);
-  return data.content ?? [];
+  return (data.content ?? []).map(normalizeTweet);
 }
 
 export async function fetchTweetDetails(
@@ -19,16 +20,23 @@ export async function fetchTweetDetails(
   if (typeof pageSize === "number") {
     url += `&size=${pageSize}`;
   }
-  return apiJson(url);
+  const raw = await apiJson<ITweetDetailsResponse>(url);
+  return {
+    tweet: normalizeTweet(raw.tweet),
+    parentTweet: raw.parentTweet ? normalizeTweet(raw.parentTweet) : undefined,
+    parentChain: (raw.parentChain ?? []).map(normalizeTweet),
+    replies: (raw.replies ?? []).map(normalizeTweet),
+  };
 }
 
 export async function fetchTweetsBySearch(q: string): Promise<ITweet[]> {
   const data = await apiJson<ITweet[] | { content: ITweet[] }>(
     `/tweets/search/content?q=${encodeURIComponent(q)}`,
   );
-  return Array.isArray(data)
+  const list = Array.isArray(data)
     ? data
     : ((data as { content: ITweet[] }).content ?? []);
+  return list.map(normalizeTweet);
 }
 
 export async function createTweet(formData: FormData): Promise<ITweet> {
@@ -41,7 +49,8 @@ export async function createTweet(formData: FormData): Promise<ITweet> {
     networkRetries: 2,
   });
   if (!res.ok) throw new Error((await res.text()) || "Failed to create tweet");
-  return res.json();
+  const created = (await res.json()) as ITweet;
+  return normalizeTweet(created);
 }
 
 export async function toggleLike(id: number, isLiked: boolean): Promise<void> {
@@ -90,7 +99,7 @@ export async function fetchTweetQuotes(
   const data = await apiJson<{ content: ITweet[] }>(
     `/tweets/${tweetId}/quotes?page=${page}`,
   );
-  return data.content ?? [];
+  return (data.content ?? []).map(normalizeTweet);
 }
 
 export async function votePoll(id: number, optionId: number): Promise<void> {
@@ -104,5 +113,9 @@ export async function votePoll(id: number, optionId: number): Promise<void> {
 export async function fetchVideoTweets(
   page?: number,
 ): Promise<IVideoTweetsResponse> {
-  return apiJson<IVideoTweetsResponse>(`/tweets/videos?page=${page}`);
+  const raw = await apiJson<IVideoTweetsResponse>(`/tweets/videos?page=${page}`);
+  return {
+    ...raw,
+    content: (raw.content ?? []).map(normalizeTweet),
+  };
 }

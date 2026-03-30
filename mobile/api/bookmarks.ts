@@ -1,11 +1,12 @@
 import { apiFetch, apiJson } from "@/lib/api";
+import { normalizeTweet } from "@/lib/normalizeTweet";
 import type { ITweet } from "@/types/tweet";
 
 export async function fetchBookmarks(page: number = 0): Promise<ITweet[]> {
   const data = await apiJson<{ content: ITweet[] }>(
     `/bookmarks?page=${page}&size=10`,
   );
-  return data.content ?? [];
+  return (data.content ?? []).map(normalizeTweet);
 }
 
 export async function toggleBookmark(

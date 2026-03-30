@@ -10,6 +10,7 @@ export default function Index() {
   const isPublicTweetPath = /^\/tweets\/\d+(?:\/quotes\/\d+)?\/?$/.test(pathname);
 
   useEffect(() => {
+    if (pathname !== '/') return;
     if (isLoading) return;
     if (!isAuthenticated && isPublicTweetPath) {
       return;

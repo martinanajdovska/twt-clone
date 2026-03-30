@@ -1,4 +1,5 @@
 import { apiFetch, apiJson } from "@/lib/api";
+import { normalizeTweet } from "@/lib/normalizeTweet";
 import type { ITweet } from "@/types/tweet";
 import type { IProfileHeader, IUpdateProfileResponse } from "@/types/profile";
 
@@ -24,7 +25,7 @@ export async function fetchProfileFeed(
   const data = await apiJson<{ tweets: ITweet[] }>(
     `/users/${username}?page=${page}&tab=${tab}`,
   );
-  return data.tweets ?? [];
+  return (data.tweets ?? []).map(normalizeTweet);
 }
 
 export async function fetchUsersByUsername(

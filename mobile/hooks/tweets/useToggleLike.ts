@@ -13,9 +13,9 @@ export function useToggleLike() {
       tweetId: number;
       isLiked: boolean;
       likesCount: number;
-    }) => toggleLike(tweetId, isLiked),
+    }) => toggleLike(tweetId, isLiked === true),
     onMutate: async ({ tweetId, isLiked, likesCount }) => {
-      const next = !isLiked;
+      const next = !(isLiked === true);
       setTweetEngagementInAllCaches(queryClient, tweetId, {
         isLiked: next,
         likesCount: Math.max(0, likesCount + (next ? 1 : -1)),
@@ -23,7 +23,7 @@ export function useToggleLike() {
     },
     onError: (_err, { tweetId, isLiked, likesCount }) => {
       setTweetEngagementInAllCaches(queryClient, tweetId, {
-        isLiked,
+        isLiked: isLiked === true,
         likesCount,
       });
     },

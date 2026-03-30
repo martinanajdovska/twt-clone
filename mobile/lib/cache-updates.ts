@@ -18,12 +18,17 @@ type TweetDetailData = {
   replies: ITweet[];
 };
 
+/** Avoid cache misses when API/JSON mixes number vs string tweet ids. */
+function tweetIdsEqual(a: unknown, b: number): boolean {
+  return Number(a) === Number(b);
+}
+
 function updateTweetInArray(
   tweets: ITweet[],
   tweetId: number,
   updater: (t: ITweet) => ITweet,
 ): ITweet[] {
-  return tweets.map((t) => (t.id === tweetId ? updater(t) : t));
+  return tweets.map((t) => (tweetIdsEqual(t.id, tweetId) ? updater(t) : t));
 }
 
 export function updateTweetInAllCaches(
@@ -70,9 +75,9 @@ export function updateTweetInAllCaches(
     if (!old) return old;
     return {
       ...old,
-      tweet: old.tweet.id === tweetId ? updater(old.tweet) : old.tweet,
+      tweet: tweetIdsEqual(old.tweet.id, tweetId) ? updater(old.tweet) : old.tweet,
       parentTweet:
-        old.parentTweet?.id === tweetId
+        old.parentTweet && tweetIdsEqual(old.parentTweet.id, tweetId)
           ? updater(old.parentTweet)
           : old.parentTweet,
       parentChain: old.parentChain
@@ -91,10 +96,11 @@ export function updateTweetInAllCaches(
       if (!old) return old;
 
       const parentChain = old.parentChain ?? [];
-      const matchesTweet = old.tweet.id === tweetId;
-      const matchesParent = old.parentTweet?.id === tweetId;
-      const matchesChain = parentChain.some((t) => t.id === tweetId);
-      const matchesReply = old.replies.some((t) => t.id === tweetId);
+      const matchesTweet = tweetIdsEqual(old.tweet.id, tweetId);
+      const matchesParent =
+        old.parentTweet != null && tweetIdsEqual(old.parentTweet.id, tweetId);
+      const matchesChain = parentChain.some((t) => tweetIdsEqual(t.id, tweetId));
+      const matchesReply = old.replies.some((t) => tweetIdsEqual(t.id, tweetId));
 
       if (!matchesTweet && !matchesParent && !matchesChain && !matchesReply) {
         return old;
@@ -138,7 +144,7 @@ export function removeTweetFromAllCaches(
   username: string,
 ): void {
   const filterOut = (tweets: ITweet[]) =>
-    tweets.filter((t) => t.id !== tweetId);
+    tweets.filter((t) => !tweetIdsEqual(t.id, tweetId));
 
   queryClient.setQueryData<InfiniteData<ITweet[]>>(["feed"], (old) => {
     if (!old) return old;
@@ -171,7 +177,7 @@ export function removeTweetFromAllCaches(
     ["tweet", String(tweetId)],
     (old) => {
       if (!old) return old;
-      if (old.tweet.id === tweetId) return undefined;
+      if (tweetIdsEqual(old.tweet.id, tweetId)) return undefined;
       return {
         ...old,
         replies: filterOut(old.replies),
@@ -186,10 +192,11 @@ export function removeTweetFromAllCaches(
       if (!old) return old;
 
       const parentChain = old.parentChain ?? [];
-      const matchesTweet = old.tweet.id === tweetId;
-      const matchesParent = old.parentTweet?.id === tweetId;
-      const matchesChain = parentChain.some((t) => t.id === tweetId);
-      const matchesReply = old.replies.some((t) => t.id === tweetId);
+      const matchesTweet = tweetIdsEqual(old.tweet.id, tweetId);
+      const matchesParent =
+        old.parentTweet != null && tweetIdsEqual(old.parentTweet.id, tweetId);
+      const matchesChain = parentChain.some((t) => tweetIdsEqual(t.id, tweetId));
+      const matchesReply = old.replies.some((t) => tweetIdsEqual(t.id, tweetId));
 
       if (!matchesTweet && !matchesParent && !matchesChain && !matchesReply) {
         return old;
@@ -201,9 +208,9 @@ export function removeTweetFromAllCaches(
         ...old,
         parentTweet: matchesParent ? undefined : old.parentTweet,
         parentChain: old.parentChain
-          ? old.parentChain.filter((t) => t.id !== tweetId)
+          ? old.parentChain.filter((t) => !tweetIdsEqual(t.id, tweetId))
           : old.parentChain,
-        replies: old.replies.filter((t) => t.id !== tweetId),
+        replies: old.replies.filter((t) => !tweetIdsEqual(t.id, tweetId)),
       };
     },
   );
@@ -744,7 +751,9 @@ export function setTweetEngagementInAllCaches(
         pages: old.pages.map((page) => ({
           ...page,
           content: page.content.map((tweet) =>
-            tweet.id === tweetId ? { ...tweet, ...updates } : tweet,
+            tweetIdsEqual(tweet.id, tweetId)
+              ? { ...tweet, ...updates }
+              : tweet,
           ),
         })),
       };
@@ -761,7 +770,9 @@ export function setTweetEngagementInAllCaches(
         pages: old.pages.map((page) => ({
           ...page,
           replies: (page.replies ?? []).map((tweet) =>
-            tweet.id === tweetId ? { ...tweet, ...updates } : tweet,
+            tweetIdsEqual(tweet.id, tweetId)
+              ? { ...tweet, ...updates }
+              : tweet,
           ),
         })),
       };
@@ -794,7 +805,9 @@ export function updateCommunityNoteRatingInCache(
     if (!old) return old;
     return {
       ...old,
-      tweet: old.tweet.id === tweetId ? updateNote(old.tweet) : old.tweet,
+      tweet: tweetIdsEqual(old.tweet.id, tweetId)
+        ? updateNote(old.tweet)
+        : old.tweet,
       parentTweet: old.parentTweet
         ? updateNote(old.parentTweet)
         : old.parentTweet,
@@ -807,7 +820,9 @@ export function updateCommunityNoteRatingInCache(
     return {
       ...old,
       pages: old.pages.map((page) =>
-        page.map((tweet) => (tweet.id === tweetId ? updateNote(tweet) : tweet)),
+        page.map((tweet) =>
+          tweetIdsEqual(tweet.id, tweetId) ? updateNote(tweet) : tweet,
+        ),
       ),
     };
   });
@@ -820,7 +835,7 @@ export function updateCommunityNoteRatingInCache(
         ...old,
         pages: old.pages.map((page) =>
           page.map((tweet) =>
-            tweet.id === tweetId ? updateNote(tweet) : tweet,
+            tweetIdsEqual(tweet.id, tweetId) ? updateNote(tweet) : tweet,
           ),
         ),
       };
@@ -835,7 +850,7 @@ export function updateCommunityNoteRatingInCache(
         ...old,
         pages: old.pages.map((page) =>
           page.map((tweet) =>
-            tweet.id === tweetId ? updateNote(tweet) : tweet,
+            tweetIdsEqual(tweet.id, tweetId) ? updateNote(tweet) : tweet,
           ),
         ),
       };

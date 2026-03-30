@@ -23,6 +23,8 @@ import { TweetActions } from './TweetActions';
 import { useTweetCardHandlers } from '../../hooks/useTweetCardHandlers';
 import { useCompose } from '@/contexts/ComposeContext';
 import { TweetVideoMedia } from './TweetVideoMedia';
+import { TweetImageViewer } from './TweetImageViewer';
+
 
 function isGifLikeUrl(url: string | null | undefined) {
   if (!url) return false;
@@ -41,7 +43,6 @@ export function TweetCard({
   currentUsername: string;
   showPinnedLabel?: boolean;
   isVideoActive?: boolean;
-  /** Feed/profile: keep inline player for active ±1 rows when thumbnail exists. */
   keepVideoPlayerWarm?: boolean;
   disableAnimatedMedia?: boolean;
 }) {
@@ -57,6 +58,7 @@ export function TweetCard({
   const [addNoteContent, setAddNoteContent] = useState('');
   const [viewNotesModalVisible, setViewNotesModalVisible] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
 
   const { keyboardHeight } = useKeyboard();
 
@@ -94,6 +96,10 @@ export function TweetCard({
     onNavigateToComposeQuote: (tweetId) => openCompose({ quotedTweetId: tweetId }),
   });
 
+  const handleImagePress = (e: any) => {
+    e.stopPropagation?.();
+    setImageViewerVisible(true);
+  };
 
   return (
     <>
@@ -140,10 +146,27 @@ export function TweetCard({
         onDeleteConfirm={handleDeleteConfirm}
       />
 
+      {(tweet.imageUrl || tweet.gifUrl) && (
+        <TweetImageViewer
+          visible={imageViewerVisible}
+          imageUrl={tweet.imageUrl || tweet.gifUrl || ''}
+          tweet={tweet}
+          onClose={() => setImageViewerVisible(false)}
+          onLikePress={handleLike}
+          onBookmarkPress={handleBookmark}
+          handleRetweet={handleRetweet}
+          handleQuoteTweet={handleQuoteTweet}
+        />
+      )}
 
       <TouchableOpacity
         activeOpacity={0.95}
-        onPress={() => router.push(`/(main)/tweets/${tweet.id}`)}
+        onPress={() =>
+          router.push({
+            pathname: '/tweets/[id]',
+            params: { id: String(tweet.id) },
+          } as any)
+        }
         style={[styles.wrapper, { borderBottomColor: borderColor }]}
       >
         {showPinnedLabel && tweet.isPinned && (
@@ -209,19 +232,23 @@ export function TweetCard({
             ) : null}
 
             {tweet.imageUrl && (
-              <Image
-                source={{ uri: tweet.imageUrl }}
-                style={[styles.tweetImage, { borderColor }]}
-                autoplay={!(disableAnimatedMedia && isGifLikeUrl(tweet.imageUrl))}
-              />
+              <TouchableOpacity onPress={handleImagePress} activeOpacity={0.95}>
+                <Image
+                  source={{ uri: tweet.imageUrl }}
+                  style={[styles.tweetImage, { borderColor }]}
+                  autoplay={!(disableAnimatedMedia && isGifLikeUrl(tweet.imageUrl))}
+                />
+              </TouchableOpacity>
             )}
 
             {tweet.gifUrl && !tweet.imageUrl && (
-              <Image
-                source={{ uri: tweet.gifUrl }}
-                style={[styles.tweetImage, { borderColor }]}
-                autoplay={!disableAnimatedMedia}
-              />
+              <TouchableOpacity onPress={handleImagePress} activeOpacity={0.95}>
+                <Image
+                  source={{ uri: tweet.gifUrl }}
+                  style={[styles.tweetImage, { borderColor }]}
+                  autoplay={!disableAnimatedMedia}
+                />
+              </TouchableOpacity>
             )}
 
             {tweet.videoUrl && !tweet.imageUrl && !tweet.gifUrl && (
@@ -257,7 +284,12 @@ export function TweetCard({
                 textColor={textColor}
                 mutedColor={mutedColor}
                 disableAnimatedMedia={disableAnimatedMedia}
-                onPress={() => router.push(`/(main)/tweets/${tweet.quotedTweet!.id}`)}
+                onPress={() =>
+                  router.push({
+                    pathname: '/tweets/[id]',
+                    params: { id: String(tweet.quotedTweet!.id) },
+                  } as any)
+                }
               />
             )}
 
@@ -277,8 +309,6 @@ export function TweetCard({
           </View>
         </View>
       </TouchableOpacity>
-
-
     </>
   );
 }
@@ -326,7 +356,8 @@ const styles = StyleSheet.create({
     gap: 4,
     flexShrink: 0,
   },
-  time: { fontSize: 13, flexShrink: 0 }, content: { fontSize: 15, lineHeight: 22, marginBottom: 12 },
+  time: { fontSize: 13, flexShrink: 0 },
+  content: { fontSize: 15, lineHeight: 22, marginBottom: 12 },
   contentText: { fontSize: 15, lineHeight: 22 },
   tweetImage: {
     width: '100%',

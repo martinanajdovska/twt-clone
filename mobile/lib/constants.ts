@@ -13,9 +13,8 @@ const extra = Constants.expoConfig?.extra as
     }
   | undefined;
 
-// const raw = extra?.apiUrl ?? "http://localhost:3000";
-const raw = "https://manuela-omnicompetent-masterly.ngrok-free.dev";
-export const FRONTEND_URL = "http://localhost:3001"; // replace withpublic url
+const raw = extra?.apiUrl ?? "http://localhost:3000";
+export const FRONTEND_URL = "http://localhost:3001";
 
 export const API_URL =
   raw.startsWith("http://") || raw.startsWith("https://")
