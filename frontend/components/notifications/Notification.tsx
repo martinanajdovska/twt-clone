@@ -1,12 +1,12 @@
 import React from 'react'
 import { INotificationResponse } from "@/DTO/INotificationResponse";
-import { AtSign, Bell, FileWarning, Heart, Mail, MessageSquare, Repeat, UserIcon } from 'lucide-react';
+import { AtSign, Bell, FileWarning, Heart, MessageSquare, Repeat, UserIcon } from 'lucide-react';
 import { useReadNotification } from "@/hooks/notifications/useReadNotification";
 import { useRouter } from "next/navigation";
 import { formatRelativeTime } from '@/lib/relativeTime';
 
 const Notification = ({ notification }: { notification: INotificationResponse }) => {
-    const { mutate: readNotification } = useReadNotification();
+    const { readNotification } = useReadNotification();
     const router = useRouter();
 
     const getIcon = (type: string) => {
@@ -41,7 +41,10 @@ const Notification = ({ notification }: { notification: INotificationResponse })
                 openNotification({ link: notification.link, id: notification.id, isRead: notification.isRead });
             }}
             key={notification.id}
-            className={`flex gap-3 p-4 border-b hover:bg-accent/50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-primary/5' : ''}`}
+            className={`flex gap-3 p-4 border-b cursor-pointer transition-colors ${notification.isRead
+                ? 'bg-transparent'
+                : 'bg-primary/25 border-l-4 border-l-primary'
+                } hover:bg-accent/50`}
         >
             <div className="mt-1">{getIcon(notification.type)}</div>
             <div className="flex flex-col gap-1">

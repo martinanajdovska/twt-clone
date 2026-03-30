@@ -4,11 +4,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search as SearchIcon, User } from 'lucide-react';
+import { Search as SearchIcon } from 'lucide-react';
 import { fetchUsers } from "@/api-calls/users-api";
 import { fetchTweetsBySearchTerm } from '@/api-calls/tweets-api';
 import { ITweetResponse } from '@/DTO/ITweetResponse';
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
+import { Avatar, AvatarFallback, AvatarImage } from './avatar';
+
+type SearchUser = {
+    username: string;
+    displayName: string | null;
+    imageUrl: string | null;
+};
 
 const Search = ({ onNavigate }: { onNavigate?: () => void } = {}) => {
     const searchParams = useSearchParams();
@@ -20,7 +27,7 @@ const Search = ({ onNavigate }: { onNavigate?: () => void } = {}) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [tab, setTab] = useState<'users' | 'tweets'>('users');
 
-    const { data: users = [], isLoading: usersLoading } = useQuery({
+    const { data: users = [] as SearchUser[], isLoading: usersLoading } = useQuery({
         queryKey: ['search-users', debouncedSearch],
         queryFn: () => fetchUsers(debouncedSearch),
         enabled: debouncedSearch.length > 0 && tab === 'users',
@@ -34,10 +41,6 @@ const Search = ({ onNavigate }: { onNavigate?: () => void } = {}) => {
 
     const isLoading = usersLoading || tweetsLoading;
     const activeData = tab === 'users' ? users : tweets;
-
-    useEffect(() => {
-        setHighlightedIndex(0);
-    }, [users.length, tweets.length]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -70,7 +73,7 @@ const Search = ({ onNavigate }: { onNavigate?: () => void } = {}) => {
         isOpen,
         onClose: () => setIsOpen(false),
         onSelect: (i) => {
-            if (tab === 'users') handleSelectUser(users[i]);
+            if (tab === 'users') handleSelectUser(users[i].username);
             else handleSelectTweet(tweets[i].id);
         },
     });
@@ -116,18 +119,28 @@ const Search = ({ onNavigate }: { onNavigate?: () => void } = {}) => {
 
                     {tab === 'users' && (
                         <div className="flex flex-col">
-                            {users.length > 0 ? users.map((username: string, i: number) => (
+                            {users.length > 0 ? users.map((user: SearchUser, i: number) => (
                                 <button
-                                    key={username}
+                                    key={user.username}
                                     type="button"
-                                    onClick={() => handleSelectUser(username)}
+                                    onClick={() => handleSelectUser(user.username)}
                                     className={`px-4 py-3 flex items-center gap-3 transition-colors text-left ${i === highlightedIndex ? '!bg-primary/15 ring-inset ring-2 ring-primary/40' : 'hover:bg-muted'}`}
                                 >
                                     <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                                        <User size={18} className="text-muted-foreground" />
+                                        <Avatar className="h-full w-full">
+                                            <AvatarImage src={user.imageUrl ?? undefined} className="object-cover" />
+                                            <AvatarFallback className="bg-muted text-foreground font-bold text-sm">
+                                                {user.username.charAt(0).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="font-bold text-sm text-foreground">@{username}</span>
+                                        <p>
+                                            <span className="font-bold text-sm text-foreground">@{user.username}  </span>
+                                            {user.displayName && (
+                                                <span className="text-xs text-muted-foreground">  {user.displayName}</span>
+                                            )}
+                                        </p>
                                         <span className="text-xs text-muted-foreground">View profile</span>
                                     </div>
                                 </button>
@@ -146,10 +159,27 @@ const Search = ({ onNavigate }: { onNavigate?: () => void } = {}) => {
                                     key={tweet.id}
                                     type="button"
                                     onClick={() => handleSelectTweet(tweet.id)}
-                                    className={`px-4 py-3 flex flex-col gap-1 transition-colors text-left ${i === highlightedIndex ? '!bg-primary/15 ring-inset ring-2 ring-primary/40' : 'hover:bg-muted'}`}
+                                    className={`px-4 py-3 flex items-center gap-3 transition-colors text-left ${i === highlightedIndex ? '!bg-primary/15 ring-inset ring-2 ring-primary/40' : 'hover:bg-muted'}`}
                                 >
-                                    <span className="font-bold text-sm text-foreground">@{tweet.username}</span>
-                                    <span className="text-sm text-muted-foreground line-clamp-2">{tweet.content}</span>
+                                    <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                                        <Avatar className="h-full w-full">
+                                            <AvatarImage src={tweet.profilePictureUrl ?? undefined} className="object-cover" />
+                                            <AvatarFallback className="bg-muted text-foreground font-bold text-sm">
+                                                {tweet.username.charAt(0).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p>
+                                            <span className="font-bold text-sm text-foreground">@{tweet.username}  </span>
+                                            {tweet.displayName && (
+                                                <span className="text-xs text-muted-foreground">  {tweet.displayName}</span>
+                                            )}
+                                        </p>
+
+                                        <span className="text-sm text-muted-foreground line-clamp-2">{tweet.content}</span>
+                                    </div>
+
                                 </button>
                             )) : !isLoading && (
                                 <div className="px-4 py-8 text-center text-sm text-muted-foreground">

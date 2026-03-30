@@ -19,7 +19,7 @@ export const useMediaPicker = ({
       if (showPoll) return;
 
       if (Platform.OS === "web") {
-        if (type === "image") {
+        if (type === "image" || type === "video") {
           Alert.alert(
             "Image upload",
             "Image attachment is available in the iOS or Android app.",

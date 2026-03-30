@@ -55,10 +55,12 @@ export default function MessageBubble({
     msg,
     isSelf,
     onImageClick,
+    highlighted = false,
 }: {
     msg: IMessageResponse;
     isSelf: boolean;
     onImageClick?: (src: string) => void;
+    highlighted?: boolean;
 }) {
     const displayName = isSelf ? 'You' : `@${msg.senderUsername}`
     const hasImage = msg.imageUrl != null && msg.imageUrl !== ''
@@ -67,7 +69,11 @@ export default function MessageBubble({
     const imageFallbackSrc = msg.optimisticImageUrl ?? null
 
     return (
-        <div className={`flex gap-3 ${isSelf ? 'flex-row-reverse' : ''} mb-4`}>
+        <div
+            className={`flex gap-3 ${isSelf ? 'flex-row-reverse' : ''} mb-4 rounded-xl transition-colors ${
+                highlighted ? 'bg-primary/10 ring-1 ring-primary/40 p-2 -m-2' : ''
+            }`}
+        >
             <Link href={`/users/${msg.senderUsername}`} className="shrink-0 hover:opacity-90 transition-opacity">
                 <Avatar className="h-9 w-9">
                     <AvatarImage src={msg.senderImageUrl ?? undefined} alt={msg.senderUsername} />

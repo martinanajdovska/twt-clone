@@ -21,10 +21,10 @@ export default function ConversationListItem({ conv, currentId }: { conv: IConve
     const { mutate: archiveConversation } = useArchiveConversation();
 
     return (
-        <div className={`relative group flex gap-3 p-3 rounded-xl transition-colors ${isActive ? 'bg-accent' : hasUnread ? 'bg-primary/10 hover:bg-primary/15' : 'hover:bg-accent/50'}`}>
+        <div className={`relative group flex gap-3 p-3 rounded-xl transition-colors ${isActive ? 'bg-accent' : hasUnread ? 'bg-primary/25 hover:bg-primary/15' : 'hover:bg-accent/50'}`}>
             <Link href={`/messages?conversation=${conv.id}`} className="flex gap-3 flex-1 min-w-0">
                 <Avatar className="h-12 w-12 shrink-0">
-                    <AvatarImage src={conv.otherParticipant.imageUrl ?? undefined} alt={displayName} />
+                    <AvatarImage src={conv.otherParticipant.imageUrl ?? undefined} alt={displayName} className="object-cover" />
                     <AvatarFallback className="text-sm">{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">

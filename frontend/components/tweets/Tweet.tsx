@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 
-// immediately shows the uploaded image instead of waiting for server response
 function TweetImageWithFallback({
     src,
     fallbackSrc,
@@ -152,7 +151,7 @@ const Tweet = ({
                                     onClick={handleUserClick}
                                     className="font-bold text-foreground hover:underline cursor-pointer"
                                 >
-                                    {tweet.username}
+                                    {tweet.displayName}
                                 </span>
                                 <span className="text-muted-foreground text-sm">
                                     @{tweet.username.toLowerCase()}

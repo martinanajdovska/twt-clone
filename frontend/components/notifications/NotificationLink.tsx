@@ -7,7 +7,8 @@ import { useGetNotifications } from '@/hooks/notifications/useGetNotifications'
 import type { INotificationResponse } from '@/DTO/INotificationResponse'
 
 export default function NotificationLink() {
-  const { data: notifications = [] } = useGetNotifications()
+  const { data } = useGetNotifications()
+  const notifications = data?.pages.flatMap((p) => p.content ?? []) ?? []
   const unreadCount = notifications.filter(
     (n: INotificationResponse) => !n.isRead && n.type !== 'MESSAGE'
   ).length

@@ -1,14 +1,15 @@
 'use client'
 
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react'
+import React, { useState, useRef, useLayoutEffect, useEffect, useCallback } from 'react'
 import { Send, ImageIcon, X } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { IMessageResponse } from '@/DTO/IMessageResponse'
 import { useGetMessages } from '@/hooks/messages/useGetMessages'
 import { useSendMessage } from '@/hooks/messages/useSendMessage'
 import MessageBubble from './MessageBubble'
 import GifPicker from '@/components/GifPicker'
-import { useCallback } from 'react'
+import { fetchMessageContext } from '@/api-calls/messages-api'
 
 const STICKY_BOTTOM_THRESHOLD = 80
 
@@ -44,6 +45,7 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
 export default function ConversationView({
   conversationId,
   otherParticipant,
+  searchTarget,
 }: {
   conversationId: number
   otherParticipant: {
@@ -51,6 +53,7 @@ export default function ConversationView({
     imageUrl: string | null;
     displayName: string | null;
   };
+  searchTarget?: { id: number; createdAt: string } | null;
 }) {
   const [input, setInput] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -58,6 +61,8 @@ export default function ConversationView({
   const [gifUrl, setGifUrl] = useState<string | null>(null)
   const [gifPickerOpen, setGifPickerOpen] = useState(false)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
+  const [contextMessages, setContextMessages] = useState<IMessageResponse[] | null>(null)
+  const [highlightedMessageId, setHighlightedMessageId] = useState<number | null>(null)
   const openLightbox = useCallback((src: string) => setLightboxSrc(src), [])
   const closeLightbox = useCallback(() => setLightboxSrc(null), [])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -66,37 +71,53 @@ export default function ConversationView({
   const prevConversationIdRef = useRef(conversationId)
   const didInitialScrollRef = useRef(false)
   const userScrolledUpRef = useRef(false)
-  const { data: messages = [], isLoading } = useGetMessages(conversationId)
+  const {
+    data: messagesData,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetMessages(conversationId)
+  const messages =
+    messagesData?.pages
+      .slice()
+      .reverse()
+      .flatMap((p) => [...(p.content ?? [])].reverse()) ?? []
+  const renderedMessages = contextMessages ?? messages
   const { mutateAsync: sendMessageAsync, isPending } = useSendMessage(conversationId)
+  const isFetchingOlderRef = useRef(false)
+  const prevScrollHeightRef = useRef(0)
+  const prevScrollTopRef = useRef(0)
 
-  if (prevConversationIdRef.current !== conversationId) {
+  useEffect(() => {
+    if (prevConversationIdRef.current === conversationId) return
     prevConversationIdRef.current = conversationId
     didInitialScrollRef.current = false
     userScrolledUpRef.current = false
-  }
+  }, [conversationId])
 
-  // instant scroll to bottom when messages load
   useLayoutEffect(() => {
-    if (messages.length === 0 || isLoading) return
+    if (renderedMessages.length === 0 || isLoading) return
 
     const el = scrollContainerRef.current
     if (!el) return
 
     const scrollToBottom = () => { el.scrollTop = el.scrollHeight }
-    scrollToBottom()
 
     if (!didInitialScrollRef.current) {
+      scrollToBottom()
       didInitialScrollRef.current = true
       const raf = requestAnimationFrame(scrollToBottom)
       return () => cancelAnimationFrame(raf)
     }
-  }, [conversationId, messages.length, isLoading])
+    if (isFetchingOlderRef.current) return
+    if (!userScrolledUpRef.current) scrollToBottom()
+  }, [conversationId, renderedMessages.length, isLoading])
 
-  // when content height changes (images/GIFs load), keep view at bottom unless user scrolled up
   useEffect(() => {
     const container = scrollContainerRef.current
     const content = contentWrapperRef.current
-    if (!container || !content || messages.length === 0) return
+    if (!container || !content || renderedMessages.length === 0) return
 
     const scrollToBottom = () => {
       if (!userScrolledUpRef.current) container.scrollTop = container.scrollHeight
@@ -109,6 +130,21 @@ export default function ConversationView({
       const { scrollTop, scrollHeight, clientHeight } = container
       if (scrollHeight - clientHeight - scrollTop > STICKY_BOTTOM_THRESHOLD) {
         userScrolledUpRef.current = true
+      } else {
+        userScrolledUpRef.current = false
+      }
+
+      if (
+        scrollTop < 120 &&
+        !contextMessages &&
+        hasNextPage &&
+        !isFetchingNextPage &&
+        !isFetchingOlderRef.current
+      ) {
+        isFetchingOlderRef.current = true
+        prevScrollHeightRef.current = scrollHeight
+        prevScrollTopRef.current = scrollTop
+        void fetchNextPage()
       }
     }
     container.addEventListener('scroll', onScroll, { passive: true })
@@ -117,7 +153,20 @@ export default function ConversationView({
       ro.disconnect()
       container.removeEventListener('scroll', onScroll)
     }
-  }, [conversationId, messages.length])
+  }, [conversationId, renderedMessages.length, hasNextPage, isFetchingNextPage, fetchNextPage, contextMessages])
+
+  useEffect(() => {
+    if (isFetchingNextPage) return
+    if (!isFetchingOlderRef.current) return
+    const container = scrollContainerRef.current
+    if (!container) return
+    const newHeight = container.scrollHeight
+    const delta = newHeight - prevScrollHeightRef.current
+    if (delta > 0) {
+      container.scrollTop = prevScrollTopRef.current + delta
+    }
+    isFetchingOlderRef.current = false
+  }, [isFetchingNextPage, renderedMessages.length])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -142,6 +191,67 @@ export default function ConversationView({
 
   const canSend = input.trim().length > 0 || imageFile || gifUrl
 
+  const jumpToResult = useCallback(async (target: { id: number; createdAt: string }) => {
+    try {
+      const context = await fetchMessageContext(conversationId, target.createdAt, 10)
+      const seen = new Set<number>()
+      const deduped = context.filter((m) => {
+        if (seen.has(m.id)) return false
+        seen.add(m.id)
+        return true
+      })
+      if (deduped.length > 0) {
+        const ordered = [...deduped].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        )
+        setContextMessages(ordered)
+        setHighlightedMessageId(target.id)
+      }
+    } catch {
+    }
+  }, [conversationId])
+
+  useEffect(() => {
+    if (!searchTarget) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    jumpToResult(searchTarget)
+  }, [searchTarget, jumpToResult])
+
+  useEffect(() => {
+    if (highlightedMessageId == null) return
+    const centerTarget = () => {
+      const container = scrollContainerRef.current
+      if (!container) return
+      const targetEl = container.querySelector(
+        `[data-message-id="${highlightedMessageId}"]`,
+      ) as HTMLElement | null
+      if (!targetEl) return
+      const containerRect = container.getBoundingClientRect()
+      const targetRect = targetEl.getBoundingClientRect()
+      const targetCenterRelativeToContainer =
+        targetRect.top - containerRect.top + targetRect.height / 2
+      const nextScrollTop =
+        container.scrollTop +
+        (targetCenterRelativeToContainer - container.clientHeight / 2)
+      container.scrollTo({ top: Math.max(0, nextScrollTop), behavior: 'auto' })
+    }
+
+    let raf2 = 0
+    let t: ReturnType<typeof setTimeout> | null = null
+    const raf1 = requestAnimationFrame(() => {
+      centerTarget()
+      raf2 = requestAnimationFrame(() => centerTarget())
+      t = setTimeout(() => centerTarget(), 60)
+    })
+
+    return () => {
+      cancelAnimationFrame(raf1)
+      if (raf2) cancelAnimationFrame(raf2)
+      if (t) clearTimeout(t)
+    }
+  }, [highlightedMessageId, renderedMessages.length])
+
   return (
     <>
       <div className="flex flex-col h-[calc(100vh-56px)]">
@@ -150,19 +260,21 @@ export default function ConversationView({
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
             </div>
-          ) : messages.length === 0 ? (
+          ) : renderedMessages.length === 0 ? (
             <p className="text-center text-muted-foreground py-8 text-sm">
               No messages yet. Send a message to start the conversation.
             </p>
           ) : (
             <div ref={contentWrapperRef}>
-              {messages.map((msg) => (
-                <MessageBubble
-                  key={msg.id}
-                  msg={msg}
-                  isSelf={msg.senderUsername !== otherParticipant.username}
-                  onImageClick={openLightbox}
-                />
+              {renderedMessages.map((msg) => (
+                <div key={msg.id} data-message-id={msg.id}>
+                  <MessageBubble
+                    msg={msg}
+                    isSelf={msg.senderUsername !== otherParticipant.username}
+                    onImageClick={openLightbox}
+                    highlighted={msg.id === highlightedMessageId}
+                  />
+                </div>
               ))}
             </div>
           )}

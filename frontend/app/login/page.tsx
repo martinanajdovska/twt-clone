@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import LogInForm from "../../components/auth/LogInForm"
 
 export default function LogIn() {
@@ -5,7 +6,9 @@ export default function LogIn() {
     return (
         <div>
             <div>
-                <LogInForm />
+                <Suspense fallback={null}>
+                    <LogInForm />
+                </Suspense>
             </div>
         </div>
     )

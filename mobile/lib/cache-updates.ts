@@ -1,7 +1,9 @@
-import type { QueryClient } from "@tanstack/react-query";
-import type { InfiniteData } from "@tanstack/react-query";
-import type { ITweet, IVideoTweetsResponse } from "@/types/tweet";
-import type { ITweetDetailsResponse } from "@/types/tweet";
+import type { QueryClient, InfiniteData } from "@tanstack/react-query";
+import type {
+  ITweet,
+  IVideoTweetsResponse,
+  ITweetDetailsResponse,
+} from "@/types/tweet";
 import type {
   IConversationListItem,
   IMessageItem,
@@ -263,6 +265,41 @@ export function prependReplyToTweetDetail(
   );
 }
 
+export function prependReplyToTweetRepliesCache(
+  queryClient: QueryClient,
+  parentId: number,
+  reply: ITweet,
+): void {
+  queryClient.setQueryData<InfiniteData<ITweetDetailsResponse>>(
+    ["tweet-replies", String(parentId)],
+    (old) => {
+      if (!old || !old.pages.length) {
+        return {
+          pages: [
+            {
+              tweet: reply,
+              parentTweet: null,
+              parentChain: [],
+              replies: [reply],
+            },
+          ],
+          pageParams: [0],
+        };
+      }
+      const pages = [...old.pages];
+      const first = pages[0];
+      pages[0] = {
+        ...first,
+        replies: [reply, ...(first.replies ?? [])],
+      };
+      return {
+        ...old,
+        pages,
+      };
+    },
+  );
+}
+
 export function replaceReplyInTweetDetailCaches(
   queryClient: QueryClient,
   parentId: number,
@@ -289,6 +326,48 @@ export function replaceReplyInTweetDetailCaches(
       if (!old) return old;
       if (old.tweet.id !== parentId) return old;
       return replaceInReplies(old);
+    },
+  );
+}
+
+export function replaceReplyInTweetRepliesCache(
+  queryClient: QueryClient,
+  parentId: number,
+  tempReplyId: number,
+  newReply: ITweet,
+): void {
+  queryClient.setQueryData<InfiniteData<ITweetDetailsResponse>>(
+    ["tweet-replies", String(parentId)],
+    (old) => {
+      if (!old) return old;
+      let replaced = false;
+      const pages = old.pages.map((page, idx) => {
+        const replies = page.replies ?? [];
+        const nextReplies = replies.map((r) => {
+          if (r.id === tempReplyId) {
+            replaced = true;
+            return newReply;
+          }
+          return r;
+        });
+        return { ...page, replies: nextReplies };
+      });
+
+      if (!replaced && pages.length > 0) {
+        const first = pages[0];
+        const exists = (first.replies ?? []).some((r) => r.id === newReply.id);
+        if (!exists) {
+          pages[0] = {
+            ...first,
+            replies: [newReply, ...(first.replies ?? [])],
+          };
+        }
+      }
+
+      return {
+        ...old,
+        pages,
+      };
     },
   );
 }
@@ -322,6 +401,26 @@ export function removeReplyFromTweetDetailCaches(
   );
 }
 
+export function removeReplyFromTweetRepliesCache(
+  queryClient: QueryClient,
+  parentId: number,
+  replyId: number,
+): void {
+  queryClient.setQueryData<InfiniteData<ITweetDetailsResponse>>(
+    ["tweet-replies", String(parentId)],
+    (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          replies: (page.replies ?? []).filter((r) => r.id !== replyId),
+        })),
+      };
+    },
+  );
+}
+
 export function appendRepliesToTweetDetailCache(
   queryClient: QueryClient,
   tweetId: number,
@@ -344,11 +443,17 @@ export function appendRepliesToTweetDetailCache(
       tweet: old.tweet ?? details.tweet,
       parentTweet: old.parentTweet ?? details.parentTweet ?? undefined,
       parentChain: old.parentChain ?? details.parentChain ?? [],
-      replies: [...oldReplies, ...newReplies.filter((r) => !existingIds.has(r.id))],
+      replies: [
+        ...oldReplies,
+        ...newReplies.filter((r) => !existingIds.has(r.id)),
+      ],
     };
   };
 
-  queryClient.setQueryData<TweetDetailData>(["tweet", String(tweetId)], appendReplies);
+  queryClient.setQueryData<TweetDetailData>(
+    ["tweet", String(tweetId)],
+    appendReplies,
+  );
 }
 
 export function replaceTempTweetInFeedAndProfile(
@@ -639,6 +744,23 @@ export function setTweetEngagementInAllCaches(
         pages: old.pages.map((page) => ({
           ...page,
           content: page.content.map((tweet) =>
+            tweet.id === tweetId ? { ...tweet, ...updates } : tweet,
+          ),
+        })),
+      };
+    },
+  );
+  const idStr = String(tweetId);
+
+  queryClient.setQueriesData<InfiniteData<ITweetDetailsResponse>>(
+    { queryKey: ["tweet-replies", idStr] },
+    (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          replies: (page.replies ?? []).map((tweet) =>
             tweet.id === tweetId ? { ...tweet, ...updates } : tweet,
           ),
         })),

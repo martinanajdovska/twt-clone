@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -33,10 +33,14 @@ export default function ReelsScreen() {
   } = useVideoTweetsForReels(initialTweetId);
 
   const [activeIndex, setActiveIndex] = useState(initialIndex);
+  const didInitIndexRef = useRef(false);
 
   useEffect(() => {
+    if (didInitIndexRef.current) return;
+    if (!tweets.length) return;
     setActiveIndex(initialIndex);
-  }, [initialIndex]);
+    didInitIndexRef.current = true;
+  }, [initialIndex, tweets.length]);
 
   if (isLoading) {
     return (
@@ -76,7 +80,6 @@ export default function ReelsScreen() {
       </TouchableOpacity>
 
       <Carousel
-        key={`carousel-${tweets.length}-${initialIndex}`}
         vertical
         width={SCREEN_WIDTH}
         height={SCREEN_HEIGHT}

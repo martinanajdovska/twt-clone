@@ -222,6 +222,7 @@ const ProfileHeader = ({
         onOpenChange={setEditOpen}
         username={username}
         initialData={{
+          imageUrl: data.imageUrl ?? '',
           displayName: data.displayName ?? '',
           bio: data.bio ?? '',
           location: data.location ?? '',

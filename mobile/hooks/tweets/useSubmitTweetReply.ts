@@ -5,8 +5,11 @@ import { createTweet } from "@/api/tweets";
 import { useFetchSelf } from "@/hooks/users/useFetchSelf";
 import {
   prependReplyToTweetDetail,
+  prependReplyToTweetRepliesCache,
   removeReplyFromTweetDetailCaches,
+  removeReplyFromTweetRepliesCache,
   replaceReplyInTweetDetailCaches,
+  replaceReplyInTweetRepliesCache,
   updateTweetInAllCaches,
 } from "@/lib/cache-updates";
 import type { ITweet } from "@/types/tweet";
@@ -85,6 +88,7 @@ export function useSubmitTweetReply({
         );
 
         prependReplyToTweetDetail(queryClient, parentId, optimisticReply);
+        prependReplyToTweetRepliesCache(queryClient, parentId, optimisticReply);
         updateTweetInAllCaches(queryClient, parentId, (t) => ({
           ...t,
           repliesCount: t.repliesCount + 1,
@@ -97,12 +101,19 @@ export function useSubmitTweetReply({
           tempReplyId,
           newReply,
         );
+        replaceReplyInTweetRepliesCache(
+          queryClient,
+          parentId,
+          tempReplyId,
+          newReply,
+        );
 
         onSubmitted?.();
         return true;
       } catch (e) {
         if (tempReplyId != null) {
           removeReplyFromTweetDetailCaches(queryClient, parentId, tempReplyId);
+          removeReplyFromTweetRepliesCache(queryClient, parentId, tempReplyId);
           updateTweetInAllCaches(queryClient, parentId, (t) => ({
             ...t,
             repliesCount: Math.max(0, t.repliesCount - 1),

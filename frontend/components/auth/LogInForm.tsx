@@ -1,11 +1,13 @@
 'use client'
-import React, { ChangeEvent, useState, useEffect } from 'react'
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLogin } from "@/hooks/auth/useLogin";
+import { BASE_URL } from "@/lib/constants";
 
 const LogInForm = () => {
     const searchParams = useSearchParams();
+    const oauthRedirectHandledRef = useRef(false);
     const [state, setState] = useState({
         email: "",
         password: ""
@@ -14,9 +16,28 @@ const LogInForm = () => {
     const { mutate: handleLogin, isPending } = useLogin();
 
     useEffect(() => {
+        const oauth = searchParams.get('oauth');
+        const error = searchParams.get('error');
+        const accessToken = searchParams.get('access_token');
+
         if (searchParams.get('session_expired') === '1') {
             document.cookie = 'token=; Path=/; Max-Age=0';
             window.history.replaceState({}, '', '/login');
+        }
+
+        if (oauth === 'success') {
+            if (!oauthRedirectHandledRef.current) {
+                oauthRedirectHandledRef.current = true;
+                if (accessToken) {
+                    const secureAttr = window.location.protocol === 'https:' ? '; Secure' : '';
+                    document.cookie = `token=${encodeURIComponent(accessToken)}; Path=/; Max-Age=${60 * 60 * 24}; SameSite=Lax${secureAttr}`;
+                }
+                setTimeout(() => window.location.replace('/'), 100);
+            }
+            return;
+        }
+        if (error) {
+            alert(decodeURIComponent(error));
         }
     }, [searchParams]);
 
@@ -33,6 +54,14 @@ const LogInForm = () => {
         handleLogin({ email: state.email, password: state.password });
     }
 
+    function onGoogleLogin() {
+        if (typeof window === 'undefined') return;
+        const returnTo = encodeURIComponent(window.location.href);
+        window.location.assign(
+            `${BASE_URL}/api/auth/google/authorize?platform=web&returnTo=${returnTo}`,
+        );
+    }
+
     return (
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
             <div className="w-full max-w-md bg-card border border-border rounded-2xl p-8 shadow-sm bg-secondary">
@@ -45,7 +74,7 @@ const LogInForm = () => {
                     <div className="space-y-1">
                         <label className="text-sm font-medium" htmlFor="email">Email</label>
                         <input
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+                            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50"
                             type="email"
                             name="email"
                             id="email"
@@ -62,7 +91,7 @@ const LogInForm = () => {
                             <label className="text-sm font-medium" htmlFor="password">Password</label>
                         </div>
                         <input
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+                            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50"
                             type="password"
                             name="password"
                             id="password"
@@ -85,6 +114,14 @@ const LogInForm = () => {
                                 <span>Signing in...</span>
                             </div>
                         ) : "Sign In"}
+                    </button>
+                    <button
+                        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 h-10 px-4 py-2"
+                        type="button"
+                        onClick={onGoogleLogin}
+                        disabled={isPending}
+                    >
+                        Continue with Google
                     </button>
                 </form>
 

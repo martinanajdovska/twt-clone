@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MessageCircle } from 'lucide-react'
 import { useGetConversations } from '@/hooks/messages/useGetConversations'
 import { useGetConversation } from '@/hooks/messages/useGetConversation'
 import { useMarkConversationAsRead } from '@/hooks/messages/useMarkConversationAsRead'
+import { searchConversationMessages } from '@/api-calls/messages-api'
 import ConversationView from './ConversationView'
 import ConversationsList from './ConversationsList'
 import MessagesHeader from './MessagesHeader'
@@ -14,9 +15,17 @@ export default function MessagesPage() {
   const searchParams = useSearchParams()
   const conversationIdParam = searchParams.get('conversation')
   const conversationId = conversationIdParam ? parseInt(conversationIdParam, 10) : null
-  const { data: conversations = [] } = useGetConversations()
+  const { data: conversationsData } = useGetConversations()
+  const conversations = useMemo(
+    () => conversationsData?.pages.flatMap((p) => p.content ?? []) ?? [],
+    [conversationsData],
+  )
   const { data: conversationDetail, isLoading: loadingDetail } = useGetConversation(conversationId)
   const { mutate: markAsRead } = useMarkConversationAsRead()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<{ id: number; content: string; createdAt: string }[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchTarget, setSearchTarget] = useState<{ id: number; createdAt: string } | null>(null)
   const currentConversation = conversationId
     ? conversations.find((c) => c.id === conversationId) ?? conversationDetail ?? null
     : null
@@ -28,6 +37,12 @@ export default function MessagesPage() {
       markAsRead(conversationId)
     }
   }, [conversationId, currentConversation, markAsRead])
+
+  useEffect(() => {
+    setSearchQuery('')
+    setSearchResults([])
+    setSearchTarget(null)
+  }, [conversationId])
 
   useEffect(() => {
     if (conversationId != null) {
@@ -46,10 +61,53 @@ export default function MessagesPage() {
     }
   }, [conversations, conversationId, router])
 
+  useEffect(() => {
+    if (!currentConversation) return
+    const q = searchQuery.trim()
+    if (!q) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+    setIsSearching(true)
+    const timer = setTimeout(async () => {
+      try {
+        const results = await searchConversationMessages(
+          currentConversation.id,
+          currentConversation.otherParticipant.username,
+          q,
+        )
+        setSearchResults(
+          results.map((r) => ({
+            id: r.id,
+            content: r.content,
+            createdAt: r.createdAt,
+          })),
+        )
+      } catch {
+        setSearchResults([])
+      } finally {
+        setIsSearching(false)
+      }
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [searchQuery, currentConversation])
+
   if (conversationId != null && currentConversation) {
     return (
       <div className="flex flex-col h-full justify-between">
-        <MessagesHeader otherParticipant={currentConversation.otherParticipant} />
+        <MessagesHeader
+          otherParticipant={currentConversation.otherParticipant}
+          showSearch
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          isSearching={isSearching}
+          searchResults={searchResults}
+          onSelectSearchResult={(result) => {
+            setSearchTarget({ id: result.id, createdAt: result.createdAt })
+            setSearchResults([])
+          }}
+        />
         {loadingDetail && !conversations.find((c) => c.id === conversationId) ? (
           <div className="flex justify-center py-24">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
@@ -58,6 +116,7 @@ export default function MessagesPage() {
           <ConversationView
             conversationId={currentConversation.id}
             otherParticipant={currentConversation.otherParticipant}
+            searchTarget={searchTarget}
           />
         )}
       </div>

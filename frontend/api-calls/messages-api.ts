@@ -4,6 +4,13 @@ import { IMessageResponse } from "@/DTO/IMessageResponse";
 import { ISendMessagePayload } from "@/DTO/ISendMessagePayload";
 import { BASE_URL } from "@/lib/constants";
 
+export type MessagesPage<T> = {
+  content: T[];
+  totalElements: number;
+  size: number;
+  number: number;
+};
+
 export async function fetchConversation(
   conversationId: number,
 ): Promise<ICreateConversationResponse | null> {
@@ -15,12 +22,40 @@ export async function fetchConversation(
   return res.json();
 }
 
-export async function fetchConversations(): Promise<IConversationListItem[]> {
-  const res = await fetch(`${BASE_URL}/api/messages/conversations`, {
-    credentials: "include",
-  });
+export async function fetchConversations(
+  page = 0,
+  size = 10,
+): Promise<MessagesPage<IConversationListItem>> {
+  const res = await fetch(
+    `${BASE_URL}/api/messages/conversations?page=${page}&size=${size}`,
+    {
+      credentials: "include",
+    },
+  );
+
   if (!res.ok) throw new Error("Failed to fetch conversations");
-  return res.json();
+  const data = await res.json();
+
+  if (Array.isArray(data)) {
+    return {
+      content: data,
+      totalElements: data.length,
+      size,
+      number: page,
+    };
+  }
+
+  return {
+    content: Array.isArray(data?.content) ? data.content : [],
+    totalElements:
+      typeof data?.totalElements === "number"
+        ? data.totalElements
+        : Array.isArray(data?.content)
+          ? data.content.length
+          : 0,
+    size: typeof data?.size === "number" ? data.size : size,
+    number: typeof data?.number === "number" ? data.number : page,
+  };
 }
 
 export async function fetchUnreadCount(): Promise<number> {
@@ -60,13 +95,34 @@ export async function createOrGetConversation(
 
 export async function fetchMessages(
   conversationId: number,
-): Promise<IMessageResponse[]> {
+  page = 0,
+  size = 20,
+): Promise<MessagesPage<IMessageResponse>> {
   const res = await fetch(
-    `${BASE_URL}/api/messages/conversations/${conversationId}/messages`,
+    `${BASE_URL}/api/messages/conversations/${conversationId}/messages?page=${page}&size=${size}`,
     { credentials: "include" },
   );
   if (!res.ok) throw new Error("Failed to fetch messages");
-  return res.json();
+  const data = await res.json();
+  if (Array.isArray(data)) {
+    return {
+      content: data,
+      totalElements: data.length,
+      size,
+      number: page,
+    };
+  }
+  return {
+    content: Array.isArray(data?.content) ? data.content : [],
+    totalElements:
+      typeof data?.totalElements === "number"
+        ? data.totalElements
+        : Array.isArray(data?.content)
+          ? data.content.length
+          : 0,
+    size: typeof data?.size === "number" ? data.size : size,
+    number: typeof data?.number === "number" ? data.number : page,
+  };
 }
 
 export async function sendMessage(
@@ -120,3 +176,42 @@ export const archiveConversation = async (id: number) => {
   });
   if (!res.ok) throw new Error(await res.text());
 };
+
+export async function searchConversationMessages(
+  conversationId: number,
+  otherUsername: string,
+  q: string,
+  page = 0,
+  size = 20,
+): Promise<IMessageResponse[]> {
+  const query = new URLSearchParams({
+    q,
+    conversationId: String(conversationId),
+    username: otherUsername,
+    page: String(page),
+    size: String(size),
+  });
+  const res = await fetch(
+    `${BASE_URL}/api/messages/search?${query.toString()}`,
+    {
+      credentials: "include",
+    },
+  );
+  if (!res.ok)
+    throw new Error((await res.text()) || "Failed to search messages");
+  return res.json();
+}
+
+export async function fetchMessageContext(
+  conversationId: number,
+  createdAt: string,
+  size = 10,
+): Promise<IMessageResponse[]> {
+  const res = await fetch(
+    `${BASE_URL}/api/messages/conversations/${conversationId}/messages/context?createdAt=${encodeURIComponent(createdAt)}&size=${size}`,
+    { credentials: "include" },
+  );
+  if (!res.ok)
+    throw new Error((await res.text()) || "Failed to fetch message context");
+  return res.json();
+}

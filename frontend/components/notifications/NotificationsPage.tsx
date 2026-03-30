@@ -1,19 +1,36 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import Notification from '@/components/notifications/Notification'
 import { useGetNotifications } from '@/hooks/notifications/useGetNotifications'
 import { useReadNotification } from '@/hooks/notifications/useReadNotification'
 import type { INotificationResponse } from '@/DTO/INotificationResponse'
+import { useInView } from 'react-intersection-observer'
 
 type NotificationTab = 'all' | 'mentions'
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<NotificationTab>('all')
-  const { data: notifications = [], isLoading } = useGetNotifications()
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetNotifications()
+  const notifications = data?.pages.flatMap((p) => p.content ?? []) ?? []
   const { mutate: readNotification } = useReadNotification()
+
+  const { ref, inView } = useInView()
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
+
 
   const filteredNotifications =
     activeTab === 'mentions'
@@ -23,9 +40,9 @@ export default function NotificationsPage() {
       )
       : notifications
 
-  const unreadCount = notifications.filter(
-    (n: INotificationResponse) => !n.isRead
-  ).length
+  const unreadCount =
+    data?.pages?.[0]?.unreadCount ??
+    notifications.filter((n: INotificationResponse) => !n.isRead).length
 
   function readAll() {
     notifications.forEach((n: INotificationResponse) =>
@@ -88,11 +105,25 @@ export default function NotificationsPage() {
                   : 'No notifications yet.'}
               </div>
             ) : (
-              filteredNotifications.map((notification: INotificationResponse) => (
-                <div key={notification.id}>
-                  <Notification notification={notification} />
-                </div>
-              ))
+              <>
+                {filteredNotifications.map((notification: INotificationResponse) => (
+                  <div key={notification.id}>
+                    <Notification notification={notification} />
+                  </div>
+                ))}
+                {hasNextPage && (
+                  <div ref={ref} className="p-4 flex justify-center">
+                    {isFetchingNextPage ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent" />
+                        <span>Loading more conversations...</span>
+                      </div>
+                    ) : hasNextPage ? (
+                      <span className="text-xs">Scroll for more</span>
+                    ) : null}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </ScrollArea>

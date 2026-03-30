@@ -2,6 +2,7 @@ export interface ITweetResponse {
   id: number;
   username: string;
   profilePictureUrl: string | null;
+  displayName: string | null;
   parentId: number | null;
   content: string;
   imageUrl: string | null;

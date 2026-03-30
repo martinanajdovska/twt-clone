@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { updateProfile } from '@/api-calls/users-api'
+import { updateProfile, updateProfileImage } from '@/api-calls/users-api'
 import { Loader2 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { IProfileHeader } from '@/DTO/IProfileHeader'
@@ -21,6 +21,7 @@ type Props = {
   onOpenChange: (open: boolean) => void
   username: string
   initialData: {
+    imageUrl: string
     displayName: string
     bio: string
     location: string
@@ -44,9 +45,12 @@ export default function EditProfileDialog({
   const [birthday, setBirthday] = useState(initialData.birthday)
   const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const bannerInputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
   const queryClient = useQueryClient()
 
   React.useEffect(() => {
@@ -58,6 +62,8 @@ export default function EditProfileDialog({
       setBirthday(initialData.birthday)
       setBannerFile(null)
       setBannerPreview(null)
+      setImageFile(null)
+      setImagePreview(null)
       setError(null)
     }
   }, [open, initialData])
@@ -75,21 +81,51 @@ export default function EditProfileDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const normalizedDisplayName = displayName.trim()
+    const normalizedBio = bio.trim()
+    const normalizedLocation = location.trim()
+    const normalizedWebsite = website.trim()
+
+    if (normalizedDisplayName.length > 50) return setError('Display name must be at most 50 characters')
+    if (normalizedBio.length > 160) return setError('Bio must be at most 160 characters')
+    if (normalizedLocation.length > 100) return setError('Location must be at most 100 characters')
+    if (normalizedWebsite.length > 100) return setError('Website must be at most 100 characters')
+    if (birthday) {
+      const selected = new Date(birthday)
+      const today = new Date()
+      selected.setHours(0, 0, 0, 0)
+      today.setHours(0, 0, 0, 0)
+      if (selected > today) return setError('Birth date cannot be in the future')
+    }
+
+    setError(null)
     setIsPending(true)
 
     try {
       const formData = new FormData()
-      formData.append('bio', bio)
-      formData.append('location', location)
-      formData.append('website', website)
+      formData.append('bio', normalizedBio)
+      formData.append('location', normalizedLocation)
+      formData.append('website', normalizedWebsite)
       formData.append('birthday', birthday)
-      formData.append('displayName', displayName)
+      formData.append('displayName', normalizedDisplayName)
 
       if (bannerFile) formData.append('banner', bannerFile)
+      if (imageFile) {
+        const imageForm = new FormData()
+        imageForm.append('image', imageFile)
+        await updateProfileImage(imageForm)
+      }
       const data = await updateProfile(formData)
       queryClient.setQueryData<IProfileHeader>(
         ['profileHeader', username],
-        (old) => (old ? { ...old, ...data } : old)
+        (old) =>
+          old
+            ? {
+                ...old,
+                ...data,
+                imageUrl: imagePreview || old.imageUrl,
+              }
+            : old
       )
       onSuccess()
     } catch (err) {
@@ -107,6 +143,42 @@ export default function EditProfileDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-foreground block mb-1.5">
+              Profile photo
+            </label>
+            <div
+              className="h-24 w-24 rounded-full border border-border bg-muted/30 flex items-center justify-center overflow-hidden cursor-pointer"
+              onClick={() => imageInputRef.current?.click()}
+            >
+              {imagePreview || initialData.imageUrl ? (
+                <img
+                  src={imagePreview || initialData.imageUrl}
+                  alt="Avatar preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-muted-foreground text-xs">Upload</span>
+              )}
+            </div>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  setImageFile(file)
+                  setImagePreview(URL.createObjectURL(file))
+                } else {
+                  setImageFile(null)
+                  setImagePreview(null)
+                }
+              }}
+              className="hidden"
+            />
+          </div>
+
           <div>
             <label className="text-sm font-medium text-foreground block mb-1.5">
               Header photo

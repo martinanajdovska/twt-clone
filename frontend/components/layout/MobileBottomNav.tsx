@@ -16,7 +16,8 @@ import {
 
 export default function MobileBottomNav() {
   const [searchOpen, setSearchOpen] = useState(false)
-  const { data: notifications = [] } = useGetNotifications()
+  const { data } = useGetNotifications()
+  const notifications = data?.pages.flatMap((p) => p.content ?? []) ?? []
   const { data: messagesUnreadCount = 0 } = useGetUnreadCount()
   const notificationUnreadCount = notifications.filter(
     (n: INotificationResponse) => !n.isRead && n.type !== 'MESSAGE'
