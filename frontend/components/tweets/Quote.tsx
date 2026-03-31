@@ -27,8 +27,8 @@ const Quote = ({ tweet, username, open: controlledOpen, onOpenChange }: Props) =
     })
 
     const dialogContent = (
-        <DialogContent className="sm:max-w-[600px] p-0 gap-0 border-gray-800">
-            <div className="p-4">
+        <DialogContent className="sm:max-w-[600px] p-0 gap-0 border-gray-800 max-h-[90vh] overflow-hidden">
+            <div className="p-4 max-h-[90vh] overflow-y-auto">
                 <div className="mb-3">
                     <Tweet tweet={tweet} username={username} />
                 </div>

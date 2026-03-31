@@ -6,11 +6,18 @@ import { Button } from "@/components/ui/button"
 import { MessageCirclePlus } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+type SearchUser = {
+    username: string
+    displayName: string | null
+    imageUrl: string | null
+}
 
 export default function NewMessageDialog({ onCreated }: { onCreated: (conversationId: number) => void }) {
     const [open, setOpen] = useState(false)
     const [search, setSearch] = useState('')
-    const [searchResults, setSearchResults] = useState<string[]>([])
+    const [searchResults, setSearchResults] = useState<SearchUser[]>([])
     const [searching, setSearching] = useState(false)
     const [highlightedIndex, setHighlightedIndex] = useState(0)
     const { mutateAsync: createConversation, isPending } = useCreateConversation()
@@ -46,7 +53,7 @@ export default function NewMessageDialog({ onCreated }: { onCreated: (conversati
         setHighlightedIndex,
         onClose: () => setOpen(false),
         onSelect: (i) => {
-            const username = searchResults[i];
+            const username = searchResults[i]?.username;
             if (username) startConversation(username);
         },
     });
@@ -94,17 +101,26 @@ export default function NewMessageDialog({ onCreated }: { onCreated: (conversati
                             </div>
                         )}
                         {!searching &&
-                            searchResults.map((username, index) => (
+                            searchResults.map((user, index) => (
                                 <button
-                                    key={username}
+                                    key={user.username}
                                     type="button"
-                                    onClick={() => startConversation(username)}
+                                    onClick={() => startConversation(user.username)}
                                     className={
                                         `flex w-full items-center gap-3 rounded-lg p-3 text-left ` +
                                         (index === highlightedIndex ? 'bg-accent' : 'hover:bg-accent')
                                     }
                                 >
-                                    <span className="font-medium">@{username}</span>
+                                    <Avatar className="h-8 w-8 shrink-0">
+                                        <AvatarImage src={user.imageUrl ?? undefined} className="object-cover" />
+                                        <AvatarFallback className="text-xs">{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0">
+                                        <p className="font-medium truncate">@{user.username}</p>
+                                        {user.displayName && (
+                                            <p className="text-xs text-muted-foreground truncate">{user.displayName}</p>
+                                        )}
+                                    </div>
                                 </button>
                             ))}
                     </ScrollArea>

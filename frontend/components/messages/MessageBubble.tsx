@@ -91,7 +91,7 @@ export default function MessageBubble({
             </Link>
             <div className={`flex flex-col max-w-[75%] ${isSelf ? 'items-end' : 'items-start'}`}>
                 <span className="text-xs text-muted-foreground mb-0.5">{displayName}</span>
-                <div className={`rounded-2xl px-4 py-2 text-sm break-words overflow-wrap-anywhere whitespace-pre-wrap max-w-full ${isSelf ? 'bg-primary text-primary-foreground rounded-br-md' : 'bg-muted rounded-bl-md'}`}>
+                <div className={`rounded-2xl px-4 py-2 text-sm break-words overflow-wrap-anywhere whitespace-pre-wrap max-w-full ${isSelf ? 'bg-[#1d9bf0] text-white rounded-br-md' : 'bg-[#d9dde1] dark:bg-[#2f3336] rounded-bl-md'}`}>
                     {(msg.content ?? '').length > 0 && <span>{msg.content}</span>}
 
                     {hasImage && (

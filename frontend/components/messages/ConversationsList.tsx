@@ -22,6 +22,7 @@ export default function ConversationsList({ variant = 'sidebar' }: { variant?: '
     isFetchingNextPage,
   } = useGetConversations()
   const conversations = data?.pages.flatMap((p) => p.content ?? []) ?? []
+  const isCenter = variant === 'center'
 
   const { ref, inView } = useInView()
 
@@ -35,20 +36,20 @@ export default function ConversationsList({ variant = 'sidebar' }: { variant?: '
     router.push(`/messages?conversation=${id}`)
   }
 
-  const isCenter = variant === 'center'
-
   const conversationItems = conversations.length === 0 ? (
     <p className="text-sm text-muted-foreground py-4 text-center">
       No conversations yet. Start a new message.
     </p>
   ) : (
     conversations.map((conv) => (
-      <ConversationListItem key={conv.id} conv={conv} currentId={currentId} />
+      <div key={conv.id} className="w-full min-w-0 max-w-full">
+        <ConversationListItem conv={conv} currentId={currentId} />
+      </div>
     ))
   )
 
   return (
-    <div className={`flex flex-col gap-4 ${isCenter ? '' : 'h-fit'}`}>
+    <div className={`w-full min-w-0 max-w-full flex flex-col gap-4 ${isCenter ? '' : 'h-fit'}`}>
       <NewMessageDialog onCreated={onCreated} />
       {isLoading ? (
         <div className="flex justify-center py-8">
@@ -69,8 +70,8 @@ export default function ConversationsList({ variant = 'sidebar' }: { variant?: '
           </div>
         </div>
       ) : (
-        <ScrollArea className="flex-1 max-h-[calc(100vh-220px)]">
-          <div className="flex flex-col gap-1 pr-2">
+        <ScrollArea className="flex-1 w-full min-w-0 max-h-[calc(100vh-220px)] [&_[data-slot=scroll-area-viewport]>div]:!block [&_[data-slot=scroll-area-viewport]>div]:!w-full [&_[data-slot=scroll-area-viewport]>div]:!min-w-0">
+          <div className="flex flex-col gap-1 pr-2 w-full min-w-0">
             {conversationItems}
 
             <div ref={ref} className="py-4 flex justify-center items-center text-muted-foreground text-xs">

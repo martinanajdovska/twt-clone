@@ -19,7 +19,8 @@ export const useSubmitNote = (tweetId: number) => {
             return res.json()
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tweet", tweetId] })
+            queryClient.invalidateQueries({ queryKey: ["community-notes", "all", tweetId] })
+            queryClient.invalidateQueries({ queryKey: ["tweet", String(tweetId)] })
             queryClient.invalidateQueries({ queryKey: ["feed"] })
             queryClient.invalidateQueries({ queryKey: ["profile"] })
         },

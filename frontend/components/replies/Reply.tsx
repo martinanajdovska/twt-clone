@@ -40,8 +40,8 @@ const Reply = ({ tweet, username, repliesCount, hideCount = false }: { tweet: IT
                 </button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-[600px] p-0 gap-0 border-gray-800">
-                <div className="p-4">
+            <DialogContent className="sm:max-w-[600px] p-0 gap-0 border-gray-800 max-h-[90vh] overflow-hidden">
+                <div className="p-4 max-h-[90vh] overflow-y-auto">
                     <div className="relative">
                         <div className="absolute left-[36px] top-10 bottom-0 w-[2px] bg-border shadow-sm" aria-hidden />
 

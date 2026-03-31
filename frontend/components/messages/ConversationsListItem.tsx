@@ -21,18 +21,18 @@ export default function ConversationListItem({ conv, currentId }: { conv: IConve
     const { mutate: archiveConversation } = useArchiveConversation();
 
     return (
-        <div className={`relative group flex gap-3 p-3 rounded-xl transition-colors ${isActive ? 'bg-accent' : hasUnread ? 'bg-primary/25 hover:bg-primary/15' : 'hover:bg-accent/50'}`}>
-            <Link href={`/messages?conversation=${conv.id}`} className="flex gap-3 flex-1 min-w-0">
+        <div className={`relative group w-full min-w-0 max-w-full flex items-center gap-3 p-3 rounded-xl transition-colors ${isActive ? 'bg-accent' : hasUnread ? 'bg-primary/25 hover:bg-primary/15' : 'hover:bg-accent/50'}`}>
+            <Link href={`/messages?conversation=${conv.id}`} className="w-full min-w-0 max-w-full flex items-center gap-3 flex-1 pr-10">
                 <Avatar className="h-12 w-12 shrink-0">
                     <AvatarImage src={conv.otherParticipant.imageUrl ?? undefined} alt={displayName} className="object-cover" />
                     <AvatarFallback className="text-sm">{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 max-w-full flex-1">
                     <div className="flex items-center justify-between gap-2">
                         <span className="font-semibold text-foreground truncate">{displayName}</span>
                         {time && <span className="text-xs text-muted-foreground shrink-0">{time}</span>}
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">{preview}</p>
+                    <p className="text-sm text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap max-w-full">{preview}</p>
                 </div>
             </Link>
 
@@ -40,7 +40,7 @@ export default function ConversationListItem({ conv, currentId }: { conv: IConve
                 <AlertDialogTrigger asChild>
                     <button
                         onClick={(e) => e.stopPropagation()}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-full"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 opacity-100 p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-full"
                     >
                         <Archive size={15} />
                     </button>
