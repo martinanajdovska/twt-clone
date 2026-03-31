@@ -11,7 +11,7 @@ export default function MessagesLink() {
   return (
     <Link
       href="/messages"
-      className="flex items-center gap-3 py-3 px-3 xl:px-3 text-[19px] font-normal rounded-full hover:bg-accent transition-colors w-fit xl:w-fit justify-center xl:justify-start min-w-[48px] relative"
+      className="relative flex h-[50px] items-center gap-3 px-3 text-[19px] leading-none font-normal rounded-full hover:bg-accent transition-colors w-fit md:group-hover:w-fit justify-center md:group-hover:justify-start min-w-[48px]"
     >
       <span className="relative shrink-0">
         <MessageCircle size={26} strokeWidth={1.5} className="size-[26px]" />
@@ -21,7 +21,7 @@ export default function MessagesLink() {
           </span>
         )}
       </span>
-      <span className="hidden xl:inline">Messages</span>
+      <span className="hidden md:group-hover:inline">Messages</span>
     </Link>
   )
 }

@@ -38,7 +38,7 @@ export default function ProfileFeed({
                             type="button"
                             onClick={() => setActiveTab(tab.id)}
                             aria-current={isActive ? 'true' : undefined}
-                            className={`flex-1 flex items-center justify-center gap-2 py-4 text-[15px] font-medium transition-colors relative hover:bg-muted/30 ${isActive
+                            className={`flex-1 flex items-center justify-center gap-2 py-4 text-[15px] font-medium transition-colors relative hover:bg-muted/30 cursor-pointer ${isActive
                                 ? 'text-foreground'
                                 : 'text-muted-foreground'
                                 }`}

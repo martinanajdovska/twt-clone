@@ -46,15 +46,15 @@ export default async function AuthenticatedLayout({ children, }: { children: Rea
                 <MobileTopBar />
             </div>
 
-            {/* Left sidebar - icons only on mobile, full on xl */}
-            <aside className="flex flex-col w-[72px] md:w-[80px] xl:w-[230px] shrink-0 px-2 py-2 sticky top-0 h-screen border-r border-border items-center xl:items-stretch">
-                <nav className="flex flex-col gap-1 mt-1 w-full items-center xl:items-stretch">
+            {/* Left sidebar */}
+            <aside className="group flex flex-col w-[72px] md:w-[80px] md:hover:w-[230px] shrink-0 px-2 py-2 sticky top-0 h-screen border-r border-border items-center md:hover:items-stretch transition-[width] duration-200">
+                <nav className="flex flex-col gap-1 mt-1 w-full items-center md:group-hover:items-stretch">
                     <NavLink href="/" icon={<Home size={26} strokeWidth={1.5} />} label="Home" />
                     <NavLink href={`/users/${self.username}`} icon={<UserIcon size={26} strokeWidth={1.5} />} label="Profile" />
                     <NotificationLink />
                     <MessagesLink />
                     <NavLink href="/bookmarks" icon={<Bookmark size={26} strokeWidth={1.5} />} label="Bookmarks" />
-                    <div className="w-full flex justify-center xl:justify-start">
+                    <div className="w-full flex justify-center md:group-hover:justify-start">
                         <ModeToggle label="Theme" sidebar />
                     </div>
                 </nav>
@@ -69,7 +69,7 @@ export default async function AuthenticatedLayout({ children, }: { children: Rea
             </main>
 
             {/* Right sidebar */}
-            <aside className="hidden lg:flex flex-col w-[400px] xl:w-[440px] px-3 py-3 sticky top-0 h-screen overflow-y-auto gap-4">
+            <aside className="hidden md:flex flex-col w-[320px] lg:w-[400px] xl:w-[440px] px-3 py-3 sticky top-0 h-screen overflow-y-auto gap-4">
                 <RightSidebarContent />
             </aside>
         </div>
@@ -80,10 +80,10 @@ function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; l
     return (
         <Link
             href={href}
-            className="flex items-center gap-3 py-3 px-3 xl:px-3 text-[19px] font-normal rounded-full hover:bg-accent transition-colors w-fit xl:w-fit justify-center xl:justify-start min-w-[48px]"
+            className="flex h-[50px] items-center gap-3 px-3 text-[19px] leading-none font-normal rounded-full hover:bg-accent transition-colors w-fit md:group-hover:w-fit justify-center md:group-hover:justify-start min-w-[48px]"
         >
             {icon}
-            <span className="hidden xl:inline">{label}</span>
+            <span className="hidden md:group-hover:inline">{label}</span>
         </Link>
     );
 }

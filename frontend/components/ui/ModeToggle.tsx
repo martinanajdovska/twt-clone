@@ -28,9 +28,9 @@ export function ModeToggle({ label, className, sidebar }: { label?: string; clas
         <button
             type="button"
             className={cn(
-                "flex items-center gap-3 py-3 px-3 text-[19px] font-normal rounded-full hover:bg-accent transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground",
+                "flex h-[50px] items-center gap-3 px-3 text-[19px] leading-none font-normal rounded-full hover:bg-accent transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground",
                 sidebar
-                    ? "w-fit xl:w-fit justify-center xl:justify-start min-w-[48px]"
+                    ? "w-fit md:group-hover:w-fit justify-center md:group-hover:justify-start min-w-[48px]"
                     : "w-full",
                 className
             )}
@@ -38,7 +38,7 @@ export function ModeToggle({ label, className, sidebar }: { label?: string; clas
             <span className="relative flex h-6 w-6 shrink-0 items-center justify-center [&_svg]:size-[26px] [&_svg]:shrink-0">
                 {icon}
             </span>
-            <span className={sidebar ? "hidden xl:inline" : undefined}>{label}</span>
+            <span className={sidebar ? "hidden md:group-hover:inline" : undefined}>{label}</span>
         </button>
     ) : (
         <Button variant="outline" size="icon">

@@ -34,15 +34,21 @@ export const fetchProfileFeed = async ({
 export const fetchSelfUsernameAndProfilePicture = async ({
   token,
 }: {
-  token: string;
+  token?: string;
 }) => {
+  const isServer = typeof window === "undefined";
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (isServer && token) {
+    headers.Cookie = `token=${token}`;
+  }
+
   const response = await fetch(`${BASE_URL}/api/users/me/info`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      // fails with credentials instead of token
-      Cookie: `token=${token}`,
-    },
+    headers,
+    ...(isServer ? {} : { credentials: "include" as const }),
   });
   if (!response.ok) {
     throw new Error("Error getting user data");

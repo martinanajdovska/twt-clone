@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import Tweet from '@/components/tweets/Tweet'
 import TweetForm from '@/components/tweets/TweetForm'
 import { ITweetResponse } from '@/DTO/ITweetResponse'
+import { useQuery } from '@tanstack/react-query'
+import { fetchSelfUsernameAndProfilePicture } from '@/api-calls/users-api'
 
 type Props = {
     tweet: ITweetResponse
@@ -18,6 +20,11 @@ const Quote = ({ tweet, username, open: controlledOpen, onOpenChange }: Props) =
     const isControlled = controlledOpen !== undefined
     const open = isControlled ? controlledOpen : internalOpen
     const setOpen = isControlled ? (onOpenChange ?? (() => { })) : setInternalOpen
+    const { data: self } = useQuery({
+        queryKey: ['self-info'],
+        queryFn: () => fetchSelfUsernameAndProfilePicture({}),
+        enabled: open,
+    })
 
     const dialogContent = (
         <DialogContent className="sm:max-w-[600px] p-0 gap-0 border-gray-800">
@@ -29,6 +36,7 @@ const Quote = ({ tweet, username, open: controlledOpen, onOpenChange }: Props) =
                     <TweetForm
                         username={username}
                         quoteId={tweet.id}
+                        profilePicture={self?.profilePicture ?? undefined}
                         onSuccess={() => setOpen(false)}
                     />
                 </div>

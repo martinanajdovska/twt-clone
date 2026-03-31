@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Lightbox from "../ui/LightBox"
 import { saveImageFromUrl } from "@/lib/saveImageFromUrl"
+import AutoPlayVideo from "./AutoPlayVideo"
 
 
 function TweetImageWithFallback({
@@ -254,14 +255,14 @@ const Tweet = ({
                                             {tweet.quotedTweet.content || ''}
                                         </div>
                                         {tweet.quotedTweet.imageUrl && (
-                                            <div className="mt-1 rounded-xl overflow-hidden border border-border">
+                                            <div className="mt-1 inline-block max-w-full rounded-xl overflow-hidden border border-border">
                                                 <Image
                                                     src={tweet.quotedTweet.imageUrl}
                                                     alt="Quoted tweet"
                                                     width={0}
                                                     height={0}
                                                     sizes="100vw"
-                                                    className="w-full max-h-[280px] object-cover"
+                                                    className="w-auto max-w-full h-auto max-h-[280px] object-cover"
                                                 />
                                             </div>
                                         )}
@@ -275,6 +276,17 @@ const Tweet = ({
                                                 />
                                             </div>
                                         )}
+                                        {tweet.quotedTweet.videoUrl && (
+                                            <div
+                                                className="relative mt-3 rounded-2xl overflow-hidden border border-border"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <AutoPlayVideo
+                                                    src={tweet.quotedTweet.videoUrl}
+                                                    className="w-full max-h-[500px] object-contain bg-black"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </button>
                             )
@@ -282,7 +294,7 @@ const Tweet = ({
 
                         {tweet.imageUrl && (
                             <div
-                                className="relative mt-3 rounded-2xl overflow-hidden cursor-zoom-in"
+                                className={`relative mt-3 rounded-2xl overflow-hidden cursor-zoom-in ${detailView ? "block w-full" : "inline-block max-w-full"}`}
                                 onClick={(e) => handleImageClick(e, tweet.imageUrl!)}
                                 onContextMenu={(e) => handleImageContextMenu(e, tweet.imageUrl!)}
                             >
@@ -290,7 +302,7 @@ const Tweet = ({
                                     src={tweet.imageUrl}
                                     fallbackSrc={tweet.optimisticImageUrl ?? null}
                                     alt="Tweet image"
-                                    className="object-contain rounded-2xl w-full max-h-[512px]" />
+                                    className={`object-contain rounded-2xl max-h-[512px] ${detailView ? "w-full h-auto" : "w-auto max-w-full h-auto"}`} />
                             </div>
                         )}
                         {tweet.gifUrl && (
@@ -309,6 +321,17 @@ const Tweet = ({
                                         height: "auto",
                                         maxHeight: "500px",
                                     }} />
+                            </div>
+                        )}
+                        {(tweet.videoUrl || tweet.optimisticVideoUrl) && (
+                            <div
+                                className="relative mt-3 rounded-2xl overflow-hidden"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <AutoPlayVideo
+                                    src={(tweet.videoUrl ?? tweet.optimisticVideoUrl)!}
+                                    className="w-full max-h-[500px] object-contain rounded-2xl bg-black"
+                                />
                             </div>
                         )}
 

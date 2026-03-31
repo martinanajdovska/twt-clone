@@ -36,8 +36,10 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
 }) => {
     const [content, setContent] = useState('')
     const [cursorPosition, setCursorPosition] = useState(0)
-    const [selectedFile, setSelectedFile] = useState<File | null>(null)
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
+    const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
+    const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null)
+    const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null)
     const [gifUrl, setGifUrl] = useState<string | null>(null)
     const [gifPickerOpen, setGifPickerOpen] = useState(false)
     const [mentionHighlightIndex, setMentionHighlightIndex] = useState(0)
@@ -48,6 +50,7 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
     const [pollDurationDays, setPollDurationDays] = useState(1)
 
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const videoInputRef = useRef<HTMLInputElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const { mutate: createTweet } = useCreateTweet({
         username,
@@ -69,12 +72,17 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
     const canAddPoll = parentId == null && quoteId == null
     const validPollOptions = pollOptions.map(o => o.trim()).filter(Boolean)
     const hasEnoughPollOptions = validPollOptions.length >= 2
-    const canSubmit: boolean = (content.trim().length > 0 || !!selectedFile || !!gifUrl || (showPoll && hasEnoughPollOptions)) && content.length <= MAX_TWEET_LENGTH
+    const canSubmit: boolean = (content.trim().length > 0 || !!selectedImageFile || !!selectedVideoFile || !!gifUrl || (showPoll && hasEnoughPollOptions)) && content.length <= MAX_TWEET_LENGTH
 
     const removeImage = () => {
-        setSelectedFile(null)
-        setPreviewUrl(null)
+        setSelectedImageFile(null)
+        setImagePreviewUrl(null)
         if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+    const removeVideo = () => {
+        setSelectedVideoFile(null)
+        setVideoPreviewUrl(null)
+        if (videoInputRef.current) videoInputRef.current.value = ''
     }
     const removeGif = () => setGifUrl(null)
 
@@ -86,7 +94,8 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
         formData.append('content', content)
         if (parentId) formData.append('parentId', parentId.toString())
         if (quoteId) formData.append('quoteId', quoteId.toString())
-        if (selectedFile) formData.append('image', selectedFile)
+        if (selectedImageFile) formData.append('image', selectedImageFile)
+        if (selectedVideoFile) formData.append('video', selectedVideoFile)
         if (gifUrl) formData.append('gifUrl', gifUrl)
         if (showPoll && hasEnoughPollOptions && canAddPoll) {
             formData.append('pollOptions', JSON.stringify(validPollOptions))
@@ -95,6 +104,7 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
         createTweet(formData, { onSuccess: () => onSuccess?.() })
         setContent('')
         removeImage()
+        removeVideo()
         removeGif()
         setShowPoll(false)
         setPollOptions(['', ''])
@@ -167,10 +177,23 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
                         />
                     )}
 
-                    {previewUrl && (
+                    {imagePreviewUrl && (
                         <div className="relative mt-2 mb-4">
-                            <Image src={previewUrl} width={300} height={300} className="rounded-2xl max-h-80 w-full object-cover border" alt="Preview" />
+                            <Image src={imagePreviewUrl} width={300} height={300} className="rounded-2xl max-h-80 w-full object-cover border" alt="Preview" />
                             <button type="button" onClick={removeImage} className="absolute top-2 left-2 p-1.5 bg-black/60 rounded-full text-white">
+                                <X size={18} />
+                            </button>
+                        </div>
+                    )}
+                    {videoPreviewUrl && (
+                        <div className="relative mt-2 mb-4">
+                            <video
+                                src={videoPreviewUrl}
+                                controls
+                                playsInline
+                                className="rounded-2xl max-h-80 w-full object-contain border bg-black"
+                            />
+                            <button type="button" onClick={removeVideo} className="absolute top-2 left-2 p-1.5 bg-black/60 rounded-full text-white">
                                 <X size={18} />
                             </button>
                         </div>
@@ -208,15 +231,40 @@ const TweetForm = ({ username, parentId, quoteId, onSuccess, profilePicture }: {
                         hasGif={!!gifUrl}
                         onTogglePoll={() => setShowPoll(p => !p)}
                         onFileClick={() => fileInputRef.current?.click()}
+                        onVideoClick={() => videoInputRef.current?.click()}
                         fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
+                        videoInputRef={videoInputRef as React.RefObject<HTMLInputElement>}
                         onFileChange={(e) => {
                             const file = e.target.files?.[0]
-                            if (file) { setGifUrl(null); setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)) }
+                            if (file) {
+                                setGifUrl(null)
+                                removeVideo()
+                                setSelectedImageFile(file)
+                                setImagePreviewUrl(URL.createObjectURL(file))
+                            }
+                        }}
+                        onVideoChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                                setGifUrl(null)
+                                removeImage()
+                                setSelectedVideoFile(file)
+                                setVideoPreviewUrl(URL.createObjectURL(file))
+                            }
                         }}
                         onGifClick={() => setGifPickerOpen(true)}
                     />
                 </form>
-                <GifPicker open={gifPickerOpen} onClose={() => setGifPickerOpen(false)} onSelect={(url) => { setGifUrl(url); setGifPickerOpen(false) }} />
+                <GifPicker
+                    open={gifPickerOpen}
+                    onClose={() => setGifPickerOpen(false)}
+                    onSelect={(url) => {
+                        removeImage()
+                        removeVideo()
+                        setGifUrl(url)
+                        setGifPickerOpen(false)
+                    }}
+                />
             </div>
         </div>
     )

@@ -9,10 +9,17 @@ import TweetForm from "@/components/tweets/TweetForm"
 import React, { useState, useEffect } from "react"
 import Tweet from "@/components/tweets/Tweet";
 import { ITweetResponse } from "@/DTO/ITweetResponse";
+import { useQuery } from "@tanstack/react-query";
+import { fetchSelfUsernameAndProfilePicture } from "@/api-calls/users-api";
 
 const Reply = ({ tweet, username, repliesCount, hideCount = false }: { tweet: ITweetResponse, username: string, repliesCount: number, hideCount: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [repliesCountState, setRepliesCountState] = useState(repliesCount);
+    const { data: self } = useQuery({
+        queryKey: ["self-info"],
+        queryFn: () => fetchSelfUsernameAndProfilePicture({}),
+        enabled: isOpen,
+    });
 
     useEffect(() => {
         setRepliesCountState(repliesCount);
@@ -41,11 +48,10 @@ const Reply = ({ tweet, username, repliesCount, hideCount = false }: { tweet: IT
                         <Tweet tweet={tweet} username={username} expandOnClick={false} />
                     </div>
                     <div className="mt-2">
-                        <TweetForm username={username} parentId={tweet.id} onSuccess={() => {
+                        <TweetForm username={username} parentId={tweet.id} profilePicture={self?.profilePicture ?? undefined} onSuccess={() => {
                             setIsOpen(false)
                             setRepliesCountState(prev => (prev + 1));
-                        }
-                        }
+                        }}
                         />
                     </div>
                 </div>

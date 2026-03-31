@@ -1,4 +1,4 @@
-import { ImageIcon, BarChart3 } from 'lucide-react'
+import { ImageIcon, Video, BarChart3 } from 'lucide-react'
 
 const MAX_TWEET_LENGTH = 280
 
@@ -11,8 +11,11 @@ export default function TweetFormToolbar({
   hasGif,
   onTogglePoll,
   onFileClick,
+  onVideoClick,
   fileInputRef,
+  videoInputRef,
   onFileChange,
+  onVideoChange,
   onGifClick,
 }: {
   content: string
@@ -23,8 +26,11 @@ export default function TweetFormToolbar({
   hasGif?: boolean
   onTogglePoll: () => void
   onFileClick: () => void
+  onVideoClick: () => void
   fileInputRef: React.RefObject<HTMLInputElement> | null
+  videoInputRef: React.RefObject<HTMLInputElement> | null
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onVideoChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onGifClick?: () => void
 }) {
   return (
@@ -32,6 +38,9 @@ export default function TweetFormToolbar({
       <div className="flex items-center gap-1 text-primary">
         <button type="button" onClick={onFileClick} className="p-2 hover:bg-primary/10 rounded-full transition-colors" disabled={!!hasGif}>
           <ImageIcon size={20} />
+        </button>
+        <button type="button" onClick={onVideoClick} className="p-2 hover:bg-primary/10 rounded-full transition-colors" disabled={!!hasGif}>
+          <Video size={20} />
         </button>
         {onGifClick && (
           <button type="button" onClick={onGifClick} className="p-2 hover:bg-primary/10 rounded-full transition-colors" disabled={isPending}>
@@ -44,6 +53,7 @@ export default function TweetFormToolbar({
           </button>
         )}
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={onFileChange} />
+        <input type="file" ref={videoInputRef} className="hidden" accept="video/*" onChange={onVideoChange} />
       </div>
       <div className="flex items-center gap-4">
         {content.length > 0 && (
