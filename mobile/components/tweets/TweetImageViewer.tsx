@@ -7,6 +7,8 @@ import {
     Pressable,
     Text,
     Dimensions,
+    Alert,
+    Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -14,9 +16,9 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/theme';
 import { TweetActions } from './TweetActions';
 import type { ITweet } from '@/types/tweet';
-import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCompose } from '@/contexts/ComposeContext';
+import { saveImageOnWebOnly } from '@/lib/webSaveImage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -41,8 +43,6 @@ export function TweetImageViewer({
     handleRetweet,
     handleQuoteTweet,
 }: TweetImageViewerProps) {
-    if (!visible) return null;
-
     const [retweetMenuVisible, setRetweetMenuVisible] = useState(false);
     const insets = useSafeAreaInsets();
     const { colorScheme, isDark } = useTheme();
@@ -52,7 +52,16 @@ export function TweetImageViewer({
     const borderColor = isDark ? '#3d4146' : '#d8dde1';
     const menuBg = colors.background;
 
+    if (!visible) return null;
 
+    const handleSave = async () => {
+        const result = await saveImageOnWebOnly(imageUrl);
+        if (!result.ok) {
+            Alert.alert('Save failed', result.message ?? 'Failed to save image.');
+            return;
+        }
+        Alert.alert('Saved', 'Download started.');
+    };
 
     const handleReplyFromViewer = () => {
         onClose();
@@ -71,15 +80,20 @@ export function TweetImageViewer({
             statusBarTranslucent
         >
             <View style={styles.overlay}>
-                <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                    <MaterialIcons name="close" size={24} color="#fff" />
-                </TouchableOpacity>
+                <View style={[styles.topControls, { top: Math.max(insets.top + 10, 50) }]}>
+                    <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                        <Text style={styles.saveText}>Save</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                        <MaterialIcons name="close" size={24} color="#fff" />
+                    </TouchableOpacity>
+                </View>
 
-                <Pressable style={styles.imageContainer} onPress={onClose}>
+                <Pressable style={styles.imageContainer} onPress={onClose} onLongPress={handleSave}>
                     <Image source={{ uri: imageUrl }} style={styles.image} contentFit="contain" />
                 </Pressable>
 
-                <BlurView intensity={80} tint="dark" style={styles.actionsContainer}>
+                <View style={[styles.actionsContainer, styles.actionsContainerOverlay, { paddingBottom: insets.bottom }]}>
                     <View style={styles.actionsInner}>
                         <TweetActions
                             tweet={tweet}
@@ -92,7 +106,7 @@ export function TweetImageViewer({
                             onReplyPress={handleReplyFromViewer}
                         />
                     </View>
-                </BlurView>
+                </View>
 
                 <Modal
                     visible={retweetMenuVisible}
@@ -147,16 +161,28 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.95)',
     },
-    container: {
-        flex: 1,
+    topControls: {
+        position: 'absolute',
+        right: 20,
+        zIndex: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    saveButton: {
+        paddingHorizontal: 14,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
         justifyContent: 'center',
         alignItems: 'center',
     },
+    saveText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '600',
+    },
     closeButton: {
-        position: 'absolute',
-        top: 50,
-        right: 20,
-        zIndex: 10,
         width: 40,
         height: 40,
         borderRadius: 20,
@@ -176,20 +202,25 @@ const styles = StyleSheet.create({
     },
     actionsContainer: {
         position: 'absolute',
-        bottom: 0,
-        left: 0,
+        left: 30,
         right: 0,
-        paddingBottom: 40,
-        paddingTop: 20,
-        overflow: 'hidden',
+        bottom: 28,
+        paddingVertical: 12,
+        alignItems: 'center',
     },
     actionsInner: {
+        width: '100%',
+        maxWidth: 480,
         paddingHorizontal: 20,
+    },
+    actionsContainerOverlay: {
+        backgroundColor: 'rgba(0, 0, 0, 0.55)',
     },
     modalOverlay: {
         flex: 1,
         justifyContent: 'flex-end',
         backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        paddingBottom: 24,
     },
     bottomSheet: {
         borderTopLeftRadius: 20,

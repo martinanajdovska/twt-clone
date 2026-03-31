@@ -35,7 +35,7 @@ export default function EditProfileScreen() {
   const borderColor = isDark ? '#3d4146' : '#d8dde1';
   const textColor = colors.text;
   const mutedColor = colors.icon;
-  const inputBg = isDark ? '#16181c' : '#f7f9f9';
+  const inputBg = isDark ? '#000000' : '#f7f9f9';
 
   const { data: self } = useFetchSelf();
   const { data: profile, isLoading } = useFetchProfileHeader(self?.username || '');
@@ -185,7 +185,7 @@ export default function EditProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <TouchableOpacity
-          style={[styles.bannerWrap, { backgroundColor: isDark ? '#2f3336' : '#cfd9de' }]}
+          style={[styles.bannerWrap, { backgroundColor: isDark ? '#000000' : '#cfd9de' }]}
           onPress={() => pickImage('banner')}
           activeOpacity={0.9}
         >
@@ -207,7 +207,7 @@ export default function EditProfileScreen() {
             {avatarPreview ? (
               <Image source={{ uri: avatarPreview }} style={styles.avatar} />
             ) : (
-              <View style={[styles.avatarBadge, { backgroundColor: isDark ? '#2f3336' : '#cfd9de' }]}>
+              <View style={[styles.avatarBadge, { backgroundColor: isDark ? '#000000' : '#cfd9de' }]}>
                 <MaterialIcons name="camera-alt" size={24} color={mutedColor} />
               </View>
             )}

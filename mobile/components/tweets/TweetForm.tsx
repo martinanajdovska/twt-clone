@@ -109,7 +109,7 @@ export function TweetForm({
   const borderColor = isDark ? '#3d4146' : '#d8dde1';
   const mutedColor = isDark ? '#71767b' : '#536471';
   const textColor = isDark ? '#e7e9ea' : '#0f1419';
-  const inputBg = isDark ? '#16181c' : '#f7f9f9';
+  const inputBg = isDark ? '#000000' : '#f7f9f9';
   const quotedBg = isDark ? colors.background : '#f7f9f9';
 
   const remaining = MAX_LENGTH - content.length;

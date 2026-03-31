@@ -43,7 +43,7 @@ export default function LoginScreen() {
   const borderColor = isDark ? '#3d4146' : '#d8dde1';
   const mutedColor = isDark ? '#71767b' : '#536471';
   const textColor = isDark ? '#e7e9ea' : '#0f1419';
-  const inputBg = isDark ? '#16181c' : INPUT_BG_LIGHT;
+  const inputBg = isDark ? '#000000' : INPUT_BG_LIGHT;
 
   const isWeb = Platform.OS === 'web';
   const isGoogleAvailable = true;

@@ -10,6 +10,7 @@ import { searchConversationMessages } from '@/api-calls/messages-api'
 import ConversationView from './ConversationView'
 import ConversationsList from './ConversationsList'
 import MessagesHeader from './MessagesHeader'
+import { IMessageResponse } from '@/DTO/IMessageResponse'
 
 export default function MessagesPage() {
   const searchParams = useSearchParams()
@@ -23,7 +24,7 @@ export default function MessagesPage() {
   const { data: conversationDetail, isLoading: loadingDetail } = useGetConversation(conversationId)
   const { mutate: markAsRead } = useMarkConversationAsRead()
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<{ id: number; content: string; createdAt: string }[]>([])
+  const [searchResults, setSearchResults] = useState<IMessageResponse[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [searchTarget, setSearchTarget] = useState<{ id: number; createdAt: string } | null>(null)
   const currentConversation = conversationId
@@ -77,13 +78,7 @@ export default function MessagesPage() {
           currentConversation.otherParticipant.username,
           q,
         )
-        setSearchResults(
-          results.map((r) => ({
-            id: r.id,
-            content: r.content,
-            createdAt: r.createdAt,
-          })),
-        )
+        setSearchResults(results)
       } catch {
         setSearchResults([])
       } finally {

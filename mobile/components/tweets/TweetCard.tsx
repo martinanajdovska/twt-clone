@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Text,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -24,6 +25,7 @@ import { useTweetCardHandlers } from '../../hooks/useTweetCardHandlers';
 import { useCompose } from '@/contexts/ComposeContext';
 import { TweetVideoMedia } from './TweetVideoMedia';
 import { TweetImageViewer } from './TweetImageViewer';
+import { saveImageOnWebOnly } from '@/lib/webSaveImage';
 
 
 function isGifLikeUrl(url: string | null | undefined) {
@@ -99,6 +101,15 @@ export function TweetCard({
   const handleImagePress = (e: any) => {
     e.stopPropagation?.();
     setImageViewerVisible(true);
+  };
+  const handleImageLongPress = async (e: any, url: string) => {
+    e.stopPropagation?.();
+    const result = await saveImageOnWebOnly(url);
+    if (!result.ok) {
+      Alert.alert('Save failed', result.message ?? 'Failed to save image.');
+      return;
+    }
+    Alert.alert('Saved', 'Download started.');
   };
 
   return (
@@ -232,7 +243,7 @@ export function TweetCard({
             ) : null}
 
             {tweet.imageUrl && (
-              <TouchableOpacity onPress={handleImagePress} activeOpacity={0.95}>
+              <TouchableOpacity onPress={handleImagePress} onLongPress={(e) => handleImageLongPress(e, tweet.imageUrl!)} activeOpacity={0.95}>
                 <Image
                   source={{ uri: tweet.imageUrl }}
                   style={[styles.tweetImage, { borderColor }]}
@@ -242,7 +253,7 @@ export function TweetCard({
             )}
 
             {tweet.gifUrl && !tweet.imageUrl && (
-              <TouchableOpacity onPress={handleImagePress} activeOpacity={0.95}>
+              <TouchableOpacity onPress={handleImagePress} onLongPress={(e) => handleImageLongPress(e, tweet.gifUrl!)} activeOpacity={0.95}>
                 <Image
                   source={{ uri: tweet.gifUrl }}
                   style={[styles.tweetImage, { borderColor }]}

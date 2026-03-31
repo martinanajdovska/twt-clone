@@ -6,9 +6,13 @@ import {
     TouchableOpacity,
     Pressable,
     Dimensions,
+    Text,
+    Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { saveImageOnWebOnly } from '@/lib/webSaveImage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -19,7 +23,18 @@ interface ImageViewerProps {
 }
 
 export function ImageViewer({ visible, imageUrl, onClose }: ImageViewerProps) {
+    const insets = useSafeAreaInsets();
+
     if (!visible) return null;
+
+    const handleSave = async () => {
+        const result = await saveImageOnWebOnly(imageUrl);
+        if (!result.ok) {
+            Alert.alert('Save failed', result.message ?? 'Failed to save image.');
+            return;
+        }
+        Alert.alert('Saved', 'Download started.');
+    };
 
     return (
         <Modal
@@ -30,11 +45,16 @@ export function ImageViewer({ visible, imageUrl, onClose }: ImageViewerProps) {
             statusBarTranslucent
         >
             <View style={styles.overlay}>
-                <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                    <MaterialIcons name="close" size={24} color="#fff" />
-                </TouchableOpacity>
+                <View style={[styles.topControls, { top: Math.max(insets.top + 10, 50) }]}>
+                    <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                        <Text style={styles.saveText}>Save</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                        <MaterialIcons name="close" size={24} color="#fff" />
+                    </TouchableOpacity>
+                </View>
 
-                <Pressable style={styles.imageContainer} onPress={onClose}>
+                <Pressable style={styles.imageContainer} onPress={onClose} onLongPress={handleSave}>
                     <Image
                         source={{ uri: imageUrl }}
                         style={styles.image}
@@ -51,11 +71,28 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.95)',
     },
-    closeButton: {
+    topControls: {
         position: 'absolute',
-        top: 50,
         right: 20,
         zIndex: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    saveButton: {
+        paddingHorizontal: 14,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    saveText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    closeButton: {
         width: 40,
         height: 40,
         borderRadius: 20,

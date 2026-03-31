@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     View,
     TextInput,
@@ -67,7 +67,7 @@ export function SearchBar({
                 style={[
                     styles.searchInner,
                     {
-                        backgroundColor: isDark ? '#1e2732' : '#eff3f4',
+                        backgroundColor: isDark ? '#000000' : '#eff3f4',
                         borderColor,
                     },
                 ]}

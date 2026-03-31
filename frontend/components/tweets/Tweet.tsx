@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from "react"
 import Like from "./Like"
 import Bookmark from "../bookmarks/Bookmark"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal, Repeat2, Pin as PinIcon } from "lucide-react"
+import { MoreHorizontal, Repeat2, Pin as PinIcon, X } from "lucide-react"
 
 import Delete from "@/components/tweets/Delete"
 import Reply from "@/components/replies/Reply"
@@ -27,6 +27,8 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import Lightbox from "../ui/LightBox"
+import { saveImageFromUrl } from "@/lib/saveImageFromUrl"
 
 
 function TweetImageWithFallback({
@@ -87,6 +89,21 @@ const Tweet = ({
     const router = useRouter()
     const isSelf = username === tweet.username
     const canInteract = username.trim().length > 0
+    const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
+
+    const handleImageClick = (e: React.MouseEvent, url: string) => {
+        e.stopPropagation()
+        setLightboxSrc(url)
+    }
+    const handleImageContextMenu = async (e: React.MouseEvent, url: string) => {
+        e.preventDefault()
+        e.stopPropagation()
+        try {
+            await saveImageFromUrl(url)
+        } catch {
+            window.open(url, '_blank')
+        }
+    }
 
     const handleUserClick = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -264,17 +281,22 @@ const Tweet = ({
                         )}
 
                         {tweet.imageUrl && (
-                            <div className="relative mt-3 rounded-2xl overflow-hidden">
+                            <div
+                                className="relative mt-3 rounded-2xl overflow-hidden cursor-zoom-in"
+                                onClick={(e) => handleImageClick(e, tweet.imageUrl!)}
+                                onContextMenu={(e) => handleImageContextMenu(e, tweet.imageUrl!)}
+                            >
                                 <TweetImageWithFallback
                                     src={tweet.imageUrl}
                                     fallbackSrc={tweet.optimisticImageUrl ?? null}
                                     alt="Tweet image"
-                                    className="object-contain rounded-2xl"
-                                />
+                                    className="object-contain rounded-2xl w-full max-h-[512px]" />
                             </div>
                         )}
                         {tweet.gifUrl && (
-                            <div className="relative mt-3 rounded-2xl overflow-hidden">
+                            <div
+                                className="relative mt-3 rounded-2xl overflow-hidden"
+                            >
                                 <img
                                     src={tweet.gifUrl}
                                     alt="GIF"
@@ -351,6 +373,12 @@ const Tweet = ({
                     </div>
                 </div>
             </article>
+            {lightboxSrc && (
+                <Lightbox
+                    src={lightboxSrc}
+                    onClose={() => setLightboxSrc(null)}
+                />
+            )}
         </TweetDropdownProvider>
     )
 }

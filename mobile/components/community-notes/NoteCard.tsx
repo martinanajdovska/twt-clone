@@ -27,7 +27,7 @@ export function NoteCard({
     : isDark ? '#2f3336' : '#eff3f4';
   const bgColor = note.isVisible
     ? isDark ? '#2d2a1f' : '#fef9e7'
-    : isDark ? '#192734' : '#f7f9f9';
+    : isDark ? '#000000' : '#f7f9f9';
   const textColor = isDark ? '#e7e9ea' : '#0f1419';
   const mutedColor = isDark ? '#71767b' : '#536471';
   const linkColor = '#1d9bf0';

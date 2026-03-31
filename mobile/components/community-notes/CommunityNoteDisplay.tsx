@@ -24,7 +24,7 @@ export function CommunityNoteDisplay({
   if (!note) return null;
 
   const borderColor = isDark ? '#3d4144' : '#cfd9de';
-  const bgColor = isDark ? '#1c2930' : '#f7f9f9';
+  const bgColor = isDark ? '#000000' : '#f7f9f9';
   const textColor = isDark ? '#e7e9ea' : '#0f1419';
   const mutedColor = isDark ? '#71767b' : '#536471';
   const linkColor = '#1d9bf0';

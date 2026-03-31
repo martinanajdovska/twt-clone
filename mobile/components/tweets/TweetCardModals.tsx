@@ -1,6 +1,7 @@
 import React from "react";
 import {
   ActivityIndicator,
+  Animated,
   Modal,
   Pressable,
   ScrollView,
@@ -13,6 +14,7 @@ import {
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { NoteCard } from "../community-notes/NoteCard";
 import useFetchNotesForTweet from "@/hooks/community-notes/useFetchNotesForTweet";
+import { useBottomSheetDrag } from "@/hooks/useBottomSheetDrag";
 
 type TweetCardModalsProps = {
   retweetMenuVisible: boolean;
@@ -89,6 +91,10 @@ export function TweetCardModals({
     tweetId,
     viewNotesModalVisible,
   );
+  const retweetSheetDrag = useBottomSheetDrag(retweetMenuVisible, onCloseRetweetMenu);
+  const optionsSheetDrag = useBottomSheetDrag(optionsMenuVisible, onCloseOptionsMenu);
+  const addNoteSheetDrag = useBottomSheetDrag(addNoteModalVisible, onCloseAddNoteModal);
+  const viewNotesSheetDrag = useBottomSheetDrag(viewNotesModalVisible, onCloseViewNotes);
 
   return (
     <>
@@ -100,8 +106,16 @@ export function TweetCardModals({
       >
         <View style={[styles.modalOverlay, { bottom: insetsBottom }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onCloseRetweetMenu} />
-          <View style={[styles.bottomSheet, { backgroundColor: menuBg, borderColor }]}>
-            <View style={[styles.bottomSheetHandle, { backgroundColor: borderColor }]} />
+          <Animated.View
+            style={[
+              styles.bottomSheet,
+              styles.retweetSheet,
+              { backgroundColor: menuBg, borderColor, transform: [{ translateY: retweetSheetDrag.translateY }] },
+            ]}
+          >
+            <View style={styles.dragHandleArea} {...retweetSheetDrag.panHandlers}>
+              <View style={[styles.bottomSheetHandle, { backgroundColor: borderColor }]} />
+            </View>
             <TouchableOpacity style={styles.menuItem} onPress={onRetweet} activeOpacity={0.7}>
               <MaterialIcons
                 name="repeat"
@@ -121,7 +135,7 @@ export function TweetCardModals({
               <MaterialIcons name="format-quote" size={22} color={textColor} />
               <Text style={[styles.menuItemText, { color: textColor }]}>Quote tweet</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
 
@@ -133,8 +147,15 @@ export function TweetCardModals({
       >
         <View style={[styles.modalOverlay, { bottom: insetsBottom }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onCloseOptionsMenu} />
-          <View style={[styles.bottomSheet, { backgroundColor: menuBg, borderColor }]}>
-            <View style={[styles.bottomSheetHandle, { backgroundColor: borderColor }]} />
+          <Animated.View
+            style={[
+              styles.bottomSheet,
+              { backgroundColor: menuBg, borderColor, transform: [{ translateY: optionsSheetDrag.translateY }] },
+            ]}
+          >
+            <View style={styles.dragHandleArea} {...optionsSheetDrag.panHandlers}>
+              <View style={[styles.bottomSheetHandle, { backgroundColor: borderColor }]} />
+            </View>
             {isSelf && (
               <>
                 <TouchableOpacity
@@ -173,7 +194,7 @@ export function TweetCardModals({
               <MaterialIcons name="notes" size={22} color={textColor} />
               <Text style={[styles.menuItemText, { color: textColor }]}>View community notes</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
 
@@ -188,14 +209,16 @@ export function TweetCardModals({
             style={StyleSheet.absoluteFill}
             onPress={() => !addNotePending && onCloseAddNoteModal()}
           />
-          <View
+          <Animated.View
             style={[
+              styles.bottomSheet,
               styles.addNoteSheet,
               {
                 backgroundColor: menuBg,
                 borderColor,
                 bottom: Math.max(0, keyboardHeight + insetsBottom),
                 paddingBottom: insetsBottom - 20,
+                transform: [{ translateY: addNoteSheetDrag.translateY }],
               },
             ]}
           >
@@ -204,6 +227,9 @@ export function TweetCardModals({
               contentContainerStyle={styles.addNoteContent}
               showsVerticalScrollIndicator={false}
             >
+              <View style={styles.dragHandleArea} {...addNoteSheetDrag.panHandlers}>
+                <View style={[styles.bottomSheetHandle, { backgroundColor: borderColor }]} />
+              </View>
               <View style={[styles.addNoteHeader, { borderBottomColor: borderColor }]}>
                 <TouchableOpacity
                   onPress={() => !addNotePending && onCloseAddNoteModal()}
@@ -246,7 +272,7 @@ export function TweetCardModals({
                 editable={!addNotePending}
               />
             </ScrollView>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
 
@@ -258,13 +284,22 @@ export function TweetCardModals({
       >
         <View style={[styles.modalOverlay, { bottom: insetsBottom }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onCloseViewNotes} />
-          <View style={[styles.viewNotesSheet, { backgroundColor: menuBg, borderColor }]}>
+          <Animated.View
+            style={[
+              styles.bottomSheet,
+              styles.viewNotesSheet,
+              {
+                backgroundColor: menuBg,
+                borderColor,
+                transform: [{ translateY: viewNotesSheetDrag.translateY }],
+              },
+            ]}
+          >
+            <View style={styles.dragHandleArea} {...viewNotesSheetDrag.panHandlers}>
+              <View style={[styles.bottomSheetHandle, { backgroundColor: borderColor }]} />
+            </View>
             <View style={[styles.viewNotesHeader, { borderBottomColor: borderColor }]}>
-              <TouchableOpacity onPress={onCloseViewNotes} style={styles.viewNotesClose}>
-                <MaterialIcons name="close" size={24} color={textColor} />
-              </TouchableOpacity>
               <Text style={[styles.viewNotesTitle, { color: textColor }]}>Community notes</Text>
-              <View style={styles.viewNotesClose} />
             </View>
             <ScrollView
               style={styles.viewNotesScroll}
@@ -293,7 +328,7 @@ export function TweetCardModals({
                   ))
               )}
             </ScrollView>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
 
@@ -359,17 +394,25 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  retweetSheet: {
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
   },
   bottomSheetHandle: {
     width: 36,
     height: 4,
     borderRadius: 2,
     alignSelf: "center",
-    marginTop: 12,
-    marginBottom: 8,
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  dragHandleArea: {
+    paddingTop: 10,
+    paddingBottom: 14,
+    minHeight: 32,
   },
   menuItem: {
     flexDirection: "row",
@@ -381,13 +424,8 @@ const styles = StyleSheet.create({
   menuItemText: { fontSize: 16, fontWeight: "500" },
   menuDivider: { height: StyleSheet.hairlineWidth },
   addNoteSheet: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
     maxHeight: "80%",
   },
   addNoteHeader: {
@@ -417,19 +455,14 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   viewNotesSheet: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    top: "20%",
+    maxHeight: "80%",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   viewNotesHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,

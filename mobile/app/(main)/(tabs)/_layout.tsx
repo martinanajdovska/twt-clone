@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { View } from 'react-native';
 
 import { HapticTab } from '@/components/ui/haptic-tab';
 import { Colors } from '@/constants/theme';
@@ -23,6 +24,14 @@ export default function MainTabsLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
+        tabBarBackground: () => (
+          <View style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#000000' : '#ffffff' }} />
+        ),
+        tabBarStyle: {
+          backgroundColor: colorScheme === 'dark' ? '#000000' : '#ffffff',
+          borderTopColor: colorScheme === 'dark' ? '#000000' : '#d8dde1',
+        },
         headerShown: false,
         tabBarButton: HapticTab,
       }}>

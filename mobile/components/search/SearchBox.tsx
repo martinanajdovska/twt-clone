@@ -71,7 +71,7 @@ export function SearchBox({
         style={[
           styles.searchWrap,
           {
-            backgroundColor: isDark ? "#1e2732" : "#eff3f4",
+            backgroundColor: isDark ? "#000000" : "#eff3f4",
             borderColor,
             marginTop: topInset + 5,
           },

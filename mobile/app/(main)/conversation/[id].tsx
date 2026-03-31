@@ -171,105 +171,104 @@ export default function ConversationScreen() {
               (!isContextReadyToShow || isResultTransitioning || isContextLoading) && styles.hiddenFrame,
             ]}
           >
-          {isSearchOpen ? (
-            <SearchBox
-              value={searchText}
-              onChangeText={setSearchText}
-              placeholder="Search this conversation"
-              users={searchedMessages.map((item) => ({
-                key: String(item.id),
-                id: item.id,
-                createdAt: item.createdAt,
-                username: item.username,
-                displayName: item.displayName,
-                imageUrl: item.imageUrl,
-                secondaryText: `${item.content || '(no text)'} • ${formatRelativeTime(item.createdAt)}`,
-              }))}
-              onUserSelect={async (item) => {
-                if (!item.createdAt) return;
-                setIsResultTransitioning(true);
-                setIsContextReadyToShow(false);
-                setIsSearchOpen(false);
-                setIsContextLoading(true);
-                try {
-                  const context = await fetchMessageContext(
-                    conversationId,
-                    item.createdAt,
-                    10,
-                  );
-                  setContextMessages(context);
-                  if (item.id) setHighlightedMessageId(item.id);
-                } finally {
-                  setIsContextLoading(false);
-                }
-              }}
-              isLoading={isSearchLoading}
-              emptyUsersText="No messages match your search."
-              userSecondaryText="Message"
-              showUserChevron={false}
-              isEmptyConversationsList
-            />
-          ) : (
-            <FlatList
-              ref={flatListRef}
-              data={contextItems ?? messageItems}
-              inverted={!contextItems}
-              style={styles.list}
-              keyExtractor={(item) => String(item.id)}
-              contentContainerStyle={styles.messages}
-              renderItem={({ item }) => (
-                <MessageBubble
-                  item={item}
-                  highlighted={item.id === highlightedMessageId}
-                  other={other ?? { username: '', imageUrl: null, displayName: null }}
-                />
-              )}
-              onScrollToIndexFailed={({ index }) => {
-                flatListRef.current?.scrollToOffset({
-                  offset: Math.max(0, index * 80),
-                  animated: false,
-                });
-                setTimeout(() => {
-                  flatListRef.current?.scrollToIndex({
-                    index,
+            {isSearchOpen ? (
+              <SearchBox
+                value={searchText}
+                onChangeText={setSearchText}
+                placeholder="Search this conversation"
+                users={searchedMessages.map((item) => ({
+                  key: String(item.id),
+                  id: item.id,
+                  createdAt: item.createdAt,
+                  username: item.senderUsername,
+                  imageUrl: item.senderImageUrl,
+                  secondaryText: `${item.content || '(no text)'} • ${formatRelativeTime(item.createdAt)}`,
+                }))}
+                onUserSelect={async (item) => {
+                  if (!item.createdAt) return;
+                  setIsResultTransitioning(true);
+                  setIsContextReadyToShow(false);
+                  setIsSearchOpen(false);
+                  setIsContextLoading(true);
+                  try {
+                    const context = await fetchMessageContext(
+                      conversationId,
+                      item.createdAt,
+                      10,
+                    );
+                    setContextMessages(context);
+                    if (item.id) setHighlightedMessageId(item.id);
+                  } finally {
+                    setIsContextLoading(false);
+                  }
+                }}
+                isLoading={isSearchLoading}
+                emptyUsersText="No messages match your search."
+                userSecondaryText="Message"
+                showUserChevron={false}
+                isEmptyConversationsList
+              />
+            ) : (
+              <FlatList
+                ref={flatListRef}
+                data={contextItems ?? messageItems}
+                inverted={!contextItems}
+                style={styles.list}
+                keyExtractor={(item) => String(item.id)}
+                contentContainerStyle={styles.messages}
+                renderItem={({ item }) => (
+                  <MessageBubble
+                    item={item}
+                    highlighted={item.id === highlightedMessageId}
+                    other={other ?? { username: '', imageUrl: null, displayName: null }}
+                  />
+                )}
+                onScrollToIndexFailed={({ index }) => {
+                  flatListRef.current?.scrollToOffset({
+                    offset: Math.max(0, index * 80),
                     animated: false,
-                    viewPosition: 0.5,
                   });
                   setTimeout(() => {
-                    setIsContextReadyToShow(true);
-                    setIsResultTransitioning(false);
-                  }, 40);
-                }, 50);
-              }}
-              onEndReachedThreshold={0.2}
-              onEndReached={() => {
-                if (!contextMessages && hasNextPage && !isFetchingNextPage) fetchNextPage();
-              }}
-              ListFooterComponent={
-                !contextMessages && isFetchingNextPage ? (
-                  <View style={styles.empty}>
-                    <ActivityIndicator color={colors.tint} />
-                  </View>
-                ) : null
-              }
-              ListEmptyComponent={
-                <ThemedView style={styles.empty}>
-                  <ThemedText style={{ color: mutedColor }}>No messages yet. Say hello!</ThemedText>
-                </ThemedView>
-              }
-            />
-          )}
+                    flatListRef.current?.scrollToIndex({
+                      index,
+                      animated: false,
+                      viewPosition: 0.5,
+                    });
+                    setTimeout(() => {
+                      setIsContextReadyToShow(true);
+                      setIsResultTransitioning(false);
+                    }, 40);
+                  }, 50);
+                }}
+                onEndReachedThreshold={0.2}
+                onEndReached={() => {
+                  if (!contextMessages && hasNextPage && !isFetchingNextPage) fetchNextPage();
+                }}
+                ListFooterComponent={
+                  !contextMessages && isFetchingNextPage ? (
+                    <View style={styles.empty}>
+                      <ActivityIndicator color={colors.tint} />
+                    </View>
+                  ) : null
+                }
+                ListEmptyComponent={
+                  <ThemedView style={styles.empty}>
+                    <ThemedText style={{ color: mutedColor }}>No messages yet. Say hello!</ThemedText>
+                  </ThemedView>
+                }
+              />
+            )}
 
-          {!isSearchOpen && !contextMessages ? (
-            <MessageInput
-              setGifPickerVisible={setGifPickerVisible}
-              gifUrl={gifUrl}
-              setGifUrl={setGifUrl}
-              imageUrl={imageUrl}
-              setImageUrl={setImageUrl}
-              conversationId={conversationId}
-            />
-          ) : null}
+            {!isSearchOpen && !contextMessages ? (
+              <MessageInput
+                setGifPickerVisible={setGifPickerVisible}
+                gifUrl={gifUrl}
+                setGifUrl={setGifUrl}
+                imageUrl={imageUrl}
+                setImageUrl={setImageUrl}
+                conversationId={conversationId}
+              />
+            ) : null}
           </View>
           {(!isContextReadyToShow || isResultTransitioning || isContextLoading) ? (
             <View style={styles.loadingOverlay}>

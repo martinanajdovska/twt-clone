@@ -34,7 +34,7 @@ export default function RegisterScreen() {
 
   const borderColor = isDark ? '#3d4146' : '#d8dde1';
   const textColor = isDark ? '#e7e9ea' : '#0f1419';
-  const inputBg = isDark ? '#16181c' : INPUT_BG_LIGHT;
+  const inputBg = isDark ? '#000000' : INPUT_BG_LIGHT;
 
   async function handleRegister() {
     if (!email.trim() || !password) {

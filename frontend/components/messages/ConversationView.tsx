@@ -4,43 +4,18 @@ import React, { useState, useRef, useLayoutEffect, useEffect, useCallback } from
 import { Send, ImageIcon, X } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { IMessageResponse } from '@/DTO/IMessageResponse'
 import { useGetMessages } from '@/hooks/messages/useGetMessages'
 import { useSendMessage } from '@/hooks/messages/useSendMessage'
 import MessageBubble from './MessageBubble'
 import GifPicker from '@/components/GifPicker'
 import { fetchMessageContext } from '@/api-calls/messages-api'
+import { useMessageJump } from '@/hooks/messages/useMessageJump'
+import { useScrollToHighlight } from '@/hooks/messages/useScrollToHighlight'
+import Lightbox from '../ui/LightBox'
+
 
 const STICKY_BOTTOM_THRESHOLD = 80
 
-function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-      >
-        <X size={22} />
-      </button>
-      <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-        <img
-          src={src}
-          alt="Full preview"
-          className="rounded-xl object-contain max-w-[90vw] max-h-[90vh] shadow-2xl"
-        />
-      </div>
-    </div>
-  )
-}
 
 export default function ConversationView({
   conversationId,
@@ -61,8 +36,6 @@ export default function ConversationView({
   const [gifUrl, setGifUrl] = useState<string | null>(null)
   const [gifPickerOpen, setGifPickerOpen] = useState(false)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
-  const [contextMessages, setContextMessages] = useState<IMessageResponse[] | null>(null)
-  const [highlightedMessageId, setHighlightedMessageId] = useState<number | null>(null)
   const openLightbox = useCallback((src: string) => setLightboxSrc(src), [])
   const closeLightbox = useCallback(() => setLightboxSrc(null), [])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -71,6 +44,7 @@ export default function ConversationView({
   const prevConversationIdRef = useRef(conversationId)
   const didInitialScrollRef = useRef(false)
   const userScrolledUpRef = useRef(false)
+
   const {
     data: messagesData,
     isLoading,
@@ -78,16 +52,26 @@ export default function ConversationView({
     hasNextPage,
     isFetchingNextPage,
   } = useGetMessages(conversationId)
+
+  const {
+    contextMessages,
+    highlightedId,
+    setHighlightedId
+  } = useMessageJump(conversationId, searchTarget || null, fetchMessageContext);
+
   const messages =
     messagesData?.pages
       .slice()
       .reverse()
       .flatMap((p) => [...(p.content ?? [])].reverse()) ?? []
+
   const renderedMessages = contextMessages ?? messages
   const { mutateAsync: sendMessageAsync, isPending } = useSendMessage(conversationId)
   const isFetchingOlderRef = useRef(false)
   const prevScrollHeightRef = useRef(0)
   const prevScrollTopRef = useRef(0)
+
+  useScrollToHighlight(scrollContainerRef, highlightedId, [renderedMessages.length]);
 
   useEffect(() => {
     if (prevConversationIdRef.current === conversationId) return
@@ -191,67 +175,6 @@ export default function ConversationView({
 
   const canSend = input.trim().length > 0 || imageFile || gifUrl
 
-  const jumpToResult = useCallback(async (target: { id: number; createdAt: string }) => {
-    try {
-      const context = await fetchMessageContext(conversationId, target.createdAt, 10)
-      const seen = new Set<number>()
-      const deduped = context.filter((m) => {
-        if (seen.has(m.id)) return false
-        seen.add(m.id)
-        return true
-      })
-      if (deduped.length > 0) {
-        const ordered = [...deduped].sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-        )
-        setContextMessages(ordered)
-        setHighlightedMessageId(target.id)
-      }
-    } catch {
-    }
-  }, [conversationId])
-
-  useEffect(() => {
-    if (!searchTarget) return
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    jumpToResult(searchTarget)
-  }, [searchTarget, jumpToResult])
-
-  useEffect(() => {
-    if (highlightedMessageId == null) return
-    const centerTarget = () => {
-      const container = scrollContainerRef.current
-      if (!container) return
-      const targetEl = container.querySelector(
-        `[data-message-id="${highlightedMessageId}"]`,
-      ) as HTMLElement | null
-      if (!targetEl) return
-      const containerRect = container.getBoundingClientRect()
-      const targetRect = targetEl.getBoundingClientRect()
-      const targetCenterRelativeToContainer =
-        targetRect.top - containerRect.top + targetRect.height / 2
-      const nextScrollTop =
-        container.scrollTop +
-        (targetCenterRelativeToContainer - container.clientHeight / 2)
-      container.scrollTo({ top: Math.max(0, nextScrollTop), behavior: 'auto' })
-    }
-
-    let raf2 = 0
-    let t: ReturnType<typeof setTimeout> | null = null
-    const raf1 = requestAnimationFrame(() => {
-      centerTarget()
-      raf2 = requestAnimationFrame(() => centerTarget())
-      t = setTimeout(() => centerTarget(), 60)
-    })
-
-    return () => {
-      cancelAnimationFrame(raf1)
-      if (raf2) cancelAnimationFrame(raf2)
-      if (t) clearTimeout(t)
-    }
-  }, [highlightedMessageId, renderedMessages.length])
-
   return (
     <>
       <div className="flex flex-col h-[calc(100vh-56px)]">
@@ -272,7 +195,7 @@ export default function ConversationView({
                     msg={msg}
                     isSelf={msg.senderUsername !== otherParticipant.username}
                     onImageClick={openLightbox}
-                    highlighted={msg.id === highlightedMessageId}
+                    highlighted={msg.id === highlightedId}
                   />
                 </div>
               ))}

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { format } from "date-fns";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import type { ITweet } from "@/types/tweet";
 import PollDisplay from "../polls/PollDisplay";
 import { CommunityNoteDisplay } from "../community-notes/CommunityNoteDisplay";
@@ -19,6 +19,7 @@ import { useKeyboard } from "@/hooks/useKeyboard";
 import { useCompose } from "@/contexts/ComposeContext";
 import { TweetVideoMedia } from "./TweetVideoMedia";
 import { TweetImageViewer } from "./TweetImageViewer";
+import { saveImageOnWebOnly } from "@/lib/webSaveImage";
 
 
 type Props = {
@@ -87,6 +88,15 @@ export function TweetCardDetailView({
   const handleImagePress = (e: any) => {
     e.stopPropagation?.();
     setImageViewerVisible(true);
+  };
+  const handleImageLongPress = async (e: any, url: string) => {
+    e.stopPropagation?.();
+    const result = await saveImageOnWebOnly(url);
+    if (!result.ok) {
+      Alert.alert('Save failed', result.message ?? 'Failed to save image.');
+      return;
+    }
+    Alert.alert('Saved', 'Download started.');
   };
 
   return (
@@ -205,13 +215,15 @@ export function TweetCardDetailView({
           ) : null}
 
           {tweet.imageUrl && (
-            <TouchableOpacity onPress={handleImagePress} activeOpacity={0.95}>
+            <TouchableOpacity onPress={handleImagePress} onLongPress={(e) => handleImageLongPress(e, tweet.imageUrl!)} activeOpacity={0.95}>
               <Image source={{ uri: tweet.imageUrl }} style={[styles.tweetImage, { borderColor }]} />
             </TouchableOpacity>
           )}
 
           {tweet.gifUrl && !tweet.imageUrl && (
-            <Image source={{ uri: tweet.gifUrl }} style={[styles.tweetImage, { borderColor }]} />
+            <TouchableOpacity onPress={handleImagePress} onLongPress={(e) => handleImageLongPress(e, tweet.gifUrl!)} activeOpacity={0.95}>
+              <Image source={{ uri: tweet.gifUrl }} style={[styles.tweetImage, { borderColor }]} />
+            </TouchableOpacity>
           )}
 
           {tweet.videoUrl && !tweet.imageUrl && !tweet.gifUrl && (

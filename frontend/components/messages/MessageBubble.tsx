@@ -5,6 +5,7 @@ import { ZoomIn } from "lucide-react";
 import { IMessageResponse } from "@/DTO/IMessageResponse";
 import { formatRelativeTime } from "@/lib/relativeTime";
 import React from "react";
+import { saveImageFromUrl } from "@/lib/saveImageFromUrl";
 
 function ImageWithFallback({
     src,
@@ -67,28 +68,37 @@ export default function MessageBubble({
     const hasGif = msg.gifUrl != null && msg.gifUrl !== ''
     const imageSrc = msg.imageUrl ?? ''
     const imageFallbackSrc = msg.optimisticImageUrl ?? null
+    const handleSaveContextMenu = async (e: React.MouseEvent, src: string) => {
+        e.preventDefault()
+        e.stopPropagation()
+        try {
+            await saveImageFromUrl(src)
+        } catch {
+            window.open(src, '_blank')
+        }
+    }
 
     return (
         <div
-            className={`flex gap-3 ${isSelf ? 'flex-row-reverse' : ''} mb-4 rounded-xl transition-colors ${
-                highlighted ? 'bg-primary/10 ring-1 ring-primary/40 p-2 -m-2' : ''
-            }`}
+            className={`flex gap-3 ${isSelf ? 'flex-row-reverse' : ''} mb-4 rounded-xl transition-colors ${highlighted ? 'bg-primary/10 ring-1 ring-primary/40 p-2 -m-2' : ''
+                }`}
         >
             <Link href={`/users/${msg.senderUsername}`} className="shrink-0 hover:opacity-90 transition-opacity">
                 <Avatar className="h-9 w-9">
-                    <AvatarImage src={msg.senderImageUrl ?? undefined} alt={msg.senderUsername} />
+                    <AvatarImage src={msg.senderImageUrl ?? undefined} alt={msg.senderUsername} className="object-cover" />
                     <AvatarFallback className="text-xs">{msg.senderUsername.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
             </Link>
             <div className={`flex flex-col max-w-[75%] ${isSelf ? 'items-end' : 'items-start'}`}>
                 <span className="text-xs text-muted-foreground mb-0.5">{displayName}</span>
-                <div className={`rounded-2xl px-4 py-2 text-sm ${isSelf ? 'bg-primary text-primary-foreground rounded-br-md' : 'bg-muted rounded-bl-md'}`}>
+                <div className={`rounded-2xl px-4 py-2 text-sm break-words overflow-wrap-anywhere whitespace-pre-wrap max-w-full ${isSelf ? 'bg-primary text-primary-foreground rounded-br-md' : 'bg-muted rounded-bl-md'}`}>
                     {(msg.content ?? '').length > 0 && <span>{msg.content}</span>}
 
                     {hasImage && (
                         <div
                             className="mt-1 rounded-lg overflow-hidden max-w-[320px] cursor-zoom-in group relative"
                             onClick={() => onImageClick?.(imageSrc)}
+                            onContextMenu={(e) => handleSaveContextMenu(e, imageSrc)}
                         >
                             <ImageWithFallback
                                 src={imageSrc}
@@ -110,6 +120,7 @@ export default function MessageBubble({
                         <div
                             className="mt-1 rounded-lg overflow-hidden max-w-[320px] cursor-zoom-in group relative"
                             onClick={() => onImageClick?.(msg.gifUrl!)}
+                            onContextMenu={(e) => handleSaveContextMenu(e, msg.gifUrl!)}
                         >
                             <Image
                                 src={msg.gifUrl!}

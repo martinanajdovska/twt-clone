@@ -28,7 +28,7 @@ export interface ISearchBoxUser {
   id?: number;
   createdAt?: string;
   username: string;
-  displayName: string | null;
+  displayName?: string | null;
   imageUrl: string | null;
   secondaryText?: string;
   key?: string;

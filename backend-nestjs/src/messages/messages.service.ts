@@ -539,7 +539,7 @@ export class MessagesService {
       id: number;
       content: string;
       username: string;
-      displayName: string | null;
+      profilePictureUrl: string | null;
       imageUrl: string | null;
       createdAt: Date;
     }[]
@@ -550,9 +550,8 @@ export class MessagesService {
       .createQueryBuilder('m')
       .select('m.id', 'id')
       .addSelect('m.content', 'content')
-      .addSelect('s.username', 'username')
-      .addSelect('s.displayName', 'displayName')
-      .addSelect('s.imageUrl', 'imageUrl')
+      .addSelect('s.username', 'senderUsername')
+      .addSelect('s.imageUrl', 'senderImageUrl')
       .addSelect('m.createdAt', 'createdAt')
       .innerJoin('m.sender', 's')
       .innerJoin('m.conversation', 'c')
@@ -568,7 +567,7 @@ export class MessagesService {
         id: number;
         content: string;
         username: string;
-        displayName: string | null;
+        profilePictureUrl: string | null;
         imageUrl: string | null;
         createdAt: Date;
       }>();

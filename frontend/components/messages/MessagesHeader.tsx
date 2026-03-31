@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { IMessageResponse } from "@/DTO/IMessageResponse";
 import Link from "next/link";
 
 export default function MessagesHeader({
@@ -15,7 +16,7 @@ export default function MessagesHeader({
     searchQuery?: string;
     onSearchQueryChange?: (value: string) => void;
     isSearching?: boolean;
-    searchResults?: { id: number; content: string; createdAt: string }[];
+    searchResults?: IMessageResponse[];
     onSelectSearchResult?: (result: { id: number; content: string; createdAt: string }) => void;
 }) {
     const displayName = otherParticipant?.displayName || otherParticipant?.username || 'Messages'
@@ -44,16 +45,35 @@ export default function MessagesHeader({
                             />
                             {searchResults.length > 0 && (
                                 <div className="absolute right-0 mt-2 w-[320px] max-w-[75vw] max-h-40 overflow-y-auto rounded-md border border-border bg-background shadow-md">
-                                    {searchResults.map((r) => (
-                                        <button
-                                            key={r.id}
-                                            type="button"
-                                            onClick={() => onSelectSearchResult?.(r)}
-                                            className="block w-full border-b border-border px-3 py-2 text-left text-xs hover:bg-accent"
-                                        >
-                                            <div className="truncate">{r.content || '(media)'}</div>
-                                        </button>
-                                    ))}
+                                    {searchResults.map((r) => {
+                                        const senderUsername = r.senderUsername || 'unknown'
+                                        return (
+                                            <button
+                                                key={r.id}
+                                                type="button"
+                                                onClick={() => onSelectSearchResult?.(r)}
+                                                className="block w-full border-b border-border px-3 py-2 text-left text-xs hover:bg-accent"
+                                            >
+                                                <div className="flex items-center gap-2 ">
+                                                    <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                                                        <Avatar className="h-full w-full">
+                                                            <AvatarImage src={r.senderImageUrl ?? undefined} className="object-cover" />
+                                                            <AvatarFallback className="bg-muted text-foreground font-bold text-sm">
+                                                                {senderUsername.charAt(0).toUpperCase()}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                    </div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <p>
+                                                            <span className="font-bold text-sm text-foreground">@{senderUsername}  </span>
+                                                        </p>
+                                                        <span className="text-xs text-muted-foreground break-words line-clamp-2">{r.content}</span>
+                                                    </div>
+                                                </div>
+
+                                            </button>
+                                        )
+                                    })}
                                 </div>
                             )}
                             {isSearching && (

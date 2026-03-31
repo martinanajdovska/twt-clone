@@ -3,7 +3,6 @@ import type {
   IConversationListItem,
   IMessageItem,
   IMessagePage,
-  IMessageSearchResult,
 } from "@/types/message";
 
 function normalizeListResponse<T>(data: unknown): T[] {
@@ -143,7 +142,7 @@ export async function searchConversationMessages(
   otherUsername: string,
   page: number = 0,
   size: number = 20,
-): Promise<IMessageSearchResult[]> {
+): Promise<IMessageItem[]> {
   const query = new URLSearchParams({
     q,
     conversationId: String(conversationId),
@@ -151,9 +150,7 @@ export async function searchConversationMessages(
     page: String(page),
     size: String(size),
   });
-  return apiJson<IMessageSearchResult[]>(
-    `/messages/search?${query.toString()}`,
-  );
+  return apiJson<IMessageItem[]>(`/messages/search?${query.toString()}`);
 }
 
 export async function fetchMessageContext(
