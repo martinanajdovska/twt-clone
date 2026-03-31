@@ -1,9 +1,11 @@
 import { formatRelativeTime } from "@/lib/relativeTime";
 import { IMessageItem } from "@/types/message";
 import { Image } from "expo-image";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from "react-native";
 import { Colors } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useState } from "react";
+import { ImageViewer } from "./ImageViewer";
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const BUBBLE_MAX_WIDTH = SCREEN_WIDTH * 0.72;
@@ -20,42 +22,62 @@ export default function MessageBubble({
     const { colorScheme, isDark } = useTheme();
     const colors = Colors[colorScheme];
 
+
     const textColor = colors.text;
     const mutedColor = colors.icon;
 
+    const [imageViewerVisible, setImageViewerVisible] = useState(false);
+    const [selectedImageUrl, setSelectedImageUrl] = useState<string>('');
+
+    const handleImagePress = (url: string) => {
+        setSelectedImageUrl(url);
+        setImageViewerVisible(true);
+    };
+
     const isSelf = other ? item.senderUsername !== other.username : false;
     return (
-        <View style={[styles.bubbleWrap, isSelf && styles.bubbleWrapSelf]}>
-            {!isSelf && item.senderImageUrl && (
-                <Image source={{ uri: item.senderImageUrl }} style={styles.bubbleAvatar} />
-            )}
-            <View style={[styles.bubbleCol, isSelf && styles.bubbleColSelf]}>
-                <Text style={[styles.bubbleTime, { color: mutedColor }]}>
-                    {formatRelativeTime(item.createdAt)}
-                </Text>
-                <View
-                    style={[
-                        styles.bubble,
-                        isSelf
-                            ? { backgroundColor: '#1d9bf0' }
-                            : { backgroundColor: isDark ? '#2f3336' : '#e8e8e8' },
-                        highlighted && styles.highlightedBubble,
-                    ]}
-                >
-                    {item.content ? (
-                        <Text style={[styles.bubbleText, { color: isSelf ? '#fff' : textColor }]}>
-                            {item.content}
-                        </Text>
-                    ) : null}
-                    {item.imageUrl && (
-                        <Image source={{ uri: item.imageUrl }} style={styles.bubbleImage} />
-                    )}
-                    {item.gifUrl && !item.imageUrl && (
-                        <Image source={{ uri: item.gifUrl }} style={styles.bubbleImage} />
-                    )}
+        <>
+            <View style={[styles.bubbleWrap, isSelf && styles.bubbleWrapSelf]}>
+                {!isSelf && item.senderImageUrl && (
+                    <Image source={{ uri: item.senderImageUrl }} style={styles.bubbleAvatar} />
+                )}
+                <View style={[styles.bubbleCol, isSelf && styles.bubbleColSelf]}>
+                    <Text style={[styles.bubbleTime, { color: mutedColor }]}>
+                        {formatRelativeTime(item.createdAt)}
+                    </Text>
+                    <View
+                        style={[
+                            styles.bubble,
+                            isSelf
+                                ? { backgroundColor: '#1d9bf0' }
+                                : { backgroundColor: isDark ? '#2f3336' : '#e8e8e8' },
+                            highlighted && styles.highlightedBubble,
+                        ]}
+                    >
+                        {item.content ? (
+                            <Text style={[styles.bubbleText, { color: isSelf ? '#fff' : textColor }]}>
+                                {item.content}
+                            </Text>
+                        ) : null}
+                        {item.imageUrl && (
+                            <TouchableOpacity onPress={() => handleImagePress(item.imageUrl!)}>
+                                <Image source={{ uri: item.imageUrl }} style={styles.bubbleImage} />
+                            </TouchableOpacity>
+                        )}
+                        {item.gifUrl && !item.imageUrl && (
+                            <TouchableOpacity onPress={() => handleImagePress(item.gifUrl!)}>
+                                <Image source={{ uri: item.gifUrl }} style={styles.bubbleImage} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </View>
             </View>
-        </View>
+            <ImageViewer
+                visible={imageViewerVisible}
+                imageUrl={selectedImageUrl}
+                onClose={() => setImageViewerVisible(false)}
+            />
+        </>
     );
 };
 

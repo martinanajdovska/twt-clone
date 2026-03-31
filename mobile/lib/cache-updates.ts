@@ -18,7 +18,6 @@ type TweetDetailData = {
   replies: ITweet[];
 };
 
-/** Avoid cache misses when API/JSON mixes number vs string tweet ids. */
 function tweetIdsEqual(a: unknown, b: number): boolean {
   return Number(a) === Number(b);
 }
@@ -75,7 +74,9 @@ export function updateTweetInAllCaches(
     if (!old) return old;
     return {
       ...old,
-      tweet: tweetIdsEqual(old.tweet.id, tweetId) ? updater(old.tweet) : old.tweet,
+      tweet: tweetIdsEqual(old.tweet.id, tweetId)
+        ? updater(old.tweet)
+        : old.tweet,
       parentTweet:
         old.parentTweet && tweetIdsEqual(old.parentTweet.id, tweetId)
           ? updater(old.parentTweet)
@@ -87,9 +88,6 @@ export function updateTweetInAllCaches(
     };
   });
 
-  // Tweet detail screen keeps a single `['tweet', rootId]` entry for the whole thread.
-  // When user acts on a reply/ancestor, we must update any `['tweet', *]` cache
-  // that contains this tweet id (tweet itself, parent chain, or replies).
   queryClient.setQueriesData<TweetDetailData>(
     { queryKey: ["tweet"] },
     (old) => {
@@ -99,8 +97,12 @@ export function updateTweetInAllCaches(
       const matchesTweet = tweetIdsEqual(old.tweet.id, tweetId);
       const matchesParent =
         old.parentTweet != null && tweetIdsEqual(old.parentTweet.id, tweetId);
-      const matchesChain = parentChain.some((t) => tweetIdsEqual(t.id, tweetId));
-      const matchesReply = old.replies.some((t) => tweetIdsEqual(t.id, tweetId));
+      const matchesChain = parentChain.some((t) =>
+        tweetIdsEqual(t.id, tweetId),
+      );
+      const matchesReply = old.replies.some((t) =>
+        tweetIdsEqual(t.id, tweetId),
+      );
 
       if (!matchesTweet && !matchesParent && !matchesChain && !matchesReply) {
         return old;
@@ -185,7 +187,6 @@ export function removeTweetFromAllCaches(
     },
   );
 
-  // Also update any thread view cache (rootId) that contains this tweet.
   queryClient.setQueriesData<TweetDetailData>(
     { queryKey: ["tweet"] },
     (old) => {
@@ -195,8 +196,12 @@ export function removeTweetFromAllCaches(
       const matchesTweet = tweetIdsEqual(old.tweet.id, tweetId);
       const matchesParent =
         old.parentTweet != null && tweetIdsEqual(old.parentTweet.id, tweetId);
-      const matchesChain = parentChain.some((t) => tweetIdsEqual(t.id, tweetId));
-      const matchesReply = old.replies.some((t) => tweetIdsEqual(t.id, tweetId));
+      const matchesChain = parentChain.some((t) =>
+        tweetIdsEqual(t.id, tweetId),
+      );
+      const matchesReply = old.replies.some((t) =>
+        tweetIdsEqual(t.id, tweetId),
+      );
 
       if (!matchesTweet && !matchesParent && !matchesChain && !matchesReply) {
         return old;
@@ -751,9 +756,7 @@ export function setTweetEngagementInAllCaches(
         pages: old.pages.map((page) => ({
           ...page,
           content: page.content.map((tweet) =>
-            tweetIdsEqual(tweet.id, tweetId)
-              ? { ...tweet, ...updates }
-              : tweet,
+            tweetIdsEqual(tweet.id, tweetId) ? { ...tweet, ...updates } : tweet,
           ),
         })),
       };
@@ -770,9 +773,7 @@ export function setTweetEngagementInAllCaches(
         pages: old.pages.map((page) => ({
           ...page,
           replies: (page.replies ?? []).map((tweet) =>
-            tweetIdsEqual(tweet.id, tweetId)
-              ? { ...tweet, ...updates }
-              : tweet,
+            tweetIdsEqual(tweet.id, tweetId) ? { ...tweet, ...updates } : tweet,
           ),
         })),
       };

@@ -184,7 +184,7 @@ export function TweetCardDetailView({
           </TouchableOpacity>
           <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); router.push(`/(main)/users/${tweet.username}`); }} style={styles.detailHeaderUser}>
             <Text style={[styles.displayName, { color: textColor }]} numberOfLines={1}>
-              {tweet.username}
+              {tweet.displayName}
             </Text>
             <Text
               style={[styles.handle, { color: mutedColor }]}

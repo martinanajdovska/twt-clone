@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
+  BackHandler,
   Dimensions,
   NativeSyntheticEvent,
+  Platform,
   StyleSheet,
   Text,
   View,
@@ -60,6 +62,15 @@ export function ReelRepliesBottomSheet({ isVisible, onClose, tweetId }: Props) {
   const handleSheetClose = useCallback(() => {
     onClose();
   }, [onClose]);
+
+  useEffect(() => {
+    if (!isVisible || Platform.OS !== 'android') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleSheetClose();
+      return true;
+    });
+    return () => sub.remove();
+  }, [isVisible, handleSheetClose]);
 
   const renderBackdrop = useCallback(
     (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
