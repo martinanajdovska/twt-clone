@@ -1,17 +1,5 @@
 <a id="readme-top"></a>
 
-<br />
-<div align="center">
-  <h3 align="center">Twitter Clone</h3>
-  <p align="center">
-    A full-stack social platform with web and mobile clients.
-    <br />
-    <br />
-    <br />
-    <a href="https://drive.google.com/file/d/1gOJF939M91Z2h_UVoLcdThnrPtasmLsu/view?usp=drive_link">View Demo</a>
-  </p>
-</div>
-
 ## About The Project
 
 This Twitter Clone demonstrates a modern multi-client architecture with a NestJS API, a Next.js web app, and an Expo React Native mobile app.
