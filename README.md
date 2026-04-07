@@ -15,6 +15,7 @@ This Twitter Clone demonstrates a modern multi-client architecture with a NestJS
 - **Community Notes:** Add and rate notes for potentially misleading tweets.
 - **Reels/Video Feed:** Dedicated video timeline endpoint and mobile reels screen.
 - **Realtime + Push:** Socket.IO realtime updates and push notification support.
+- **Chatting with Gemini** Gemini integration in tweets, triggered by @grok mention.
 - **Dark/Light Mode:** Theme toggling for improved UX.
 
 **Architecture Overview:**
