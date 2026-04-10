@@ -25,7 +25,7 @@ This Twitter Clone demonstrates a modern multi-client architecture with a NestJS
 - Backend (NestJS): REST + websocket API layer following a layered architecture (Controller -> Service -> Repository).
 - Database (PostgreSQL): Stores relational data like Users, Tweets, and Relationships.
 - Realtime Transport: Socket.IO gateway on `/ws`.
-- External Services: Cloudinary (media), Firebase (auth + admin), Google OAuth, Expo push, and Gemini integration.
+- External Services: Cloudinary, Firebase, Google OAuth, Expo push, and Gemini integration.
 
 ### Built With
 
