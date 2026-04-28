@@ -6,26 +6,25 @@ This Twitter Clone demonstrates a modern multi-client architecture with a NestJS
 
 **Key Features:**
 
-- **Authentication:** Email/password auth and Google OAuth support (web and mobile callback flow).
+- **Authentication:** Firebase Auth (password and email) and Google OAuth support (web and mobile callback flow).
 - **Core Tweets:** Create, delete, quote, pin/unpin, and interact with tweets.
-- **Media + GIFs:** Image uploads via Cloudinary and GIF integration.
-- **Direct Messages:** Private conversations with message list/detail screens.
-- **Bookmarks:** Save and manage bookmarked tweets.
-- **Polls:** Create polls and vote on poll options.
+- **Media + GIFs:** Image and video uploads via Cloudinary and GIF integration.
+- **Direct Messages:** Realtime private conversations.
+- **Polls:** Create and vote on polls, server based poll tracking with scheduler.
 - **Community Notes:** Add and rate notes for potentially misleading tweets.
-- **Reels/Video Feed:** Dedicated video timeline endpoint and mobile reels screen.
-- **Realtime + Push:** Socket.IO realtime updates and push notification support.
+- **Reels/Video Feed:** Infinite scroll mobile reels screen imitating Instagram/Tiktok look.
+- **Realtime + Push:** Realtime updates and push notification with deep link support.
 - **Chatting with Gemini:** Gemini integration in tweets, triggered by @grok mention.
 - **Dark/Light Mode:** Theme toggling for improved UX.
 
 **Architecture Overview:**
 
 - Frontend (Next.js): Presentation layer for web, using TanStack Query and Firebase client auth.
-- Mobile (Expo React Native): Native/web mobile client with Expo Router, React Query, Socket.IO client, and push registration.
+- Mobile (Expo React Native): Native/web mobile client with Expo Router, React Query, Socket.IO client and push registration.
 - Backend (NestJS): REST + websocket API layer following a layered architecture (Controller -> Service -> Repository).
 - Database (PostgreSQL): Stores relational data like Users, Tweets, and Relationships.
 - Realtime Transport: Socket.IO gateway on `/ws`.
-- External Services: Cloudinary, Firebase, Google OAuth, Expo push, and Gemini integration.
+- External Services: Cloudinary, Firebase, Google OAuth, Expo push, Klipy and Gemini integration.
 
 ### Built With
 
@@ -55,6 +54,7 @@ To get a local setup running, complete env configuration first, then start servi
 - Firebase project credentials
 - Cloudinary credentials
 - Google OAuth credentials (if you want OAuth enabled)
+- Klipy credentials
 
 ### Quickstart (All Services)
 
